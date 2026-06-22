@@ -95,6 +95,7 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedTag, setSelectedTag] = useState<string>("all");
   const [activeDims, setActiveDims] = useState<Set<Dimension>>(new Set(DIMENSIONS));
+  const [showInsights, setShowInsights] = useState(true);
 
   function toggleDim(dim: Dimension) {
     setActiveDims((prev) => {
@@ -268,16 +269,24 @@ export default function AnalyticsPage() {
 
             {insights.length > 0 && (
               <section>
-                <div className="flex items-center gap-2 mb-4">
+                <button
+                  onClick={() => setShowInsights((v) => !v)}
+                  className="flex items-center gap-2 mb-4 group"
+                >
                   <Lightbulb className="h-4 w-4 text-violet-400" />
                   <h2 className="text-lg font-bold">Insights</h2>
                   <span className="text-xs text-slate-500 ml-1">auto-detected from your data</span>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {insights.map((insight, i) => (
-                    <InsightCard key={i} insight={insight} />
-                  ))}
-                </div>
+                  <span className="ml-2 text-xs text-slate-600 group-hover:text-slate-400 transition">
+                    {showInsights ? "hide ▲" : "show ▼"}
+                  </span>
+                </button>
+                {showInsights && (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {insights.map((insight, i) => (
+                      <InsightCard key={i} insight={insight} />
+                    ))}
+                  </div>
+                )}
               </section>
             )}
 
