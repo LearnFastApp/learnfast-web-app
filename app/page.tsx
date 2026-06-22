@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, orderBy, onSnapshot, doc, getDocs } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, doc, deleteDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import {
@@ -12,6 +12,7 @@ import {
   LogOut,
   Plus,
   Settings,
+  Trash2,
   Users,
 } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
@@ -64,6 +65,11 @@ export default function Home() {
       );
     });
   }, [user]);
+
+  async function handleDeleteSession(sessionId: string) {
+    if (!confirm("Delete this session? This cannot be undone.")) return;
+    await deleteDoc(doc(db, "sessions", sessionId));
+  }
 
   function handleSignOut() {
     signOut(auth).then(() => router.replace("/auth/login"));
@@ -174,19 +180,27 @@ export default function Home() {
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {sessions.map((s) => (
-                    <a
+                    <div
                       key={s.id}
-                      href={`/sessions/${s.id}`}
-                      className="rounded-2xl border border-white/10 bg-[#111827] p-5 hover:border-violet-500/40 transition"
+                      className="group rounded-2xl border border-white/10 bg-[#111827] p-5 hover:border-violet-500/40 transition"
                     >
-                      <p className="font-semibold mb-1">{s.title}</p>
-                      <p className="text-xs text-slate-400 font-mono">{s.code}</p>
-                      {s.createdAt && (
-                        <p className="mt-3 text-xs text-slate-500">
-                          {s.createdAt.toDate().toLocaleDateString()}
-                        </p>
-                      )}
-                    </a>
+                      <a href={`/sessions/${s.id}`} className="block">
+                        <p className="font-semibold mb-1">{s.title}</p>
+                        <p className="text-xs text-slate-400 font-mono">{s.code}</p>
+                        {s.createdAt && (
+                          <p className="mt-3 text-xs text-slate-500">
+                            {s.createdAt.toDate().toLocaleDateString()}
+                          </p>
+                        )}
+                      </a>
+                      <button
+                        onClick={() => handleDeleteSession(s.id)}
+                        className="mt-4 flex items-center gap-1.5 text-xs text-slate-600 hover:text-red-400 transition opacity-0 group-hover:opacity-100"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}
