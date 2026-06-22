@@ -94,8 +94,13 @@ export default function LiveSessionPage() {
   const [copied, setCopied] = useState(false);
   const [notes, setNotes] = useState("");
   const [notesSaved, setNotesSaved] = useState(false);
-  const [resources, setResources] = useState<{ videoId: string; title: string; channelTitle: string; thumbnail: string }[]>([]);
+  const [resources, setResources] = useState<{
+    videos: { videoId: string; title: string; channelTitle: string; thumbnail: string }[];
+    tedTalks: { videoId: string; title: string; channelTitle: string; thumbnail: string }[];
+    articles: { title: string; url: string; source: string }[];
+  } | null>(null);
   const [resourcesLoading, setResourcesLoading] = useState(false);
+  const [resourceTab, setResourceTab] = useState<"videos" | "ted" | "articles">("videos");
 
   useEffect(() => {
     if (authLoading) return;
@@ -136,7 +141,7 @@ export default function LiveSessionPage() {
     setResourcesLoading(true);
     fetch(`/api/resources?dimension=${lowestDimension}`)
       .then((r) => r.json())
-      .then((data) => { setResources(data.videos ?? []); setResourcesLoading(false); })
+      .then((data) => { setResources(data); setResourcesLoading(false); })
       .catch(() => setResourcesLoading(false));
   }, [lowestDimension]);
 
@@ -363,33 +368,66 @@ export default function LiveSessionPage() {
                   <p className="text-xs text-slate-500 animate-pulse">Finding resources…</p>
                 )}
 
-                {!resourcesLoading && resources.length > 0 && (
-                  <div className="space-y-2">
-                    {resources.map((video) => (
-                      <a
-                        key={video.videoId}
-                        href={`https://www.youtube.com/watch?v=${video.videoId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-start gap-3 rounded-xl border border-white/10 bg-[#1a2135] p-3 hover:border-violet-500/40 transition"
-                      >
-                        {video.thumbnail && (
-                          <img
-                            src={video.thumbnail}
-                            alt=""
-                            className="w-20 h-12 rounded-lg object-cover shrink-0"
-                          />
-                        )}
-                        <div className="min-w-0">
-                          <p className="text-xs text-slate-200 leading-snug line-clamp-2 mb-1">{video.title}</p>
-                          <p className="text-xs text-slate-500 flex items-center gap-1">
-                            <PlayCircle className="h-3 w-3 text-violet-400" />
-                            {video.channelTitle}
-                          </p>
-                        </div>
-                      </a>
-                    ))}
-                  </div>
+                {!resourcesLoading && resources && (
+                  <>
+                    <div className="flex rounded-lg border border-white/10 bg-[#0f1424] p-0.5 mb-3">
+                      {(["videos", "ted", "articles"] as const).map((tab) => (
+                        <button
+                          key={tab}
+                          onClick={() => setResourceTab(tab)}
+                          className={`flex-1 rounded-md py-1.5 text-xs font-semibold transition ${
+                            resourceTab === tab
+                              ? "bg-violet-500 text-white"
+                              : "text-slate-400 hover:text-white"
+                          }`}
+                        >
+                          {tab === "videos" ? "Videos" : tab === "ted" ? "TED Talks" : "Articles"}
+                        </button>
+                      ))}
+                    </div>
+
+                    {resourceTab !== "articles" && (
+                      <div className="space-y-2">
+                        {(resourceTab === "videos" ? resources.videos : resources.tedTalks).map((video) => (
+                          <a
+                            key={video.videoId}
+                            href={`https://www.youtube.com/watch?v=${video.videoId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-start gap-3 rounded-xl border border-white/10 bg-[#1a2135] p-3 hover:border-violet-500/40 transition"
+                          >
+                            {video.thumbnail && (
+                              <img src={video.thumbnail} alt="" className="w-20 h-12 rounded-lg object-cover shrink-0" />
+                            )}
+                            <div className="min-w-0">
+                              <p className="text-xs text-slate-200 leading-snug line-clamp-2 mb-1">{video.title}</p>
+                              <p className="text-xs text-slate-500 flex items-center gap-1">
+                                <PlayCircle className="h-3 w-3 text-violet-400" />
+                                {video.channelTitle}
+                              </p>
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+
+                    {resourceTab === "articles" && (
+                      <div className="space-y-2">
+                        {resources.articles.map((article) => (
+                          <a
+                            key={article.url}
+                            href={article.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex flex-col gap-1 rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 hover:border-violet-500/40 transition"
+                          >
+                            <p className="text-xs text-slate-200 leading-snug line-clamp-2">{article.title}</p>
+                            <p className="text-xs text-slate-500">{article.source}</p>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <p className="mt-3 text-xs text-slate-500 text-center">
