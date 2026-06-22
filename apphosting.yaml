@@ -43,3 +43,11 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  - variable: APP_URL
+    value: https://learnfast-web-app--learnfast-app-cc98c.us-east4.hosted.app
+    availability:
+      - RUNTIME
+  - variable: CRON_SECRET
+    value: LearnFast12!
+    availability:
+      - RUNTIME
