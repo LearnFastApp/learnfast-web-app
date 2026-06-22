@@ -1,9 +1,19 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-let _resend: Resend | null = null;
-function getResend() {
-  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY!);
-  return _resend;
+let _transporter: nodemailer.Transporter | null = null;
+function getTransporter() {
+  if (!_transporter) {
+    _transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    });
+  }
+  return _transporter;
 }
 
 const DIMS = ["clarity", "engagement", "energy", "understanding", "connection"] as const;
@@ -135,8 +145,8 @@ function buildHtml(opts: SummaryEmailOptions): string {
 }
 
 export async function sendSummaryEmail(opts: SummaryEmailOptions) {
-  const from = process.env.FROM_EMAIL ?? "LearnFast <summary@learnfast.app>";
-  await getResend().emails.send({
+  const from = `LearnFast <${process.env.GMAIL_USER}>`;
+  await getTransporter().sendMail({
     from,
     to: opts.to,
     subject: `Your session summary — ${opts.sessionTitle}`,
