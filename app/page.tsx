@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, orderBy, onSnapshot, doc, deleteDoc, updateDoc } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, doc, deleteDoc, updateDoc, getDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import {
@@ -19,6 +19,7 @@ import {
 import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import CreateSessionModal from "@/components/create-session-modal";
+import UpgradeModal from "@/components/upgrade-modal";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/", active: true },
@@ -47,6 +48,8 @@ export default function Home() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<"free" | "active">("free");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [editingTagsId, setEditingTagsId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState("");
@@ -54,6 +57,16 @@ export default function Home() {
   useEffect(() => {
     if (!loading && !user) router.replace("/auth/login");
   }, [user, loading, router]);
+
+  useEffect(() => {
+    if (!user) return;
+    getDoc(doc(db, "presenters", user.uid)).then((snap) => {
+      if (snap.exists()) {
+        const status = snap.data().subscriptionStatus;
+        if (status === "active") setSubscriptionStatus("active");
+      }
+    });
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -112,6 +125,7 @@ export default function Home() {
           onCreated={handleSessionCreated}
         />
       )}
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
 
       <div className="flex min-h-screen">
         <aside className="hidden w-72 border-r border-white/10 bg-[#0f1424] p-6 lg:flex lg:flex-col">
@@ -181,13 +195,33 @@ export default function Home() {
             </div>
 
             <button
-              onClick={() => setShowModal(true)}
+              onClick={() => {
+                if (subscriptionStatus !== "active" && sessions.length >= 2) {
+                  setShowUpgrade(true);
+                } else {
+                  setShowModal(true);
+                }
+              }}
               className="flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-400"
             >
               <Plus className="h-5 w-5" />
               Create Session
             </button>
           </header>
+
+          {subscriptionStatus !== "active" && sessions.length >= 2 && (
+            <div className="flex items-center justify-between border-b border-amber-500/20 bg-amber-500/5 px-6 py-3 lg:px-8">
+              <p className="text-sm text-amber-300">
+                You&apos;ve used both your free sessions.
+              </p>
+              <button
+                onClick={() => setShowUpgrade(true)}
+                className="rounded-lg bg-violet-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-violet-400 transition"
+              >
+                Upgrade to Lite
+              </button>
+            </div>
+          )}
 
           <div className="space-y-8 p-6 lg:p-8">
             {/* Recent sessions */}

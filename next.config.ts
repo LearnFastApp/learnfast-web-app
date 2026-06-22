@@ -4,6 +4,8 @@ const withPWA = require("next-pwa")({
   disable: process.env.NODE_ENV === "development",
 });
 
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+  serverExternalPackages: ["firebase-admin", "firebase"],
+};
 
 module.exports = withPWA(nextConfig);
