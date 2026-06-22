@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, KeyboardEvent } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { QRCodeSVG } from "qrcode.react";
-import { X, Copy, Check } from "lucide-react";
+import { X, Copy, Check, Tag } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 
@@ -19,6 +19,8 @@ interface Props {
 export default function CreateSessionModal({ onClose, onCreated }: Props) {
   const { user } = useAuth();
   const [title, setTitle] = useState("");
+  const [tagInput, setTagInput] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState<{ id: string; code: string } | null>(null);
   const [copied, setCopied] = useState(false);
@@ -26,6 +28,19 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
   const feedbackUrl = created
     ? `${window.location.origin}/session/${created.code}`
     : "";
+
+  function addTag() {
+    const tag = tagInput.trim().toLowerCase();
+    if (tag && !tags.includes(tag)) setTags((prev) => [...prev, tag]);
+    setTagInput("");
+  }
+
+  function handleTagKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(); }
+    if (e.key === "Backspace" && !tagInput && tags.length) {
+      setTags((prev) => prev.slice(0, -1));
+    }
+  }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -37,6 +52,7 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
       presenterId: user.uid,
       title: title.trim() || "Untitled session",
       code,
+      tags,
       status: "active",
       createdAt: serverTimestamp(),
       expiresAt: null,
@@ -68,9 +84,7 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
         {!created ? (
           <form onSubmit={handleCreate} className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm text-slate-400">
-                Session title (optional)
-              </label>
+              <label className="mb-2 block text-sm text-slate-400">Session title (optional)</label>
               <input
                 type="text"
                 placeholder="e.g. Leadership Workshop — June 2026"
@@ -78,6 +92,37 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
               />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm text-slate-400">
+                Tags <span className="text-slate-600">(optional — press Enter or comma to add)</span>
+              </label>
+              <div className="min-h-[48px] flex flex-wrap gap-2 rounded-xl border border-white/10 bg-[#1a2135] px-3 py-2 focus-within:border-violet-500">
+                {tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="flex items-center gap-1 rounded-lg bg-violet-500/20 px-2 py-1 text-xs text-violet-300"
+                  >
+                    <Tag className="h-3 w-3" />
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => setTags((prev) => prev.filter((t) => t !== tag))}
+                      className="ml-1 text-violet-400 hover:text-white"
+                    >×</button>
+                  </span>
+                ))}
+                <input
+                  type="text"
+                  placeholder={tags.length === 0 ? "e.g. board, workshop, team" : ""}
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleTagKeyDown}
+                  onBlur={addTag}
+                  className="flex-1 min-w-[120px] bg-transparent text-sm text-white placeholder-slate-600 outline-none"
+                />
+              </div>
             </div>
 
             <button
@@ -96,9 +141,7 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
 
             <div className="rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-center">
               <p className="mb-1 text-xs text-slate-400">Session code</p>
-              <p className="text-3xl font-bold tracking-widest text-white">
-                {created.code}
-              </p>
+              <p className="text-3xl font-bold tracking-widest text-white">{created.code}</p>
             </div>
 
             <div className="flex gap-3">
@@ -106,11 +149,7 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
                 onClick={copyUrl}
                 className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-300 hover:bg-white/5"
               >
-                {copied ? (
-                  <Check className="h-4 w-4 text-green-400" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
+                {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
                 {copied ? "Copied!" : "Copy link"}
               </button>
 

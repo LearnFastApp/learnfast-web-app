@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, orderBy, onSnapshot, doc, deleteDoc } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, doc, deleteDoc, updateDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import {
@@ -12,6 +12,7 @@ import {
   LogOut,
   Plus,
   Settings,
+  Tag,
   Trash2,
   Users,
 } from "lucide-react";
@@ -20,11 +21,11 @@ import { useAuth } from "@/lib/auth-context";
 import CreateSessionModal from "@/components/create-session-modal";
 
 const navItems = [
-  { label: "Dashboard", icon: LayoutDashboard, active: true },
-  { label: "Session Calendar", icon: Calendar },
-  { label: "Analytics", icon: BarChart3 },
-  { label: "Learning Hub", icon: BookOpen },
-  { label: "Settings", icon: Settings },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/", active: true },
+  { label: "Session Calendar", icon: Calendar, href: "#" },
+  { label: "Analytics", icon: BarChart3, href: "/analytics" },
+  { label: "Learning Hub", icon: BookOpen, href: "#" },
+  { label: "Settings", icon: Settings, href: "#" },
 ];
 
 const resources = [
@@ -38,8 +39,8 @@ interface Session {
   id: string;
   title: string;
   code: string;
+  tags?: string[];
   createdAt: { toDate: () => Date } | null;
-  responseCount?: number;
 }
 
 export default function Home() {
@@ -47,6 +48,8 @@ export default function Home() {
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [editingTagsId, setEditingTagsId] = useState<string | null>(null);
+  const [tagInput, setTagInput] = useState("");
 
   useEffect(() => {
     if (!loading && !user) router.replace("/auth/login");
@@ -69,6 +72,17 @@ export default function Home() {
   async function handleDeleteSession(sessionId: string) {
     if (!confirm("Delete this session? This cannot be undone.")) return;
     await deleteDoc(doc(db, "sessions", sessionId));
+  }
+
+  async function handleAddTag(sessionId: string, currentTags: string[]) {
+    const tag = tagInput.trim().toLowerCase();
+    if (!tag || currentTags.includes(tag)) { setTagInput(""); return; }
+    await updateDoc(doc(db, "sessions", sessionId), { tags: [...currentTags, tag] });
+    setTagInput("");
+  }
+
+  async function handleRemoveTag(sessionId: string, currentTags: string[], tag: string) {
+    await updateDoc(doc(db, "sessions", sessionId), { tags: currentTags.filter((t) => t !== tag) });
   }
 
   function handleSignOut() {
@@ -115,8 +129,9 @@ export default function Home() {
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
-                <div
+                <a
                   key={item.label}
+                  href={item.href}
                   className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition ${
                     item.active
                       ? "bg-violet-500/15 text-white"
@@ -125,7 +140,7 @@ export default function Home() {
                 >
                   <Icon className="h-5 w-5" />
                   {item.label}
-                </div>
+                </a>
               );
             })}
           </nav>
@@ -188,14 +203,54 @@ export default function Home() {
                         <p className="font-semibold mb-1">{s.title}</p>
                         <p className="text-xs text-slate-400 font-mono">{s.code}</p>
                         {s.createdAt && (
-                          <p className="mt-3 text-xs text-slate-500">
+                          <p className="mt-2 text-xs text-slate-500">
                             {s.createdAt.toDate().toLocaleDateString()}
                           </p>
                         )}
                       </a>
+
+                      {/* Tags */}
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {(s.tags ?? []).map((tag) => (
+                          <span
+                            key={tag}
+                            className="group/tag flex items-center gap-1 rounded-lg bg-violet-500/20 px-2 py-0.5 text-xs text-violet-300"
+                          >
+                            <Tag className="h-3 w-3" />
+                            {tag}
+                            <button
+                              onClick={() => handleRemoveTag(s.id, s.tags ?? [], tag)}
+                              className="ml-0.5 opacity-0 group-hover/tag:opacity-100 hover:text-white transition"
+                            >×</button>
+                          </span>
+                        ))}
+                        {editingTagsId === s.id ? (
+                          <input
+                            autoFocus
+                            type="text"
+                            placeholder="add tag…"
+                            value={tagInput}
+                            onChange={(e) => setTagInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === ",") { e.preventDefault(); handleAddTag(s.id, s.tags ?? []); }
+                              if (e.key === "Escape") { setEditingTagsId(null); setTagInput(""); }
+                            }}
+                            onBlur={() => { handleAddTag(s.id, s.tags ?? []); setEditingTagsId(null); }}
+                            className="rounded-lg border border-violet-500/40 bg-[#1a2135] px-2 py-0.5 text-xs text-white outline-none w-24"
+                          />
+                        ) : (
+                          <button
+                            onClick={() => { setEditingTagsId(s.id); setTagInput(""); }}
+                            className="rounded-lg border border-dashed border-white/20 px-2 py-0.5 text-xs text-slate-600 hover:text-slate-300 hover:border-white/40 transition opacity-0 group-hover:opacity-100"
+                          >
+                            + tag
+                          </button>
+                        )}
+                      </div>
+
                       <button
                         onClick={() => handleDeleteSession(s.id)}
-                        className="mt-4 flex items-center gap-1.5 text-xs text-slate-600 hover:text-red-400 transition opacity-0 group-hover:opacity-100"
+                        className="mt-3 flex items-center gap-1.5 text-xs text-slate-600 hover:text-red-400 transition opacity-0 group-hover:opacity-100"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                         Delete
