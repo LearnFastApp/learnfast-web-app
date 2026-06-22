@@ -9,16 +9,26 @@ import {
   PolarGrid,
   PolarAngleAxis,
   ResponsiveContainer,
+  Legend,
 } from "recharts";
 import { QRCodeSVG } from "qrcode.react";
-import { ArrowLeft, Copy, Check, Users } from "lucide-react";
+import { ArrowLeft, Copy, Check, Users, PenLine } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
+import PresenterReflectionModal from "@/components/presenter-reflection-modal";
 
 const DIMENSIONS = ["clarity", "engagement", "energy", "understanding", "connection"] as const;
 type Dimension = (typeof DIMENSIONS)[number];
 
 interface FeedbackResponse {
+  clarity: number;
+  engagement: number;
+  energy: number;
+  understanding: number;
+  connection: number;
+}
+
+interface PresenterReflection {
   clarity: number;
   engagement: number;
   energy: number;
@@ -38,14 +48,13 @@ export default function LiveSessionPage() {
 
   const [session, setSession] = useState<{ title: string; code: string } | null>(null);
   const [responses, setResponses] = useState<FeedbackResponse[]>([]);
+  const [reflection, setReflection] = useState<PresenterReflection | null>(null);
+  const [showReflection, setShowReflection] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) {
-      router.replace("/auth/login");
-      return;
-    }
+    if (!user) { router.replace("/auth/login"); return; }
 
     getDoc(doc(db, "sessions", id)).then((snap) => {
       if (snap.exists()) {
@@ -55,28 +64,30 @@ export default function LiveSessionPage() {
     });
 
     const q = query(collection(db, "feedback_responses"), where("sessionId", "==", id));
-    return onSnapshot(q, (snap) => {
+    const unsubFeedback = onSnapshot(q, (snap) => {
       setResponses(snap.docs.map((d) => d.data() as FeedbackResponse));
     });
+
+    const unsubReflection = onSnapshot(doc(db, "presenter_reflections", id), (snap) => {
+      if (snap.exists()) setReflection(snap.data() as PresenterReflection);
+    });
+
+    return () => { unsubFeedback(); unsubReflection(); };
   }, [id, user, authLoading, router]);
 
-  const averages = DIMENSIONS.reduce(
-    (acc, dim) => ({
-      ...acc,
-      [dim]: average(responses.map((r) => r[dim])),
-    }),
+  const audienceAverages = DIMENSIONS.reduce(
+    (acc, dim) => ({ ...acc, [dim]: average(responses.map((r) => r[dim])) }),
     {} as Record<Dimension, number>
   );
 
   const radarData = DIMENSIONS.map((dim) => ({
     dimension: dim.charAt(0).toUpperCase() + dim.slice(1),
-    value: averages[dim],
+    audience: audienceAverages[dim],
+    presenter: reflection ? reflection[dim] : null,
     fullMark: 100,
   }));
 
-  const feedbackUrl = session
-    ? `${window.location.origin}/session/${session.code}`
-    : "";
+  const feedbackUrl = session ? `${window.location.origin}/session/${session.code}` : "";
 
   function copyUrl() {
     navigator.clipboard.writeText(feedbackUrl);
@@ -94,11 +105,17 @@ export default function LiveSessionPage() {
 
   return (
     <main className="min-h-screen bg-[#05070d] text-white">
+      {showReflection && user && (
+        <PresenterReflectionModal
+          sessionId={id}
+          presenterId={user.uid}
+          onClose={() => setShowReflection(false)}
+          onSubmitted={() => setShowReflection(false)}
+        />
+      )}
+
       <header className="border-b border-white/10 bg-[#101523] px-6 py-5 flex items-center gap-4">
-        <button
-          onClick={() => router.push("/")}
-          className="text-slate-400 hover:text-white"
-        >
+        <button onClick={() => router.push("/")} className="text-slate-400 hover:text-white">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex-1">
@@ -109,17 +126,41 @@ export default function LiveSessionPage() {
             <span className="text-green-400">● Live</span>
           </p>
         </div>
-        <div className="flex items-center gap-2 text-slate-400">
-          <Users className="h-4 w-4" />
-          <span className="text-sm font-semibold text-white">{responses.length}</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-slate-400">
+            <Users className="h-4 w-4" />
+            <span className="text-sm font-semibold text-white">{responses.length}</span>
+          </div>
+          <button
+            onClick={() => setShowReflection(true)}
+            className="flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-300 hover:bg-cyan-400/20"
+          >
+            <PenLine className="h-4 w-4" />
+            {reflection ? "Edit reflection" : "Rate yourself"}
+          </button>
         </div>
       </header>
 
       <div className="grid gap-6 p-6 lg:p-8 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
           <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
-            <h2 className="mb-4 text-lg font-bold">Live averages</h2>
-            {responses.length === 0 ? (
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="text-lg font-bold">Live averages</h2>
+              <div className="flex items-center gap-4 text-xs">
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-violet-500 inline-block" />
+                  <span className="text-slate-400">Audience</span>
+                </span>
+                {reflection && (
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 rounded-full bg-cyan-400 inline-block" />
+                    <span className="text-slate-400">Your reflection</span>
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {responses.length === 0 && !reflection ? (
               <div className="flex h-64 items-center justify-center text-slate-500">
                 Waiting for responses…
               </div>
@@ -132,25 +173,65 @@ export default function LiveSessionPage() {
                       dataKey="dimension"
                       tick={{ fill: "#94a3b8", fontSize: 13 }}
                     />
-                    <Radar
-                      dataKey="value"
-                      stroke="#8b5cf6"
-                      fill="#8b5cf6"
-                      fillOpacity={0.25}
-                      strokeWidth={2}
-                    />
+                    {responses.length > 0 && (
+                      <Radar
+                        name="Audience"
+                        dataKey="audience"
+                        stroke="#8b5cf6"
+                        fill="#8b5cf6"
+                        fillOpacity={0.25}
+                        strokeWidth={2}
+                      />
+                    )}
+                    {reflection && (
+                      <Radar
+                        name="Your reflection"
+                        dataKey="presenter"
+                        stroke="#22d3ee"
+                        fill="#22d3ee"
+                        fillOpacity={0.15}
+                        strokeWidth={2}
+                        strokeDasharray="5 3"
+                      />
+                    )}
                   </RadarChart>
                 </ResponsiveContainer>
 
                 <div className="mt-4 grid grid-cols-5 gap-3">
                   {DIMENSIONS.map((dim) => (
                     <div key={dim} className="text-center">
-                      <p className="text-xs text-slate-400 capitalize">{dim}</p>
-                      <p className="text-xl font-bold text-white">{averages[dim]}</p>
+                      <p className="text-xs text-slate-400 capitalize mb-1">{dim}</p>
+                      <p className="text-xl font-bold text-violet-300">{audienceAverages[dim]}</p>
+                      {reflection && (
+                        <p className="text-sm font-semibold text-cyan-400">{reflection[dim]}</p>
+                      )}
                       <p className="text-xs text-slate-500">/100</p>
                     </div>
                   ))}
                 </div>
+
+                {reflection && responses.length > 0 && (
+                  <div className="mt-6 rounded-xl bg-[#1a2135] p-4">
+                    <p className="text-xs text-slate-400 mb-3 font-semibold uppercase tracking-wider">Gap analysis</p>
+                    <div className="grid grid-cols-5 gap-3">
+                      {DIMENSIONS.map((dim) => {
+                        const gap = reflection[dim] - audienceAverages[dim];
+                        const color = gap > 0 ? "text-amber-400" : gap < 0 ? "text-green-400" : "text-slate-400";
+                        return (
+                          <div key={dim} className="text-center">
+                            <p className="text-xs text-slate-500 capitalize mb-1">{dim}</p>
+                            <p className={`text-sm font-bold ${color}`}>
+                              {gap > 0 ? "+" : ""}{gap.toFixed(1)}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-3 text-xs text-slate-500">
+                      Amber = you rated yourself higher than the audience · Green = audience rated you higher
+                    </p>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -172,11 +253,7 @@ export default function LiveSessionPage() {
               onClick={copyUrl}
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-300 hover:bg-white/5"
             >
-              {copied ? (
-                <Check className="h-4 w-4 text-green-400" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
+              {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
               {copied ? "Copied!" : "Copy link"}
             </button>
           </div>
