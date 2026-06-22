@@ -20,6 +20,7 @@ import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import CreateSessionModal from "@/components/create-session-modal";
 import UpgradeModal from "@/components/upgrade-modal";
+import MobileNav from "@/components/mobile-nav";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/", active: true },
@@ -126,6 +127,13 @@ export default function Home() {
         />
       )}
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
+      <MobileNav onCreateSession={() => {
+        if (subscriptionStatus !== "active" && sessions.length >= 2) {
+          setShowUpgrade(true);
+        } else {
+          setShowModal(true);
+        }
+      }} />
 
       <div className="flex min-h-screen">
         <aside className="hidden w-72 border-r border-white/10 bg-[#0f1424] p-6 lg:flex lg:flex-col">
@@ -223,7 +231,7 @@ export default function Home() {
             </div>
           )}
 
-          <div className="space-y-8 p-6 lg:p-8">
+          <div className="space-y-8 p-6 pb-24 lg:pb-8 lg:p-8">
             {/* Recent sessions */}
             <section>
               <h2 className="mb-4 text-lg font-bold">Your sessions</h2>

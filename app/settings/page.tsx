@@ -10,6 +10,7 @@ import {
 } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { User, Lock, CreditCard, Check, Zap } from "lucide-react";
+import MobileNav from "@/components/mobile-nav";
 import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 
@@ -142,7 +143,8 @@ export default function SettingsPage() {
   const isActive = presenter.subscriptionStatus === "active";
 
   return (
-    <main className="min-h-screen bg-[#05070d] text-white">
+    <main className="min-h-screen bg-[#05070d] text-white pb-20 lg:pb-0">
+      <MobileNav />
       <header className="border-b border-white/10 bg-[#101523] px-6 py-6 lg:px-8">
         <div className="flex items-center justify-between">
           <div>

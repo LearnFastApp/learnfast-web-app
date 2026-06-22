@@ -18,6 +18,7 @@ import {
   Legend,
 } from "recharts";
 import { TrendingUp, TrendingDown, Minus, Tag, BarChart3, Lightbulb, AlertTriangle, Sparkles, ArrowUpRight } from "lucide-react";
+import MobileNav from "@/components/mobile-nav";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { generateInsights, type Insight } from "@/lib/insights";
@@ -196,7 +197,8 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#05070d] text-white">
+    <main className="min-h-screen bg-[#05070d] text-white pb-20 lg:pb-0">
+      <MobileNav />
       <header className="border-b border-white/10 bg-[#101523] px-6 py-6 lg:px-8">
         <div className="flex items-center justify-between">
           <div>
