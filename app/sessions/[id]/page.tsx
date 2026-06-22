@@ -16,6 +16,7 @@ import { ArrowLeft, Copy, Check, Users, PenLine, PlayCircle, Headphones, FileTex
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import PresenterReflectionModal from "@/components/presenter-reflection-modal";
+import { generateGapInsight } from "@/lib/gap-insight";
 
 const DIMENSIONS = ["clarity", "engagement", "energy", "understanding", "connection"] as const;
 type Dimension = (typeof DIMENSIONS)[number];
@@ -266,6 +267,9 @@ export default function LiveSessionPage() {
                     </div>
                     <p className="mt-3 text-xs text-slate-500">
                       Amber = you rated yourself higher than the audience · Green = audience rated you higher
+                    </p>
+                    <p className="mt-4 text-sm text-slate-300 leading-relaxed border-t border-white/10 pt-4">
+                      {generateGapInsight(audienceAverages, reflection)}
                     </p>
                   </div>
                 )}
