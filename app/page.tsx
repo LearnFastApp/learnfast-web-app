@@ -344,7 +344,14 @@ export default function Home() {
                 <div>
                   <h2 className="text-xl font-bold">Audience join link</h2>
                   <p className="text-slate-300">
-                    Share <span className="font-mono text-violet-300">{window.location.origin}/join</span> or scan the QR from any active session.
+                    Share{" "}
+                    <a
+                      href="/join"
+                      className="font-mono text-violet-300 underline underline-offset-2 hover:text-violet-200"
+                    >
+                      {typeof window !== "undefined" ? window.location.origin : ""}/join
+                    </a>
+                    {" "}or scan the QR from any active session.
                   </p>
                 </div>
               </div>
