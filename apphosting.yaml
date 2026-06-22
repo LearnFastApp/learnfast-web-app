@@ -55,3 +55,11 @@ env:
     value: AIzaSyAd8ocb4ejxuycD4SSz_JeGM0tLAiw3MFw
     availability:
       - RUNTIME
+  - variable: PODCAST_INDEX_KEY
+    value: REPLACE_WITH_KEY
+    availability:
+      - RUNTIME
+  - variable: PODCAST_INDEX_SECRET
+    value: REPLACE_WITH_SECRET
+    availability:
+      - RUNTIME

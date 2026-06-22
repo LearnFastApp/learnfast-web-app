@@ -100,7 +100,9 @@ export default function LiveSessionPage() {
     articles: { title: string; url: string; source: string }[];
   } | null>(null);
   const [resourcesLoading, setResourcesLoading] = useState(false);
-  const [resourceTab, setResourceTab] = useState<"videos" | "ted" | "articles">("videos");
+  const [resourceTab, setResourceTab] = useState<"videos" | "ted" | "podcasts" | "articles">("videos");
+  const [podcasts, setPodcasts] = useState<{ title: string; author: string; description: string; image: string; link: string }[]>([]);
+  const [podcastsLoading, setPodcastsLoading] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -143,6 +145,12 @@ export default function LiveSessionPage() {
       .then((r) => r.json())
       .then((data) => { setResources(data); setResourcesLoading(false); })
       .catch(() => setResourcesLoading(false));
+
+    setPodcastsLoading(true);
+    fetch(`/api/resources/podcasts?dimension=${lowestDimension}`)
+      .then((r) => r.json())
+      .then((data) => { setPodcasts(data.podcasts ?? []); setPodcastsLoading(false); })
+      .catch(() => setPodcastsLoading(false));
   }, [lowestDimension]);
 
   const radarData = DIMENSIONS.map((dim) => ({
@@ -370,23 +378,23 @@ export default function LiveSessionPage() {
 
                 {!resourcesLoading && resources && (
                   <>
-                    <div className="flex rounded-lg border border-white/10 bg-[#0f1424] p-0.5 mb-3">
-                      {(["videos", "ted", "articles"] as const).map((tab) => (
+                    <div className="grid grid-cols-4 rounded-lg border border-white/10 bg-[#0f1424] p-0.5 mb-3">
+                      {(["videos", "ted", "podcasts", "articles"] as const).map((tab) => (
                         <button
                           key={tab}
                           onClick={() => setResourceTab(tab)}
-                          className={`flex-1 rounded-md py-1.5 text-xs font-semibold transition ${
+                          className={`rounded-md py-1.5 text-xs font-semibold transition ${
                             resourceTab === tab
                               ? "bg-violet-500 text-white"
                               : "text-slate-400 hover:text-white"
                           }`}
                         >
-                          {tab === "videos" ? "Videos" : tab === "ted" ? "TED Talks" : "Articles"}
+                          {tab === "videos" ? "Videos" : tab === "ted" ? "TED" : tab === "podcasts" ? "Podcasts" : "Read"}
                         </button>
                       ))}
                     </div>
 
-                    {resourceTab !== "articles" && (
+                    {(resourceTab === "videos" || resourceTab === "ted") && (
                       <div className="space-y-2">
                         {(resourceTab === "videos" ? resources.videos : resources.tedTalks).map((video) => (
                           <a
@@ -405,6 +413,32 @@ export default function LiveSessionPage() {
                                 <PlayCircle className="h-3 w-3 text-violet-400" />
                                 {video.channelTitle}
                               </p>
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+
+                    {resourceTab === "podcasts" && (
+                      <div className="space-y-2">
+                        {podcastsLoading && (
+                          <p className="text-xs text-slate-500 animate-pulse">Finding podcasts…</p>
+                        )}
+                        {!podcastsLoading && podcasts.map((pod) => (
+                          <a
+                            key={pod.link}
+                            href={pod.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-start gap-3 rounded-xl border border-white/10 bg-[#1a2135] p-3 hover:border-violet-500/40 transition"
+                          >
+                            {pod.image && (
+                              <img src={pod.image} alt="" className="w-12 h-12 rounded-lg object-cover shrink-0" />
+                            )}
+                            <div className="min-w-0">
+                              <p className="text-xs text-slate-200 leading-snug line-clamp-1 mb-0.5 font-semibold">{pod.title}</p>
+                              <p className="text-xs text-violet-400 mb-1">{pod.author}</p>
+                              <p className="text-xs text-slate-500 line-clamp-2">{pod.description}</p>
                             </div>
                           </a>
                         ))}
