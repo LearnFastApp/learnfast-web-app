@@ -71,7 +71,7 @@ export default function LiveSessionPage() {
   const radarData = DIMENSIONS.map((dim) => ({
     dimension: dim.charAt(0).toUpperCase() + dim.slice(1),
     value: averages[dim],
-    fullMark: 10,
+    fullMark: 100,
   }));
 
   const feedbackUrl = session
@@ -147,7 +147,7 @@ export default function LiveSessionPage() {
                     <div key={dim} className="text-center">
                       <p className="text-xs text-slate-400 capitalize">{dim}</p>
                       <p className="text-xl font-bold text-white">{averages[dim]}</p>
-                      <p className="text-xs text-slate-500">/10</p>
+                      <p className="text-xs text-slate-500">/100</p>
                     </div>
                   ))}
                 </div>
