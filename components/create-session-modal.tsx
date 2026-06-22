@@ -56,6 +56,7 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
       status: "active",
       createdAt: serverTimestamp(),
       expiresAt: null,
+      summarySent: false,
     });
 
     setCreated({ id: ref.id, code });
