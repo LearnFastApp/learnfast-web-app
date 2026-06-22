@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { doc, getDoc, collection, query, where, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, query, where, onSnapshot, serverTimestamp } from "firebase/firestore";
 import { useParams, useRouter } from "next/navigation";
 import {
   Radar,
@@ -27,6 +27,9 @@ interface FeedbackResponse {
   energy: number;
   understanding: number;
   connection: number;
+  comment?: string;
+  anonymous?: boolean;
+  commenterName?: string | null;
 }
 
 interface PresenterReflection {
@@ -89,6 +92,8 @@ export default function LiveSessionPage() {
   const [reflection, setReflection] = useState<PresenterReflection | null>(null);
   const [showReflection, setShowReflection] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [notes, setNotes] = useState("");
+  const [notesSaved, setNotesSaved] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -110,7 +115,11 @@ export default function LiveSessionPage() {
       if (snap.exists()) setReflection(snap.data() as PresenterReflection);
     });
 
-    return () => { unsubFeedback(); unsubReflection(); };
+    const unsubNotes = onSnapshot(doc(db, "session_notes", id), (snap) => {
+      if (snap.exists()) setNotes(snap.data().notes ?? "");
+    });
+
+    return () => { unsubFeedback(); unsubReflection(); unsubNotes(); };
   }, [id, user, authLoading, router]);
 
   const audienceAverages = DIMENSIONS.reduce(
@@ -124,6 +133,12 @@ export default function LiveSessionPage() {
     presenter: reflection ? reflection[dim] : null,
     fullMark: 100,
   }));
+
+  async function saveNotes() {
+    await setDoc(doc(db, "session_notes", id), { notes, updatedAt: serverTimestamp() }, { merge: true });
+    setNotesSaved(true);
+    setTimeout(() => setNotesSaved(false), 2000);
+  }
 
   const feedbackUrl = session ? `${window.location.origin}/session/${session.code}` : "";
 
@@ -182,6 +197,7 @@ export default function LiveSessionPage() {
       <div className="grid gap-6 p-6 lg:p-8 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
           <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
+
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-lg font-bold">Live averages</h2>
               <div className="flex items-center gap-4 text-xs">
@@ -275,6 +291,44 @@ export default function LiveSessionPage() {
                 )}
               </>
             )}
+          </div>
+
+          {responses.some((r) => r.comment) && (
+            <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Audience comments</p>
+              <div className="space-y-3">
+                {responses
+                  .filter((r) => r.comment)
+                  .map((r, i) => (
+                    <div key={i} className="rounded-xl bg-[#1a2135] px-4 py-3">
+                      <p className="text-sm text-slate-200 leading-relaxed">&ldquo;{r.comment}&rdquo;</p>
+                      <p className="mt-2 text-xs text-slate-500">
+                        {r.anonymous || !r.commenterName ? "Anonymous" : r.commenterName}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Presenter notes</p>
+            <p className="text-xs text-slate-500 mb-3">Record anything you noticed during the session — energy shifts, questions that landed, moments to revisit.</p>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={4}
+              placeholder="e.g. Lost the room around the 10-min mark, picked up again after the example…"
+              className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-sm text-white placeholder-slate-600 outline-none focus:border-violet-500 resize-none mb-3"
+            />
+            <button
+              onClick={saveNotes}
+              className="flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 transition"
+            >
+              {notesSaved ? (
+                <><span className="text-green-400">✓</span> Saved</>
+              ) : "Save notes"}
+            </button>
           </div>
         </div>
 

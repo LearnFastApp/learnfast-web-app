@@ -86,6 +86,9 @@ export default function FeedbackPage() {
   });
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [comment, setComment] = useState("");
+  const [commenterName, setCommenterName] = useState("");
+  const [anonymous, setAnonymous] = useState(true);
 
   useEffect(() => {
     async function loadSession() {
@@ -112,6 +115,11 @@ export default function FeedbackPage() {
       ...scores,
       submittedAt: serverTimestamp(),
       anonId: randomAnonId(),
+      ...(comment.trim() && {
+        comment: comment.trim(),
+        anonymous,
+        commenterName: anonymous ? null : commenterName.trim() || null,
+      }),
     });
     setSubmitted(true);
     setSubmitting(false);
@@ -196,6 +204,51 @@ export default function FeedbackPage() {
                 </div>
               );
             })}
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-[#111827] p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-white mb-1">
+                Leave a comment <span className="text-slate-500 font-normal">(optional)</span>
+              </label>
+              <p className="text-xs text-slate-500 mb-3">Share anything specific that stood out — positive or constructive.</p>
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                rows={3}
+                placeholder="e.g. The opening story really set the tone well…"
+                className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-sm text-white placeholder-slate-600 outline-none focus:border-violet-500 resize-none"
+              />
+            </div>
+
+            {comment.trim() && (
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setAnonymous((a) => !a)}
+                  className={`flex items-center gap-3 w-full rounded-xl border px-4 py-3 text-sm transition ${
+                    anonymous
+                      ? "border-violet-500/40 bg-violet-500/10 text-violet-300"
+                      : "border-white/10 bg-[#1a2135] text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <span className={`flex h-5 w-5 items-center justify-center rounded-full border-2 shrink-0 transition ${anonymous ? "border-violet-400 bg-violet-400" : "border-slate-600"}`}>
+                    {anonymous && <span className="block h-2 w-2 rounded-full bg-white" />}
+                  </span>
+                  {anonymous ? "Commenting anonymously" : "Show my name with this comment"}
+                </button>
+
+                {!anonymous && (
+                  <input
+                    type="text"
+                    placeholder="Your name (optional)"
+                    value={commenterName}
+                    onChange={(e) => setCommenterName(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-sm text-white placeholder-slate-600 outline-none focus:border-violet-500"
+                  />
+                )}
+              </div>
+            )}
           </div>
 
           <button
