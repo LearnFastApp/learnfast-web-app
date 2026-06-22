@@ -22,9 +22,9 @@ import CreateSessionModal from "@/components/create-session-modal";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/", active: true },
-  { label: "Session Calendar", icon: Calendar, href: "#" },
+  { label: "Session Calendar", icon: Calendar, href: "#", comingSoon: true },
   { label: "Analytics", icon: BarChart3, href: "/analytics" },
-  { label: "Learning Hub", icon: BookOpen, href: "#" },
+  { label: "Learning Hub", icon: BookOpen, href: "#", comingSoon: true },
   { label: "Settings", icon: Settings, href: "#" },
 ];
 
@@ -139,7 +139,12 @@ export default function Home() {
                   }`}
                 >
                   <Icon className="h-5 w-5" />
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {item.comingSoon && (
+                    <span className="rounded-md bg-violet-500/20 px-2 py-0.5 text-xs text-violet-400">
+                      Soon
+                    </span>
+                  )}
                 </a>
               );
             })}
