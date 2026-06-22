@@ -17,9 +17,10 @@ import {
   PolarAngleAxis,
   Legend,
 } from "recharts";
-import { TrendingUp, TrendingDown, Minus, Tag, BarChart3 } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Tag, BarChart3, Lightbulb, AlertTriangle, Sparkles, ArrowUpRight } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
+import { generateInsights, type Insight } from "@/lib/insights";
 
 const DIMENSIONS = ["clarity", "engagement", "energy", "understanding", "connection"] as const;
 type Dimension = (typeof DIMENSIONS)[number];
@@ -50,6 +51,41 @@ function avg(values: number[]): number {
 function trend(data: SessionData[], dim: Dimension): number {
   if (data.length < 2) return 0;
   return Math.round((data[data.length - 1].averages[dim] - data[0].averages[dim]) * 10) / 10;
+}
+
+function InsightCard({ insight }: { insight: Insight }) {
+  const styles = {
+    positive: {
+      border: "border-green-500/30",
+      bg: "bg-green-500/5",
+      icon: <Sparkles className="h-4 w-4 text-green-400 shrink-0 mt-0.5" />,
+      titleColor: "text-green-300",
+    },
+    warning: {
+      border: "border-amber-500/30",
+      bg: "bg-amber-500/5",
+      icon: <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />,
+      titleColor: "text-amber-300",
+    },
+    neutral: {
+      border: "border-white/10",
+      bg: "bg-[#111827]",
+      icon: <ArrowUpRight className="h-4 w-4 text-violet-400 shrink-0 mt-0.5" />,
+      titleColor: "text-violet-300",
+    },
+  }[insight.severity];
+
+  return (
+    <div className={`rounded-2xl border ${styles.border} ${styles.bg} p-5`}>
+      <div className="flex items-start gap-3">
+        {styles.icon}
+        <div>
+          <p className={`font-semibold text-sm mb-1 ${styles.titleColor}`}>{insight.title}</p>
+          <p className="text-xs text-slate-400 leading-relaxed">{insight.description}</p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function AnalyticsPage() {
@@ -148,6 +184,7 @@ export default function AnalyticsPage() {
     : null;
 
   const totalResponses = filtered.reduce((acc, s) => acc + s.responseCount, 0);
+  const insights = generateInsights(filtered);
 
   if (authLoading || loading) {
     return (
@@ -228,6 +265,21 @@ export default function AnalyticsPage() {
                 </div>
               )}
             </section>
+
+            {insights.length > 0 && (
+              <section>
+                <div className="flex items-center gap-2 mb-4">
+                  <Lightbulb className="h-4 w-4 text-violet-400" />
+                  <h2 className="text-lg font-bold">Insights</h2>
+                  <span className="text-xs text-slate-500 ml-1">auto-detected from your data</span>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {insights.map((insight, i) => (
+                    <InsightCard key={i} insight={insight} />
+                  ))}
+                </div>
+              </section>
+            )}
 
             <section className="rounded-2xl border border-white/10 bg-[#111827] p-6">
               <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
