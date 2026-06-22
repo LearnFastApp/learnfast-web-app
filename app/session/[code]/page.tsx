@@ -9,43 +9,43 @@ const DIMENSIONS = ["clarity", "engagement", "energy", "understanding", "connect
 type Dimension = (typeof DIMENSIONS)[number];
 
 const LABELS: Record<Dimension, string> = {
-  clarity: "Clarity",
-  engagement: "Engagement",
-  energy: "Energy",
-  understanding: "Understanding",
-  connection: "Connection",
+  clarity: "Presenter's Clarity",
+  engagement: "Presenter's Audience Engagement",
+  energy: "Presenter's Energy",
+  understanding: "Presenter's Understanding",
+  connection: "Presenter's Audience Connection",
 };
 
 const NARRATIVES: Record<Dimension, { max: number; text: string }[]> = {
   clarity: [
-    { max: 40, text: "I struggled to get my points across clearly and often felt my explanations were potentially confusing or unclear." },
-    { max: 60, text: "I was able to express some of my points clearly, but there were moments where I think I could have been more concise or precise." },
-    { max: 80, text: "Most of my points were well-articulated and clear, with only a few areas needing more polish." },
-    { max: 100, text: "My ideas were communicated with clarity and precision, leaving little room for misunderstanding." },
+    { max: 40, text: "The message was pretty unclear, difficult to follow, or confusing." },
+    { max: 60, text: "Some points were clear, but there were inconsistencies or gaps in understanding." },
+    { max: 80, text: "The message was clear and well-organised, with only minor areas for improvement." },
+    { max: 100, text: "Information was communicated exceptionally well, with complete clarity and strong engagement." },
   ],
   understanding: [
-    { max: 40, text: "I feel I did not fully convey my message, and the audience likely struggled to follow my train of thought." },
-    { max: 60, text: "I made an effort to explain my points, but there were gaps in ensuring the audience truly grasped my message." },
-    { max: 80, text: "I made my points comprehensible, and I believe the audience understood the majority of what I was saying." },
-    { max: 100, text: "I think the group fully understood my message and ideas throughout the presentation." },
+    { max: 40, text: "Limited understanding, with confusing explanations." },
+    { max: 60, text: "Ok basic understanding, but some points I'm still not sure about." },
+    { max: 80, text: "Solid understanding, with clear and accurate explanations throughout." },
+    { max: 100, text: "Deep and comprehensive understanding, with thorough and insightful explanations." },
   ],
   energy: [
-    { max: 40, text: "I think I came across as low-energy, and my presentation lacked enthusiasm or drive." },
-    { max: 60, text: "My energy levels were moderate, but there were moments when I could have been more engaging." },
-    { max: 80, text: "I think I delivered with good energy, keeping the tone lively and engaging for most of the presentation." },
-    { max: 100, text: "I felt my energy was vibrant and consistent, fully capturing and maintaining attention throughout." },
+    { max: 40, text: "To be honest, lacked energy, appeared disengaged and failed to capture attention." },
+    { max: 60, text: "Ok but I needed more to seek the ideas to me." },
+    { max: 80, text: "Engaging and energetic, maintaining interest most of the time." },
+    { max: 100, text: "Loved it, had me bought in and energised!" },
   ],
   connection: [
-    { max: 40, text: "I think I struggled to establish any meaningful connection with the group, and the interaction felt distant." },
-    { max: 60, text: "I managed some connection with the group, but I could have done more to build rapport." },
-    { max: 80, text: "I think I connected well with the group and built a reasonable level of rapport and interaction." },
-    { max: 100, text: "I felt that I created a strong connection with the group and fostered a sense of trust and engagement." },
+    { max: 40, text: "Just didn't feel connected to what was being said and didn't feel any effort was made to change that." },
+    { max: 60, text: "Some attempts to connect, but limited or inconsistent engagement." },
+    { max: 80, text: "Established a solid connection, engaging the audience effectively most of the time." },
+    { max: 100, text: "Exceptional connection, I was right there with the presenter." },
   ],
   engagement: [
-    { max: 40, text: "The group seemed disengaged, and I did little to actively involve or captivate them." },
-    { max: 60, text: "The group was somewhat engaged, though there were opportunities to involve them more actively." },
-    { max: 80, text: "The group appeared engaged, and I think I succeeded in keeping their attention for most of the presentation." },
-    { max: 100, text: "The group seemed highly engaged, actively participating and attentive throughout the presentation." },
+    { max: 40, text: "Honestly I felt pretty disengaged, there was little interaction or stimulation." },
+    { max: 60, text: "Some engagement, but it felt sporadic or lacked depth." },
+    { max: 80, text: "Consistently engaged the audience, with effective interaction and interest." },
+    { max: 100, text: "Highly engaging, really felt part of this! Great interaction." },
   ],
 };
 
