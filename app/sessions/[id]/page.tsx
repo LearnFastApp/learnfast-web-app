@@ -12,7 +12,7 @@ import {
   Legend,
 } from "recharts";
 import { QRCodeCanvas } from "qrcode.react";
-import { ArrowLeft, Copy, Check, Users, PenLine, PlayCircle, Headphones, FileText, TrendingUp } from "lucide-react";
+import { ArrowLeft, Copy, Check, Users, PenLine, PlayCircle, TrendingUp } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import PresenterReflectionModal from "@/components/presenter-reflection-modal";
@@ -94,6 +94,8 @@ export default function LiveSessionPage() {
   const [copied, setCopied] = useState(false);
   const [notes, setNotes] = useState("");
   const [notesSaved, setNotesSaved] = useState(false);
+  const [resources, setResources] = useState<{ videoId: string; title: string; channelTitle: string; thumbnail: string }[]>([]);
+  const [resourcesLoading, setResourcesLoading] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -126,6 +128,17 @@ export default function LiveSessionPage() {
     (acc, dim) => ({ ...acc, [dim]: average(responses.map((r) => r[dim])) }),
     {} as Record<Dimension, number>
   );
+
+  const lowestDimension = getLowestDimension(audienceAverages);
+
+  useEffect(() => {
+    if (!lowestDimension) return;
+    setResourcesLoading(true);
+    fetch(`/api/resources?dimension=${lowestDimension}`)
+      .then((r) => r.json())
+      .then((data) => { setResources(data.videos ?? []); setResourcesLoading(false); })
+      .catch(() => setResourcesLoading(false));
+  }, [lowestDimension]);
 
   const radarData = DIMENSIONS.map((dim) => ({
     dimension: dim.charAt(0).toUpperCase() + dim.slice(1),
@@ -333,10 +346,8 @@ export default function LiveSessionPage() {
         </div>
 
         <div className="space-y-4">
-          {(() => {
-            const lowest = getLowestDimension(audienceAverages);
-            if (!lowest || responses.length === 0) return null;
-            const rec = RECOMMENDATIONS[lowest];
+          {lowestDimension && responses.length > 0 && (() => {
+            const rec = RECOMMENDATIONS[lowestDimension];
             return (
               <div className="rounded-2xl border border-violet-500/30 bg-gradient-to-b from-violet-500/10 to-[#111827] p-6">
                 <div className="mb-3 flex items-center gap-2">
@@ -348,37 +359,41 @@ export default function LiveSessionPage() {
                 <p className="mb-1 font-bold text-white">{rec.title}</p>
                 <p className="mb-4 text-xs text-slate-400 leading-relaxed">{rec.description}</p>
 
-                <div className="space-y-2">
-                  <a
-                    href="#"
-                    onClick={(e) => e.preventDefault()}
-                    className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-sm text-slate-300 hover:border-violet-500/40 hover:text-white transition"
-                  >
-                    <PlayCircle className="h-4 w-4 text-violet-400 shrink-0" />
-                    <span>How to improve {DIMENSION_LABELS[lowest]} — Video</span>
-                  </a>
+                {resourcesLoading && (
+                  <p className="text-xs text-slate-500 animate-pulse">Finding resources…</p>
+                )}
 
-                  <a
-                    href="#"
-                    onClick={(e) => e.preventDefault()}
-                    className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-sm text-slate-300 hover:border-violet-500/40 hover:text-white transition"
-                  >
-                    <Headphones className="h-4 w-4 text-cyan-400 shrink-0" />
-                    <span>How to improve {DIMENSION_LABELS[lowest]} — Podcast</span>
-                  </a>
-
-                  <a
-                    href="#"
-                    onClick={(e) => e.preventDefault()}
-                    className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-sm text-slate-300 hover:border-violet-500/40 hover:text-white transition"
-                  >
-                    <FileText className="h-4 w-4 text-blue-400 shrink-0" />
-                    <span>How to improve {DIMENSION_LABELS[lowest]} — PDF Guide</span>
-                  </a>
-                </div>
+                {!resourcesLoading && resources.length > 0 && (
+                  <div className="space-y-2">
+                    {resources.map((video) => (
+                      <a
+                        key={video.videoId}
+                        href={`https://www.youtube.com/watch?v=${video.videoId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-start gap-3 rounded-xl border border-white/10 bg-[#1a2135] p-3 hover:border-violet-500/40 transition"
+                      >
+                        {video.thumbnail && (
+                          <img
+                            src={video.thumbnail}
+                            alt=""
+                            className="w-20 h-12 rounded-lg object-cover shrink-0"
+                          />
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-xs text-slate-200 leading-snug line-clamp-2 mb-1">{video.title}</p>
+                          <p className="text-xs text-slate-500 flex items-center gap-1">
+                            <PlayCircle className="h-3 w-3 text-violet-400" />
+                            {video.channelTitle}
+                          </p>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                )}
 
                 <p className="mt-3 text-xs text-slate-500 text-center">
-                  Based on lowest audience score · {DIMENSION_LABELS[lowest]}: {audienceAverages[lowest]}/100
+                  Based on lowest audience score · {DIMENSION_LABELS[lowestDimension]}: {audienceAverages[lowestDimension]}/100
                 </p>
               </div>
             );
