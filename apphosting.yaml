@@ -1,0 +1,45 @@
+runConfig:
+  cpu: 1
+  memoryMiB: 512
+
+env:
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyAofZYyhfEvNq_B0WLWBXD_UTU0eAKbn-A
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: learnfast-app-cc98c.firebaseapp.com
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: learnfast-app-cc98c
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: learnfast-app-cc98c.firebasestorage.app
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "475985529712"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: 1:475985529712:web:029c46f292573346b4ddb5
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    value: G-9HLETVY5B3
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_APP_URL
+    value: https://learnfast-web-app--learnfast-app-cc98c.us-east4.hosted.app
+    availability:
+      - BUILD
+      - RUNTIME
