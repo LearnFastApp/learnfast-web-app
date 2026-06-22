@@ -56,10 +56,10 @@ env:
     availability:
       - RUNTIME
   - variable: PODCAST_INDEX_KEY
-    value: REPLACE_WITH_KEY
+    value: MSNBEJJJ7FYETUKEHFJE
     availability:
       - RUNTIME
   - variable: PODCAST_INDEX_SECRET
-    value: REPLACE_WITH_SECRET
+    value: "$uus8pgQkQy4Xk8UfAkFhWjhQuX3mbX5D$CjL3KE"
     availability:
       - RUNTIME
