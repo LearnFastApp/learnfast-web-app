@@ -116,8 +116,8 @@ export default function Home() {
       <div className="flex min-h-screen">
         <aside className="hidden w-72 border-r border-white/10 bg-[#0f1424] p-6 lg:flex lg:flex-col">
           <div className="mb-12 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-cyan-400/40 bg-cyan-400/10 text-cyan-300 font-bold">
-              LF
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl overflow-hidden bg-white">
+              <img src="/logo.png" alt="LearnFast" className="h-11 w-11 object-contain" />
             </div>
             <div>
               <p className="text-xl font-bold">LearnFast</p>

@@ -34,8 +34,8 @@ export default function LoginPage() {
     <main className="min-h-screen bg-[#05070d] flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="mb-10 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-cyan-400/40 bg-cyan-400/10 text-cyan-300 font-bold">
-            LF
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl overflow-hidden bg-white">
+            <img src="/logo.png" alt="LearnFast" className="h-11 w-11 object-contain" />
           </div>
           <div>
             <p className="text-xl font-bold text-white">LearnFast</p>

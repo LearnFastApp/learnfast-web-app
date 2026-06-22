@@ -154,8 +154,8 @@ export default function FeedbackPage() {
     <main className="min-h-screen bg-[#05070d] flex items-center justify-center p-6">
       <div className="w-full max-w-lg">
         <div className="mb-8 text-center">
-          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-cyan-400/40 bg-cyan-400/10 text-cyan-300 font-bold mx-auto">
-            LF
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl overflow-hidden bg-white mx-auto">
+            <img src="/logo.png" alt="LearnFast" className="h-12 w-12 object-contain" />
           </div>
           <h1 className="text-xl font-bold text-white">{sessionTitle || "Live Session"}</h1>
           <p className="text-sm text-slate-400">Rate this session — takes 30 seconds.</p>
