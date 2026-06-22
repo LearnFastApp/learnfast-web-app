@@ -116,8 +116,8 @@ export default function Home() {
       <div className="flex min-h-screen">
         <aside className="hidden w-72 border-r border-white/10 bg-[#0f1424] p-6 lg:flex lg:flex-col">
           <div className="mb-12 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl overflow-hidden bg-white">
-              <img src="/logo.png" alt="LearnFast" className="h-11 w-11 object-contain" />
+            <div className="flex items-center justify-center rounded-xl overflow-hidden bg-white px-2 py-1.5">
+              <img src="/logo.png" alt="LearnFast" className="h-7 w-auto" />
             </div>
             <div>
               <p className="text-xl font-bold">LearnFast</p>

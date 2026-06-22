@@ -34,8 +34,8 @@ export default function LoginPage() {
     <main className="min-h-screen bg-[#05070d] flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="mb-10 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl overflow-hidden bg-white">
-            <img src="/logo.png" alt="LearnFast" className="h-11 w-11 object-contain" />
+          <div className="flex items-center justify-center rounded-xl overflow-hidden bg-white px-2 py-1.5">
+            <img src="/logo.png" alt="LearnFast" className="h-7 w-auto" />
           </div>
           <div>
             <p className="text-xl font-bold text-white">LearnFast</p>
