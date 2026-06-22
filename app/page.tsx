@@ -1,3 +1,9 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { collection, query, where, orderBy, onSnapshot, doc, getDocs } from "firebase/firestore";
+import { signOut } from "firebase/auth";
+import { useRouter } from "next/navigation";
 import {
   BarChart3,
   BookOpen,
@@ -8,6 +14,9 @@ import {
   Settings,
   Users,
 } from "lucide-react";
+import { auth, db } from "@/lib/firebase";
+import { useAuth } from "@/lib/auth-context";
+import CreateSessionModal from "@/components/create-session-modal";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, active: true },
@@ -17,15 +26,6 @@ const navItems = [
   { label: "Settings", icon: Settings },
 ];
 
-const metrics = [
-  { label: "Clarity", score: 86, change: "+8%" },
-  { label: "Understanding", score: 85, change: "+5%" },
-  { label: "Energy", score: 89, change: "+3%" },
-  { label: "Connection", score: 84, change: "-2%" },
-  { label: "Engagement", score: 86, change: "+6%" },
-  { label: "Audience Size", score: 14, change: "+12%" },
-];
-
 const resources = [
   "Executive Presence Mastery",
   "Strategic Communication for Modern Leaders",
@@ -33,13 +33,70 @@ const resources = [
   "The Art of Difficult Conversations",
 ];
 
+interface Session {
+  id: string;
+  title: string;
+  code: string;
+  createdAt: { toDate: () => Date } | null;
+  responseCount?: number;
+}
+
 export default function Home() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const [showModal, setShowModal] = useState(false);
+  const [sessions, setSessions] = useState<Session[]>([]);
+
+  useEffect(() => {
+    if (!loading && !user) router.replace("/auth/login");
+  }, [user, loading, router]);
+
+  useEffect(() => {
+    if (!user) return;
+    const q = query(
+      collection(db, "sessions"),
+      where("presenterId", "==", user.uid),
+      orderBy("createdAt", "desc")
+    );
+    return onSnapshot(q, (snap) => {
+      setSessions(
+        snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Session, "id">) }))
+      );
+    });
+  }, [user]);
+
+  function handleSignOut() {
+    signOut(auth).then(() => router.replace("/auth/login"));
+  }
+
+  function handleSessionCreated(sessionId: string) {
+    setShowModal(false);
+    router.push(`/sessions/${sessionId}`);
+  }
+
+  if (loading || !user) {
+    return (
+      <main className="min-h-screen bg-[#05070d] flex items-center justify-center">
+        <p className="text-slate-400 animate-pulse">Loading…</p>
+      </main>
+    );
+  }
+
+  const displayName = user.displayName ?? user.email?.split("@")[0] ?? "Presenter";
+
   return (
     <main className="min-h-screen bg-[#05070d] text-white">
+      {showModal && (
+        <CreateSessionModal
+          onClose={() => setShowModal(false)}
+          onCreated={handleSessionCreated}
+        />
+      )}
+
       <div className="flex min-h-screen">
         <aside className="hidden w-72 border-r border-white/10 bg-[#0f1424] p-6 lg:flex lg:flex-col">
           <div className="mb-12 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-cyan-400/40 bg-cyan-400/10 text-cyan-300">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-cyan-400/40 bg-cyan-400/10 text-cyan-300 font-bold">
               LF
             </div>
             <div>
@@ -69,16 +126,19 @@ export default function Home() {
 
           <div className="mt-auto border-t border-white/10 pt-6">
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-violet-500/30">
-                O
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-violet-500/30 font-bold">
+                {displayName.charAt(0).toUpperCase()}
               </div>
               <div>
-                <p className="font-semibold">Ollie Richardson</p>
+                <p className="font-semibold">{displayName}</p>
                 <p className="text-sm text-slate-400">Presenter</p>
               </div>
             </div>
 
-            <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/40 px-4 py-3 text-red-300 hover:bg-red-500/10">
+            <button
+              onClick={handleSignOut}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/40 px-4 py-3 text-red-300 hover:bg-red-500/10"
+            >
               <LogOut className="h-4 w-4" />
               Sign Out
             </button>
@@ -94,98 +154,71 @@ export default function Home() {
               </p>
             </div>
 
-            <button className="flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-400">
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-400"
+            >
               <Plus className="h-5 w-5" />
               Create Session
             </button>
           </header>
 
           <div className="space-y-8 p-6 lg:p-8">
-            <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {metrics.map((metric) => (
-                <div
-                  key={metric.label}
-                  className="rounded-2xl border border-white/10 bg-[#111827] p-6 shadow-xl shadow-black/20"
-                >
-                  <div className="mb-8 flex items-center justify-between">
-                    <p className="text-lg text-slate-300">{metric.label}</p>
-                    <span className="rounded-lg bg-violet-500/20 px-3 py-1 text-sm text-violet-200">
-                      {metric.change}
-                    </span>
-                  </div>
-
-                  <div className="flex items-end justify-between">
-                    <p className="text-4xl font-bold">{metric.score}</p>
-                    <div className="flex h-20 w-20 items-center justify-center rounded-full border-8 border-violet-500/80 text-sm text-slate-300">
-                      /100
-                    </div>
-                  </div>
+            {/* Recent sessions */}
+            <section>
+              <h2 className="mb-4 text-lg font-bold">Your sessions</h2>
+              {sessions.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-slate-500">
+                  No sessions yet — hit <strong className="text-slate-300">Create Session</strong> to start.
                 </div>
-              ))}
-            </section>
-
-            <section className="rounded-2xl border border-white/10 bg-[#111827] p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold">Performance Trend</h2>
-                  <p className="text-sm text-slate-400">
-                    Your feedback profile across recent sessions.
-                  </p>
-                </div>
-                <span className="rounded-xl border border-white/10 bg-[#1a2135] px-4 py-2 text-sm text-slate-300">
-                  Last 7 Days
-                </span>
-              </div>
-
-              <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-white/10 bg-[#0b1020] text-slate-500">
-                Chart area — coming in next stage
-              </div>
-            </section>
-
-            <section className="grid gap-6 xl:grid-cols-[1fr_2fr]">
-              <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
-                <h2 className="mb-4 text-xl font-bold">Recent Feedback</h2>
-                <div className="space-y-5">
-                  {[
-                    "Good clarity today. The message was easy to follow.",
-                    "Strong energy throughout the session.",
-                    "Could connect more directly with the audience.",
-                  ].map((comment) => (
-                    <div key={comment} className="border-b border-white/10 pb-4">
-                      <p className="text-slate-300">{comment}</p>
-                      <div className="mt-3 h-2 w-28 rounded-full bg-violet-500" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
-                <div className="mb-5 flex items-center justify-between">
-                  <h2 className="text-xl font-bold">Featured Learning Resources</h2>
-                  <p className="text-sm text-violet-300">View all resources →</p>
-                </div>
-
-                <div className="grid gap-5 md:grid-cols-2">
-                  {resources.map((resource) => (
-                    <div
-                      key={resource}
-                      className="rounded-xl border border-white/10 bg-[#1a2135] p-5"
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {sessions.map((s) => (
+                    <a
+                      key={s.id}
+                      href={`/sessions/${s.id}`}
+                      className="rounded-2xl border border-white/10 bg-[#111827] p-5 hover:border-violet-500/40 transition"
                     >
-                      <div className="mb-4 flex items-center gap-3">
-                        <div className="rounded-lg bg-blue-500/20 p-3 text-blue-300">
-                          <BookOpen className="h-5 w-5" />
-                        </div>
-                        <span className="rounded-full bg-blue-500/20 px-3 py-1 text-xs text-blue-300">
-                          Resource
-                        </span>
-                      </div>
-                      <h3 className="mb-2 font-bold">{resource}</h3>
-                      <p className="text-sm text-slate-400">
-                        Suggested based on your current feedback profile.
-                      </p>
-                    </div>
+                      <p className="font-semibold mb-1">{s.title}</p>
+                      <p className="text-xs text-slate-400 font-mono">{s.code}</p>
+                      {s.createdAt && (
+                        <p className="mt-3 text-xs text-slate-500">
+                          {s.createdAt.toDate().toLocaleDateString()}
+                        </p>
+                      )}
+                    </a>
                   ))}
                 </div>
+              )}
+            </section>
+
+            {/* Featured resources */}
+            <section className="rounded-2xl border border-white/10 bg-[#111827] p-6">
+              <div className="mb-5 flex items-center justify-between">
+                <h2 className="text-xl font-bold">Featured Learning Resources</h2>
+                <p className="text-sm text-violet-300">View all resources →</p>
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-2">
+                {resources.map((resource) => (
+                  <div
+                    key={resource}
+                    className="rounded-xl border border-white/10 bg-[#1a2135] p-5"
+                  >
+                    <div className="mb-4 flex items-center gap-3">
+                      <div className="rounded-lg bg-blue-500/20 p-3 text-blue-300">
+                        <BookOpen className="h-5 w-5" />
+                      </div>
+                      <span className="rounded-full bg-blue-500/20 px-3 py-1 text-xs text-blue-300">
+                        Resource
+                      </span>
+                    </div>
+                    <h3 className="mb-2 font-bold">{resource}</h3>
+                    <p className="text-sm text-slate-400">
+                      Suggested based on your current feedback profile.
+                    </p>
+                  </div>
+                ))}
               </div>
             </section>
 
@@ -193,9 +226,9 @@ export default function Home() {
               <div className="flex items-center gap-3">
                 <Users className="h-6 w-6 text-cyan-300" />
                 <div>
-                  <h2 className="text-xl font-bold">Next milestone</h2>
+                  <h2 className="text-xl font-bold">Audience join link</h2>
                   <p className="text-slate-300">
-                    Build the create-session flow, QR code link and anonymous audience feedback form.
+                    Share <span className="font-mono text-violet-300">{window.location.origin}/join</span> or scan the QR from any active session.
                   </p>
                 </div>
               </div>

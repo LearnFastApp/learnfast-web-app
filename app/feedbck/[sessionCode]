@@ -1,7 +1,0 @@
-export default function FeedbackPage() {
-  return (
-    <div className="min-h-screen bg-black text-white p-10">
-      Audience Feedback Page
-    </div>
-  )
-}
