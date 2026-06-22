@@ -51,3 +51,7 @@ env:
     value: LearnFast12!
     availability:
       - RUNTIME
+  - variable: YOUTUBE_API_KEY
+    value: AIzaSyAd8ocb4ejxuycD4SSz_JeGM0tLAiw3MFw
+    availability:
+      - RUNTIME
