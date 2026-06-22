@@ -57,22 +57,22 @@ function trend(data: SessionData[], dim: Dimension): number {
 function InsightCard({ insight }: { insight: Insight }) {
   const styles = {
     positive: {
-      border: "border-green-500/30",
-      bg: "bg-green-500/5",
-      icon: <Sparkles className="h-4 w-4 text-green-400 shrink-0 mt-0.5" />,
-      titleColor: "text-green-300",
+      border: "border-green-200",
+      bg: "bg-green-50",
+      icon: <Sparkles className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />,
+      titleColor: "text-green-700",
     },
     warning: {
-      border: "border-amber-500/30",
-      bg: "bg-amber-500/5",
-      icon: <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />,
-      titleColor: "text-amber-300",
+      border: "border-amber-200",
+      bg: "bg-amber-50",
+      icon: <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />,
+      titleColor: "text-amber-700",
     },
     neutral: {
-      border: "border-white/10",
-      bg: "bg-[#111827]",
-      icon: <ArrowUpRight className="h-4 w-4 text-violet-400 shrink-0 mt-0.5" />,
-      titleColor: "text-violet-300",
+      border: "border-slate-200",
+      bg: "bg-white",
+      icon: <ArrowUpRight className="h-4 w-4 text-violet-600 shrink-0 mt-0.5" />,
+      titleColor: "text-violet-600",
     },
   }[insight.severity];
 
@@ -190,29 +190,29 @@ export default function AnalyticsPage() {
 
   if (authLoading || loading) {
     return (
-      <main className="min-h-screen bg-[#05070d] flex items-center justify-center">
+      <main className="min-h-screen bg-slate-50 flex items-center justify-center">
         <p className="text-slate-400 animate-pulse">Loading analytics…</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#05070d] text-white pb-20 lg:pb-0">
+    <main className="min-h-screen bg-slate-50 text-white pb-20 lg:pb-0">
       <MobileNav />
-      <header className="border-b border-white/10 bg-[#101523] px-6 py-6 lg:px-8">
+      <header className="border-b border-slate-200 bg-white px-6 py-6 lg:px-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Analytics</h1>
             <p className="text-sm text-slate-400">Performance trends across your sessions.</p>
           </div>
-          <a href="/" className="text-sm text-slate-400 hover:text-white">← Dashboard</a>
+          <a href="/" className="text-sm text-slate-400 hover:text-slate-900">← Dashboard</a>
         </div>
 
         {allTags.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedTag("all")}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${selectedTag === "all" ? "bg-violet-500 text-white" : "border border-white/10 text-slate-400 hover:text-white"}`}
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${selectedTag === "all" ? "bg-violet-500 text-white" : "border border-slate-200 text-slate-400 hover:text-slate-900"}`}
             >
               All sessions
             </button>
@@ -220,7 +220,7 @@ export default function AnalyticsPage() {
               <button
                 key={tag}
                 onClick={() => setSelectedTag(tag)}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${selectedTag === tag ? "bg-violet-500 text-white" : "border border-white/10 text-slate-400 hover:text-white"}`}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${selectedTag === tag ? "bg-violet-500 text-white" : "border border-slate-200 text-slate-400 hover:text-slate-900"}`}
               >
                 <Tag className="h-3 w-3" />
                 {tag}
@@ -240,30 +240,30 @@ export default function AnalyticsPage() {
         ) : (
           <>
             <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-2xl border border-white/10 bg-[#111827] p-5">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5">
                 <p className="text-sm text-slate-400 mb-1">Sessions analysed</p>
                 <p className="text-3xl font-bold">{filtered.length}</p>
                 <p className="text-xs text-slate-500 mt-1">{totalResponses} total responses</p>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-[#111827] p-5">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5">
                 <p className="text-sm text-slate-400 mb-1">Overall average</p>
                 <p className="text-3xl font-bold">{avg(Object.values(overallAverages))}</p>
                 <p className="text-xs text-slate-500 mt-1">across all dimensions /100</p>
               </div>
 
               {highestDim && (
-                <div className="rounded-2xl border border-green-500/20 bg-[#111827] p-5">
+                <div className="rounded-2xl border border-green-200 bg-white p-5">
                   <p className="text-sm text-slate-400 mb-1">Strongest area</p>
-                  <p className="text-3xl font-bold text-green-400 capitalize">{highestDim}</p>
+                  <p className="text-3xl font-bold text-green-600 capitalize">{highestDim}</p>
                   <p className="text-xs text-slate-500 mt-1">avg {overallAverages[highestDim]}/100</p>
                 </div>
               )}
 
               {lowestDim && (
-                <div className="rounded-2xl border border-amber-500/20 bg-[#111827] p-5">
+                <div className="rounded-2xl border border-amber-200 bg-white p-5">
                   <p className="text-sm text-slate-400 mb-1">Focus area</p>
-                  <p className="text-3xl font-bold text-amber-400 capitalize">{lowestDim}</p>
+                  <p className="text-3xl font-bold text-amber-600 capitalize">{lowestDim}</p>
                   <p className="text-xs text-slate-500 mt-1">avg {overallAverages[lowestDim]}/100</p>
                 </div>
               )}
@@ -275,7 +275,7 @@ export default function AnalyticsPage() {
                   onClick={() => setShowInsights((v) => !v)}
                   className="flex items-center gap-2 mb-4 group"
                 >
-                  <Lightbulb className="h-4 w-4 text-violet-400" />
+                  <Lightbulb className="h-4 w-4 text-violet-600" />
                   <h2 className="text-lg font-bold">Insights</h2>
                   <span className="text-xs text-slate-500 ml-1">auto-detected from your data</span>
                   <span className="ml-2 text-xs text-slate-600 group-hover:text-slate-400 transition">
@@ -292,7 +292,7 @@ export default function AnalyticsPage() {
               </section>
             )}
 
-            <section className="rounded-2xl border border-white/10 bg-[#111827] p-6">
+            <section className="rounded-2xl border border-slate-200 bg-white p-6">
               <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
                 <div>
                   <h2 className="text-lg font-bold mb-1">Performance over time</h2>
@@ -328,8 +328,8 @@ export default function AnalyticsPage() {
                   <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 12 }} />
                   <YAxis domain={[0, 100]} tick={{ fill: "#64748b", fontSize: 12 }} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: "#1a2135", border: "1px solid #ffffff15", borderRadius: "12px" }}
-                    labelStyle={{ color: "#ffffff" }}
+                    contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px" }}
+                    labelStyle={{ color: "#0f172a" }}
                   />
                   {DIMENSIONS.filter((dim) => activeDims.has(dim)).map((dim) => (
                     <Line
@@ -347,7 +347,7 @@ export default function AnalyticsPage() {
             </section>
 
             <section className="grid gap-6 lg:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6">
                 <h2 className="text-lg font-bold mb-1">Overall profile</h2>
                 <p className="text-sm text-slate-400 mb-4">Average across all filtered sessions.</p>
                 <ResponsiveContainer width="100%" height={260}>
@@ -359,7 +359,7 @@ export default function AnalyticsPage() {
                 </ResponsiveContainer>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6">
                 <h2 className="text-lg font-bold mb-4">Dimension trends</h2>
                 <div className="space-y-4">
                   {DIMENSIONS.filter((dim) => activeDims.has(dim)).map((dim) => {
@@ -375,7 +375,7 @@ export default function AnalyticsPage() {
                           />
                         </div>
                         <div className="w-10 text-right text-sm font-bold">{score}</div>
-                        <div className={`flex items-center gap-0.5 text-xs w-14 ${t > 0 ? "text-green-400" : t < 0 ? "text-red-400" : "text-slate-500"}`}>
+                        <div className={`flex items-center gap-0.5 text-xs w-14 ${t > 0 ? "text-green-600" : t < 0 ? "text-red-500" : "text-slate-500"}`}>
                           {t > 0 ? <TrendingUp className="h-3 w-3" /> : t < 0 ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
                           {t !== 0 ? `${t > 0 ? "+" : ""}${t}` : "flat"}
                         </div>

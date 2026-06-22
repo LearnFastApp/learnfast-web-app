@@ -50,10 +50,10 @@ const NARRATIVES: Record<Dimension, { max: number; text: string }[]> = {
 };
 
 const BAND_LABELS: Record<string, { label: string; color: string }> = {
-  poor:      { label: "Poor",      color: "text-red-400" },
-  okay:      { label: "Okay",      color: "text-amber-400" },
+  poor:      { label: "Poor",      color: "text-red-500" },
+  okay:      { label: "Okay",      color: "text-amber-600" },
   good:      { label: "Good",      color: "text-blue-400" },
-  excellent: { label: "Excellent", color: "text-green-400" },
+  excellent: { label: "Excellent", color: "text-green-600" },
 };
 
 function getBand(score: number) {
@@ -100,13 +100,13 @@ export default function PresenterReflectionModal({ sessionId, presenterId, onClo
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm overflow-y-auto">
-      <div className="w-full max-w-lg rounded-2xl border border-cyan-400/20 bg-[#111827] p-8 shadow-2xl my-8">
+      <div className="w-full max-w-lg rounded-2xl border border-cyan-400/20 bg-white p-8 shadow-2xl my-8">
         <div className="mb-2 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-white">Your self-reflection</h2>
             <p className="text-sm text-slate-400">How do you feel the session went?</p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-900">
             <X className="h-5 w-5" />
           </button>
         </div>

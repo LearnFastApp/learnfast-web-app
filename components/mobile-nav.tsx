@@ -17,12 +17,12 @@ export default function MobileNav({ onCreateSession }: Props) {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#0f1424] lg:hidden safe-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white lg:hidden safe-bottom">
       <div className="flex items-center">
         <a
           href="/"
           className={`flex flex-1 flex-col items-center gap-1 py-3 text-xs transition ${
-            pathname === "/" ? "text-violet-400" : "text-slate-500 hover:text-white"
+            pathname === "/" ? "text-violet-400" : "text-slate-400 hover:text-slate-900"
           }`}
         >
           <LayoutDashboard className="h-5 w-5" />
@@ -32,7 +32,7 @@ export default function MobileNav({ onCreateSession }: Props) {
         <a
           href="/analytics"
           className={`flex flex-1 flex-col items-center gap-1 py-3 text-xs transition ${
-            pathname === "/analytics" ? "text-violet-400" : "text-slate-500 hover:text-white"
+            pathname === "/analytics" ? "text-violet-400" : "text-slate-400 hover:text-slate-900"
           }`}
         >
           <BarChart3 className="h-5 w-5" />
@@ -53,7 +53,7 @@ export default function MobileNav({ onCreateSession }: Props) {
         <a
           href="/settings"
           className={`flex flex-1 flex-col items-center gap-1 py-3 text-xs transition ${
-            pathname === "/settings" ? "text-violet-400" : "text-slate-500 hover:text-white"
+            pathname === "/settings" ? "text-violet-400" : "text-slate-400 hover:text-slate-900"
           }`}
         >
           <Settings className="h-5 w-5" />

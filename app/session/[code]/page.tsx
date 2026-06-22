@@ -50,10 +50,10 @@ const NARRATIVES: Record<Dimension, { max: number; text: string }[]> = {
 };
 
 const BAND_LABELS: Record<string, { label: string; color: string }> = {
-  poor:      { label: "Poor",      color: "text-red-400" },
-  okay:      { label: "Okay",      color: "text-amber-400" },
+  poor:      { label: "Poor",      color: "text-red-500" },
+  okay:      { label: "Okay",      color: "text-amber-600" },
   good:      { label: "Good",      color: "text-blue-400" },
-  excellent: { label: "Excellent", color: "text-green-400" },
+  excellent: { label: "Excellent", color: "text-green-600" },
 };
 
 function getBand(score: number) {
@@ -119,12 +119,12 @@ export default function FeedbackPage() {
 
   if (notFound) {
     return (
-      <main className="min-h-screen bg-[#05070d] flex items-center justify-center p-6">
+      <main className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
         <div className="text-center">
           <p className="text-4xl mb-4">🔍</p>
           <h1 className="text-xl font-bold text-white mb-2">Session not found</h1>
           <p className="text-slate-400">Check the code and try again.</p>
-          <a href="/join" className="mt-6 inline-block text-violet-400 underline">Enter a different code</a>
+          <a href="/join" className="mt-6 inline-block text-violet-600 underline">Enter a different code</a>
         </div>
       </main>
     );
@@ -132,7 +132,7 @@ export default function FeedbackPage() {
 
   if (!sessionId) {
     return (
-      <main className="min-h-screen bg-[#05070d] flex items-center justify-center">
+      <main className="min-h-screen bg-slate-50 flex items-center justify-center">
         <p className="text-slate-400 animate-pulse">Loading session…</p>
       </main>
     );
@@ -140,7 +140,7 @@ export default function FeedbackPage() {
 
   if (submitted) {
     return (
-      <main className="min-h-screen bg-[#05070d] flex items-center justify-center p-6">
+      <main className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
         <div className="text-center max-w-sm">
           <div className="mb-4 text-5xl">✅</div>
           <h1 className="mb-2 text-2xl font-bold text-white">Thanks!</h1>
@@ -151,7 +151,7 @@ export default function FeedbackPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#05070d] flex items-center justify-center p-6">
+    <main className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
       <div className="w-full max-w-lg">
         <div className="mb-8 text-center">
           <div className="mb-3 inline-flex items-center justify-center rounded-xl overflow-hidden bg-white px-3 py-2 mx-auto">
@@ -162,7 +162,7 @@ export default function FeedbackPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="rounded-2xl border border-white/10 bg-[#111827] p-6 space-y-8">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-8">
             {DIMENSIONS.map((dim) => {
               const score = scores[dim];
               const band = getBand(score);

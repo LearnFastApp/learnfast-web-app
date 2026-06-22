@@ -108,9 +108,17 @@ export default function Home() {
     router.push(`/sessions/${sessionId}`);
   }
 
+  function openCreateSession() {
+    if (subscriptionStatus !== "active" && sessions.length >= 2) {
+      setShowUpgrade(true);
+    } else {
+      setShowModal(true);
+    }
+  }
+
   if (loading || !user) {
     return (
-      <main className="min-h-screen bg-[#05070d] flex items-center justify-center">
+      <main className="min-h-screen bg-slate-50 flex items-center justify-center">
         <p className="text-slate-400 animate-pulse">Loading…</p>
       </main>
     );
@@ -119,7 +127,7 @@ export default function Home() {
   const displayName = user.displayName ?? user.email?.split("@")[0] ?? "Presenter";
 
   return (
-    <main className="min-h-screen bg-[#05070d] text-white">
+    <main className="min-h-screen bg-slate-50 text-slate-900">
       {showModal && (
         <CreateSessionModal
           onClose={() => setShowModal(false)}
@@ -127,43 +135,37 @@ export default function Home() {
         />
       )}
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
-      <MobileNav onCreateSession={() => {
-        if (subscriptionStatus !== "active" && sessions.length >= 2) {
-          setShowUpgrade(true);
-        } else {
-          setShowModal(true);
-        }
-      }} />
+      <MobileNav onCreateSession={openCreateSession} />
 
       <div className="flex min-h-screen">
-        <aside className="hidden w-72 border-r border-white/10 bg-[#0f1424] p-6 lg:flex lg:flex-col">
+        <aside className="hidden w-72 border-r border-slate-200 bg-white p-6 lg:flex lg:flex-col">
           <div className="mb-12 flex items-center gap-3">
-            <div className="flex items-center justify-center rounded-xl overflow-hidden bg-white px-2 py-1.5">
+            <div className="flex items-center justify-center rounded-xl overflow-hidden bg-white border border-slate-100 px-2 py-1.5">
               <img src="/logo.png" alt="LearnFast" className="h-7 w-auto" />
             </div>
             <div>
-              <p className="text-xl font-bold">LearnFast</p>
+              <p className="text-xl font-bold text-slate-900">LearnFast</p>
               <p className="text-xs text-slate-400">Feedback Intelligence</p>
             </div>
           </div>
 
-          <nav className="space-y-2">
+          <nav className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
                 <a
                   key={item.label}
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition ${
+                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
                     item.active
-                      ? "bg-violet-500/15 text-white"
-                      : "text-slate-400 hover:bg-white/5 hover:text-white"
+                      ? "bg-violet-50 text-violet-700"
+                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                   }`}
                 >
                   <Icon className="h-5 w-5" />
                   <span className="flex-1">{item.label}</span>
                   {item.comingSoon && (
-                    <span className="rounded-md bg-violet-500/20 px-2 py-0.5 text-xs text-violet-400">
+                    <span className="rounded-md bg-violet-100 px-2 py-0.5 text-xs text-violet-600">
                       Coming Soon
                     </span>
                   )}
@@ -172,20 +174,20 @@ export default function Home() {
             })}
           </nav>
 
-          <div className="mt-auto border-t border-white/10 pt-6">
+          <div className="mt-auto border-t border-slate-200 pt-6">
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-violet-500/30 font-bold">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-violet-100 text-violet-700 font-bold">
                 {displayName.charAt(0).toUpperCase()}
               </div>
               <div>
-                <p className="font-semibold">{displayName}</p>
+                <p className="font-semibold text-slate-900">{displayName}</p>
                 <p className="text-sm text-slate-400">Presenter</p>
               </div>
             </div>
 
             <button
               onClick={handleSignOut}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/40 px-4 py-3 text-red-300 hover:bg-red-500/10"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition"
             >
               <LogOut className="h-4 w-4" />
               Sign Out
@@ -193,24 +195,17 @@ export default function Home() {
           </div>
         </aside>
 
-        <section className="flex-1">
-          <header className="flex items-center justify-between border-b border-white/10 bg-[#101523] px-6 py-6 lg:px-8">
+        <section className="flex-1 min-w-0">
+          <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-5 lg:px-8">
             <div>
-              <h1 className="text-2xl font-bold">Dashboard</h1>
-              <p className="text-sm text-slate-400">
+              <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+              <p className="text-sm text-slate-500">
                 Track presentation feedback and development progress.
               </p>
             </div>
-
             <button
-              onClick={() => {
-                if (subscriptionStatus !== "active" && sessions.length >= 2) {
-                  setShowUpgrade(true);
-                } else {
-                  setShowModal(true);
-                }
-              }}
-              className="flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-400"
+              onClick={openCreateSession}
+              className="flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-3 font-semibold text-white shadow-sm hover:bg-violet-700 transition"
             >
               <Plus className="h-5 w-5" />
               Create Session
@@ -218,13 +213,13 @@ export default function Home() {
           </header>
 
           {subscriptionStatus !== "active" && sessions.length >= 2 && (
-            <div className="flex items-center justify-between border-b border-amber-500/20 bg-amber-500/5 px-6 py-3 lg:px-8">
-              <p className="text-sm text-amber-300">
+            <div className="flex items-center justify-between border-b border-amber-200 bg-amber-50 px-6 py-3 lg:px-8">
+              <p className="text-sm text-amber-700">
                 You&apos;ve used both your free sessions.
               </p>
               <button
                 onClick={() => setShowUpgrade(true)}
-                className="rounded-lg bg-violet-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-violet-400 transition"
+                className="rounded-lg bg-violet-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-violet-700 transition"
               >
                 Upgrade to Lite
               </button>
@@ -232,42 +227,40 @@ export default function Home() {
           )}
 
           <div className="space-y-8 p-6 pb-24 lg:pb-8 lg:p-8">
-            {/* Recent sessions */}
             <section>
-              <h2 className="mb-4 text-lg font-bold">Your sessions</h2>
+              <h2 className="mb-4 text-lg font-bold text-slate-900">Your sessions</h2>
               {sessions.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-slate-500">
-                  No sessions yet — hit <strong className="text-slate-300">Create Session</strong> to start.
+                <div className="rounded-2xl border border-dashed border-slate-200 p-10 text-center text-slate-400">
+                  No sessions yet — hit <strong className="text-slate-600">Create Session</strong> to start.
                 </div>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {sessions.map((s) => (
                     <div
                       key={s.id}
-                      className="group rounded-2xl border border-white/10 bg-[#111827] p-5 hover:border-violet-500/40 transition"
+                      className="group rounded-2xl border border-slate-200 bg-white p-5 hover:border-violet-300 hover:shadow-sm transition"
                     >
                       <a href={`/sessions/${s.id}`} className="block">
-                        <p className="font-semibold mb-1">{s.title}</p>
+                        <p className="font-semibold text-slate-900 mb-1">{s.title}</p>
                         <p className="text-xs text-slate-400 font-mono">{s.code}</p>
                         {s.createdAt && (
-                          <p className="mt-2 text-xs text-slate-500">
+                          <p className="mt-2 text-xs text-slate-400">
                             {s.createdAt.toDate().toLocaleDateString()}
                           </p>
                         )}
                       </a>
 
-                      {/* Tags */}
                       <div className="mt-3 flex flex-wrap gap-1.5">
                         {(s.tags ?? []).map((tag) => (
                           <span
                             key={tag}
-                            className="group/tag flex items-center gap-1 rounded-lg bg-violet-500/20 px-2 py-0.5 text-xs text-violet-300"
+                            className="group/tag flex items-center gap-1 rounded-lg bg-violet-50 px-2 py-0.5 text-xs text-violet-600"
                           >
                             <Tag className="h-3 w-3" />
                             {tag}
                             <button
                               onClick={() => handleRemoveTag(s.id, s.tags ?? [], tag)}
-                              className="ml-0.5 opacity-0 group-hover/tag:opacity-100 hover:text-white transition"
+                              className="ml-0.5 opacity-0 group-hover/tag:opacity-100 hover:text-violet-900 transition"
                             >×</button>
                           </span>
                         ))}
@@ -283,12 +276,12 @@ export default function Home() {
                               if (e.key === "Escape") { setEditingTagsId(null); setTagInput(""); }
                             }}
                             onBlur={() => { handleAddTag(s.id, s.tags ?? []); setEditingTagsId(null); }}
-                            className="rounded-lg border border-violet-500/40 bg-[#1a2135] px-2 py-0.5 text-xs text-white outline-none w-24"
+                            className="rounded-lg border border-violet-300 bg-white px-2 py-0.5 text-xs text-slate-900 outline-none w-24"
                           />
                         ) : (
                           <button
                             onClick={() => { setEditingTagsId(s.id); setTagInput(""); }}
-                            className="rounded-lg border border-dashed border-white/20 px-2 py-0.5 text-xs text-slate-600 hover:text-slate-300 hover:border-white/40 transition opacity-0 group-hover:opacity-100"
+                            className="rounded-lg border border-dashed border-slate-300 px-2 py-0.5 text-xs text-slate-400 hover:text-slate-600 hover:border-slate-400 transition opacity-0 group-hover:opacity-100"
                           >
                             + tag
                           </button>
@@ -297,7 +290,7 @@ export default function Home() {
 
                       <button
                         onClick={() => handleDeleteSession(s.id)}
-                        className="mt-3 flex items-center gap-1.5 text-xs text-slate-600 hover:text-red-400 transition opacity-0 group-hover:opacity-100"
+                        className="mt-3 flex items-center gap-1.5 text-xs text-slate-400 hover:text-red-500 transition opacity-0 group-hover:opacity-100"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                         Delete
@@ -308,29 +301,24 @@ export default function Home() {
               )}
             </section>
 
-            {/* Featured resources */}
-            <section className="rounded-2xl border border-white/10 bg-[#111827] p-6">
+            <section className="rounded-2xl border border-slate-200 bg-white p-6">
               <div className="mb-5 flex items-center justify-between">
-                <h2 className="text-xl font-bold">Featured Learning Resources</h2>
-                <p className="text-sm text-violet-300">View all resources →</p>
+                <h2 className="text-xl font-bold text-slate-900">Featured Learning Resources</h2>
+                <p className="text-sm text-violet-600">View all resources →</p>
               </div>
-
               <div className="grid gap-5 md:grid-cols-2">
                 {resources.map((resource) => (
-                  <div
-                    key={resource}
-                    className="rounded-xl border border-white/10 bg-[#1a2135] p-5"
-                  >
+                  <div key={resource} className="rounded-xl border border-slate-100 bg-slate-50 p-5">
                     <div className="mb-4 flex items-center gap-3">
-                      <div className="rounded-lg bg-blue-500/20 p-3 text-blue-300">
+                      <div className="rounded-lg bg-blue-50 p-3 text-blue-600">
                         <BookOpen className="h-5 w-5" />
                       </div>
-                      <span className="rounded-full bg-blue-500/20 px-3 py-1 text-xs text-blue-300">
+                      <span className="rounded-full bg-blue-50 px-3 py-1 text-xs text-blue-600">
                         Resource
                       </span>
                     </div>
-                    <h3 className="mb-2 font-bold">{resource}</h3>
-                    <p className="text-sm text-slate-400">
+                    <h3 className="mb-2 font-bold text-slate-900">{resource}</h3>
+                    <p className="text-sm text-slate-500">
                       Suggested based on your current feedback profile.
                     </p>
                   </div>
@@ -338,16 +326,16 @@ export default function Home() {
               </div>
             </section>
 
-            <section className="rounded-2xl border border-white/10 bg-gradient-to-r from-cyan-500/10 via-violet-500/10 to-blue-500/10 p-6">
+            <section className="rounded-2xl border border-violet-100 bg-gradient-to-r from-violet-50 via-cyan-50 to-blue-50 p-6">
               <div className="flex items-center gap-3">
-                <Users className="h-6 w-6 text-cyan-300" />
+                <Users className="h-6 w-6 text-violet-500" />
                 <div>
-                  <h2 className="text-xl font-bold">Audience join link</h2>
-                  <p className="text-slate-300">
+                  <h2 className="text-xl font-bold text-slate-900">Audience join link</h2>
+                  <p className="text-slate-600">
                     Share{" "}
                     <a
                       href="/join"
-                      className="font-mono text-violet-300 underline underline-offset-2 hover:text-violet-200"
+                      className="font-mono text-violet-600 underline underline-offset-2 hover:text-violet-800"
                     >
                       {typeof window !== "undefined" ? window.location.origin : ""}/join
                     </a>
