@@ -4,11 +4,11 @@ import { createHash } from "crypto";
 export const dynamic = "force-dynamic";
 
 const QUERIES: Record<string, string> = {
-  clarity: "presentation clarity communication public speaking",
-  engagement: "public speaking audience engagement presenting",
-  energy: "speaker confidence presence energy delivery",
-  understanding: "teaching explaining ideas clearly simply",
-  connection: "communication connection rapport storytelling",
+  clarity: "presentation skills",
+  engagement: "public speaking",
+  energy: "public speaking tips",
+  understanding: "communication skills",
+  connection: "storytelling",
 };
 
 interface PodcastResult {
