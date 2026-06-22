@@ -134,7 +134,7 @@ export default function SettingsPage() {
 
   if (authLoading || !user) {
     return (
-      <main className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <main className="min-h-screen bg-[#05070d] flex items-center justify-center">
         <p className="text-slate-400 animate-pulse">Loading…</p>
       </main>
     );
@@ -143,15 +143,15 @@ export default function SettingsPage() {
   const isActive = presenter.subscriptionStatus === "active";
 
   return (
-    <main className="min-h-screen bg-slate-50 text-white pb-20 lg:pb-0">
+    <main className="min-h-screen bg-[#05070d] text-white pb-20 lg:pb-0">
       <MobileNav />
-      <header className="border-b border-slate-200 bg-white px-6 py-6 lg:px-8">
+      <header className="border-b border-white/10 bg-[#101523] px-6 py-6 lg:px-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Settings</h1>
             <p className="text-sm text-slate-400">Manage your account and subscription.</p>
           </div>
-          <a href="/" className="text-sm text-slate-400 hover:text-slate-900 transition">
+          <a href="/" className="text-sm text-slate-400 hover:text-white transition">
             ← Dashboard
           </a>
         </div>
@@ -160,10 +160,10 @@ export default function SettingsPage() {
       <div className="mx-auto max-w-2xl space-y-6 p-6 lg:p-8">
 
         {/* Profile */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-6">
+        <section className="rounded-2xl border border-white/10 bg-[#111827] p-6">
           <div className="mb-5 flex items-center gap-3">
-            <div className="rounded-xl bg-violet-50 p-2">
-              <User className="h-4 w-4 text-violet-600" />
+            <div className="rounded-xl bg-violet-500/20 p-2">
+              <User className="h-4 w-4 text-violet-400" />
             </div>
             <h2 className="font-bold text-lg">Profile</h2>
           </div>
@@ -175,7 +175,7 @@ export default function SettingsPage() {
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-white placeholder-slate-400 outline-none focus:border-violet-500"
+                className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-violet-500"
                 placeholder="Your name"
               />
             </div>
@@ -185,10 +185,10 @@ export default function SettingsPage() {
                 type="email"
                 value={user.email ?? ""}
                 disabled
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-500 outline-none cursor-not-allowed"
+                className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-slate-500 outline-none cursor-not-allowed"
               />
             </div>
-            {profileError && <p className="text-sm text-red-500">{profileError}</p>}
+            {profileError && <p className="text-sm text-red-400">{profileError}</p>}
             <button
               type="submit"
               disabled={profileSaving}
@@ -202,10 +202,10 @@ export default function SettingsPage() {
         </section>
 
         {/* Password */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-6">
+        <section className="rounded-2xl border border-white/10 bg-[#111827] p-6">
           <div className="mb-5 flex items-center gap-3">
-            <div className="rounded-xl bg-violet-50 p-2">
-              <Lock className="h-4 w-4 text-violet-600" />
+            <div className="rounded-xl bg-violet-500/20 p-2">
+              <Lock className="h-4 w-4 text-violet-400" />
             </div>
             <h2 className="font-bold text-lg">Password</h2>
           </div>
@@ -218,7 +218,7 @@ export default function SettingsPage() {
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-white placeholder-slate-400 outline-none focus:border-violet-500"
+                className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-violet-500"
                 placeholder="••••••••"
               />
             </div>
@@ -229,7 +229,7 @@ export default function SettingsPage() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-white placeholder-slate-400 outline-none focus:border-violet-500"
+                className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-violet-500"
                 placeholder="••••••••"
               />
             </div>
@@ -240,11 +240,11 @@ export default function SettingsPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-white placeholder-slate-400 outline-none focus:border-violet-500"
+                className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-violet-500"
                 placeholder="••••••••"
               />
             </div>
-            {passwordError && <p className="text-sm text-red-500">{passwordError}</p>}
+            {passwordError && <p className="text-sm text-red-400">{passwordError}</p>}
             <button
               type="submit"
               disabled={passwordSaving}
@@ -258,23 +258,23 @@ export default function SettingsPage() {
         </section>
 
         {/* Subscription */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-6">
+        <section className="rounded-2xl border border-white/10 bg-[#111827] p-6">
           <div className="mb-5 flex items-center gap-3">
-            <div className="rounded-xl bg-violet-50 p-2">
-              <CreditCard className="h-4 w-4 text-violet-600" />
+            <div className="rounded-xl bg-violet-500/20 p-2">
+              <CreditCard className="h-4 w-4 text-violet-400" />
             </div>
             <h2 className="font-bold text-lg">Subscription</h2>
           </div>
 
-          <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4 mb-4">
+          <div className="flex items-center justify-between rounded-xl border border-white/10 bg-[#1a2135] p-4 mb-4">
             <div>
               <p className="text-sm text-slate-400 mb-1">Current plan</p>
               <div className="flex items-center gap-2">
                 {isActive ? (
                   <>
-                    <Zap className="h-4 w-4 text-violet-600" />
-                    <span className="font-bold text-violet-600">Lite</span>
-                    <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-600">Active</span>
+                    <Zap className="h-4 w-4 text-violet-400" />
+                    <span className="font-bold text-violet-300">Lite</span>
+                    <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-400">Active</span>
                   </>
                 ) : (
                   <>
@@ -297,7 +297,7 @@ export default function SettingsPage() {
             <button
               onClick={handleManageBilling}
               disabled={portalLoading}
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-slate-50 disabled:opacity-50 transition"
+              className="w-full rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 disabled:opacity-50 transition"
             >
               {portalLoading ? "Opening portal…" : "Manage billing →"}
             </button>

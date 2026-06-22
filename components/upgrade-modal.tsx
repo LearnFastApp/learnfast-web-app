@@ -33,18 +33,18 @@ export default function UpgradeModal({ onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl border border-violet-200 bg-white p-8 shadow-2xl">
+      <div className="w-full max-w-md rounded-2xl border border-violet-500/30 bg-[#111827] p-8 shadow-2xl">
         <div className="mb-6 flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-violet-50 p-2.5">
-              <Zap className="h-5 w-5 text-violet-600" />
+            <div className="rounded-xl bg-violet-500/20 p-2.5">
+              <Zap className="h-5 w-5 text-violet-400" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">Free sessions used</h2>
               <p className="text-sm text-slate-400 mt-0.5">Upgrade to keep going</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-900 ml-4">
+          <button onClick={onClose} className="text-slate-400 hover:text-white ml-4">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -53,7 +53,7 @@ export default function UpgradeModal({ onClose }: Props) {
           Your free plan includes <strong className="text-white">2 meeting feedback connections</strong>. Upgrade to LearnFast Lite for unlimited sessions and the full analytics suite.
         </p>
 
-        <div className="rounded-xl border border-violet-200 bg-slate-50 p-4 mb-6">
+        <div className="rounded-xl border border-violet-500/20 bg-[#1a2135] p-4 mb-6">
           <div className="flex items-center justify-between mb-3">
             <span className="font-semibold text-white">Lite</span>
             <span className="text-2xl font-bold text-white">
@@ -68,14 +68,14 @@ export default function UpgradeModal({ onClose }: Props) {
               "Reflective practice tracker",
             ].map((f) => (
               <li key={f} className="flex items-center gap-2">
-                <Check className="h-3.5 w-3.5 text-green-600 shrink-0" />
+                <Check className="h-3.5 w-3.5 text-green-400 shrink-0" />
                 {f}
               </li>
             ))}
           </ul>
         </div>
 
-        {error && <p className="mb-4 text-sm text-red-500">{error}</p>}
+        {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
 
         <button
           onClick={handleUpgrade}

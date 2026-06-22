@@ -71,12 +71,12 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl">
+      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#111827] p-8 shadow-2xl">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-bold text-white">
             {created ? "Session ready" : "New session"}
           </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-900">
+          <button onClick={onClose} className="text-slate-400 hover:text-white">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -90,7 +90,7 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
                 placeholder="e.g. Leadership Workshop — June 2026"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-white placeholder-slate-400 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
               />
             </div>
 
@@ -98,18 +98,18 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
               <label className="mb-2 block text-sm text-slate-400">
                 Tags <span className="text-slate-600">(optional — press Enter or comma to add)</span>
               </label>
-              <div className="min-h-[48px] flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 focus-within:border-violet-500">
+              <div className="min-h-[48px] flex flex-wrap gap-2 rounded-xl border border-white/10 bg-[#1a2135] px-3 py-2 focus-within:border-violet-500">
                 {tags.map((tag) => (
                   <span
                     key={tag}
-                    className="flex items-center gap-1 rounded-lg bg-violet-50 px-2 py-1 text-xs text-violet-600"
+                    className="flex items-center gap-1 rounded-lg bg-violet-500/20 px-2 py-1 text-xs text-violet-300"
                   >
                     <Tag className="h-3 w-3" />
                     {tag}
                     <button
                       type="button"
                       onClick={() => setTags((prev) => prev.filter((t) => t !== tag))}
-                      className="ml-1 text-violet-600 hover:text-slate-900"
+                      className="ml-1 text-violet-400 hover:text-white"
                     >×</button>
                   </span>
                 ))}
@@ -120,7 +120,7 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={handleTagKeyDown}
                   onBlur={addTag}
-                  className="flex-1 min-w-[120px] bg-transparent text-sm text-white placeholder-slate-400 outline-none"
+                  className="flex-1 min-w-[120px] bg-transparent text-sm text-white placeholder-slate-600 outline-none"
                 />
               </div>
             </div>
@@ -142,7 +142,7 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
               <QRCodeCanvas value={feedbackUrl} size={512} id="qr-modal-download" />
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center">
+            <div className="rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-center">
               <p className="mb-1 text-xs text-slate-400">Session code</p>
               <p className="text-3xl font-bold tracking-widest text-white">{created.code}</p>
             </div>
@@ -150,9 +150,9 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
             <div className="flex gap-3">
               <button
                 onClick={copyUrl}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-300 hover:bg-slate-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-300 hover:bg-white/5"
               >
-                {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
                 {copied ? "Copied!" : "Copy link"}
               </button>
 
@@ -172,7 +172,7 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
                 link.href = canvas.toDataURL("image/png");
                 link.click();
               }}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-400 hover:bg-slate-50 hover:text-slate-900 transition"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-slate-400 hover:bg-white/5 hover:text-white transition"
             >
               Download QR (PNG)
             </button>

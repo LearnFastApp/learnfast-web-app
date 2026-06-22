@@ -134,14 +134,14 @@ export default function LiveSessionPage() {
 
   if (authLoading || !session) {
     return (
-      <main className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <main className="min-h-screen bg-[#05070d] flex items-center justify-center">
         <p className="text-slate-400 animate-pulse">Loading session…</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-white">
+    <main className="min-h-screen bg-[#05070d] text-white">
       {showReflection && user && (
         <PresenterReflectionModal
           sessionId={id}
@@ -151,8 +151,8 @@ export default function LiveSessionPage() {
         />
       )}
 
-      <header className="border-b border-slate-200 bg-white px-6 py-5 flex items-center gap-4">
-        <button onClick={() => router.push("/")} className="text-slate-400 hover:text-slate-900">
+      <header className="border-b border-white/10 bg-[#101523] px-6 py-5 flex items-center gap-4">
+        <button onClick={() => router.push("/")} className="text-slate-400 hover:text-white">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex-1">
@@ -160,7 +160,7 @@ export default function LiveSessionPage() {
           <p className="text-xs text-slate-400">
             Code: <span className="font-mono font-bold text-white">{session.code}</span>
             {" · "}
-            <span className="text-green-600">● Live</span>
+            <span className="text-green-400">● Live</span>
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -170,7 +170,7 @@ export default function LiveSessionPage() {
           </div>
           <button
             onClick={() => setShowReflection(true)}
-            className="flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-600 hover:bg-cyan-400/20"
+            className="flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-300 hover:bg-cyan-400/20"
           >
             <PenLine className="h-4 w-4" />
             {reflection ? "Edit reflection" : "Rate yourself"}
@@ -180,7 +180,7 @@ export default function LiveSessionPage() {
 
       <div className="grid gap-6 p-6 lg:p-8 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6">
+          <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-lg font-bold">Live averages</h2>
               <div className="flex items-center gap-4 text-xs">
@@ -238,9 +238,9 @@ export default function LiveSessionPage() {
                   {DIMENSIONS.map((dim) => (
                     <div key={dim} className="text-center">
                       <p className="text-xs text-slate-400 capitalize mb-1">{dim}</p>
-                      <p className="text-xl font-bold text-violet-600">{audienceAverages[dim]}</p>
+                      <p className="text-xl font-bold text-violet-300">{audienceAverages[dim]}</p>
                       {reflection && (
-                        <p className="text-sm font-semibold text-cyan-600">{reflection[dim]}</p>
+                        <p className="text-sm font-semibold text-cyan-400">{reflection[dim]}</p>
                       )}
                       <p className="text-xs text-slate-500">/100</p>
                     </div>
@@ -248,12 +248,12 @@ export default function LiveSessionPage() {
                 </div>
 
                 {reflection && responses.length > 0 && (
-                  <div className="mt-6 rounded-xl bg-slate-50 p-4">
+                  <div className="mt-6 rounded-xl bg-[#1a2135] p-4">
                     <p className="text-xs text-slate-400 mb-3 font-semibold uppercase tracking-wider">Gap analysis</p>
                     <div className="grid grid-cols-5 gap-3">
                       {DIMENSIONS.map((dim) => {
                         const gap = reflection[dim] - audienceAverages[dim];
-                        const color = gap > 0 ? "text-amber-600" : gap < 0 ? "text-green-600" : "text-slate-400";
+                        const color = gap > 0 ? "text-amber-400" : gap < 0 ? "text-green-400" : "text-slate-400";
                         return (
                           <div key={dim} className="text-center">
                             <p className="text-xs text-slate-500 capitalize mb-1">{dim}</p>
@@ -280,10 +280,10 @@ export default function LiveSessionPage() {
             if (!lowest || responses.length === 0) return null;
             const rec = RECOMMENDATIONS[lowest];
             return (
-              <div className="rounded-2xl border border-violet-200 bg-gradient-to-b from-violet-500/10 to-[#111827] p-6">
+              <div className="rounded-2xl border border-violet-500/30 bg-gradient-to-b from-violet-500/10 to-[#111827] p-6">
                 <div className="mb-3 flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-violet-600" />
-                  <h2 className="text-sm font-semibold text-violet-600 uppercase tracking-wider">
+                  <TrendingUp className="h-4 w-4 text-violet-400" />
+                  <h2 className="text-sm font-semibold text-violet-300 uppercase tracking-wider">
                     Recommended focus
                   </h2>
                 </div>
@@ -294,25 +294,25 @@ export default function LiveSessionPage() {
                   <a
                     href="#"
                     onClick={(e) => e.preventDefault()}
-                    className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-300 hover:border-violet-200 hover:text-slate-900 transition"
+                    className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-sm text-slate-300 hover:border-violet-500/40 hover:text-white transition"
                   >
-                    <PlayCircle className="h-4 w-4 text-violet-600 shrink-0" />
+                    <PlayCircle className="h-4 w-4 text-violet-400 shrink-0" />
                     <span>How to improve {DIMENSION_LABELS[lowest]} — Video</span>
                   </a>
 
                   <a
                     href="#"
                     onClick={(e) => e.preventDefault()}
-                    className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-300 hover:border-violet-200 hover:text-slate-900 transition"
+                    className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-sm text-slate-300 hover:border-violet-500/40 hover:text-white transition"
                   >
-                    <Headphones className="h-4 w-4 text-cyan-600 shrink-0" />
+                    <Headphones className="h-4 w-4 text-cyan-400 shrink-0" />
                     <span>How to improve {DIMENSION_LABELS[lowest]} — Podcast</span>
                   </a>
 
                   <a
                     href="#"
                     onClick={(e) => e.preventDefault()}
-                    className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-300 hover:border-violet-200 hover:text-slate-900 transition"
+                    className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-sm text-slate-300 hover:border-violet-500/40 hover:text-white transition"
                   >
                     <FileText className="h-4 w-4 text-blue-400 shrink-0" />
                     <span>How to improve {DIMENSION_LABELS[lowest]} — PDF Guide</span>
@@ -326,7 +326,7 @@ export default function LiveSessionPage() {
             );
           })()}
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-6">
+          <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
             <h2 className="mb-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">
               Share with audience
             </h2>
@@ -337,15 +337,15 @@ export default function LiveSessionPage() {
             <div className="hidden">
               <QRCodeCanvas value={feedbackUrl} size={512} id="qr-download" />
             </div>
-            <div className="rounded-xl bg-slate-50 px-4 py-3 text-center mb-3">
+            <div className="rounded-xl bg-[#1a2135] px-4 py-3 text-center mb-3">
               <p className="text-xs text-slate-400 mb-1">Code</p>
               <p className="text-2xl font-bold tracking-widest">{session.code}</p>
             </div>
             <button
               onClick={copyUrl}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-300 hover:bg-slate-50 mb-2"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-300 hover:bg-white/5 mb-2"
             >
-              {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+              {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
               {copied ? "Copied!" : "Copy link"}
             </button>
             <button
@@ -357,7 +357,7 @@ export default function LiveSessionPage() {
                 link.href = canvas.toDataURL("image/png");
                 link.click();
               }}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-300 hover:bg-slate-50"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-300 hover:bg-white/5"
             >
               Download QR (PNG)
             </button>

@@ -92,21 +92,21 @@ export default function PricingPage() {
 
   if (authLoading || !user) {
     return (
-      <main className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <main className="min-h-screen bg-[#05070d] flex items-center justify-center">
         <p className="text-slate-400 animate-pulse">Loading…</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-white">
-      <header className="border-b border-slate-200 bg-white px-6 py-6 lg:px-8">
+    <main className="min-h-screen bg-[#05070d] text-white">
+      <header className="border-b border-white/10 bg-[#101523] px-6 py-6 lg:px-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Choose your plan</h1>
             <p className="text-sm text-slate-400">Unlock the full power of LearnFast</p>
           </div>
-          <a href="/" className="text-sm text-slate-400 hover:text-slate-900 transition">
+          <a href="/" className="text-sm text-slate-400 hover:text-white transition">
             ← Dashboard
           </a>
         </div>
@@ -114,11 +114,11 @@ export default function PricingPage() {
 
       <div className="mx-auto max-w-5xl p-6 lg:p-8">
         {success && (
-          <div className="mb-8 rounded-2xl border border-green-200 bg-green-500/10 p-5 text-center">
-            <p className="font-semibold text-green-700">You&apos;re now on Lite — welcome aboard!</p>
+          <div className="mb-8 rounded-2xl border border-green-500/30 bg-green-500/10 p-5 text-center">
+            <p className="font-semibold text-green-300">You&apos;re now on Lite — welcome aboard!</p>
             <p className="mt-1 text-sm text-slate-400">
               All features are unlocked.{" "}
-              <a href="/" className="text-violet-600 underline">
+              <a href="/" className="text-violet-400 underline">
                 Go to dashboard →
               </a>
             </p>
@@ -126,8 +126,8 @@ export default function PricingPage() {
         )}
 
         {cancelled && (
-          <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-500/10 p-5 text-center">
-            <p className="font-semibold text-amber-700">
+          <div className="mb-8 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-center">
+            <p className="font-semibold text-amber-300">
               No problem — you can upgrade any time.
             </p>
           </div>
@@ -140,7 +140,7 @@ export default function PricingPage() {
               className={`flex flex-col rounded-2xl border p-6 ${
                 tier.highlight
                   ? "border-violet-500/50 bg-violet-500/5 shadow-lg shadow-violet-500/10"
-                  : "border-slate-200 bg-white"
+                  : "border-white/10 bg-[#111827]"
               }`}
             >
               {tier.highlight && (
@@ -149,7 +149,7 @@ export default function PricingPage() {
                 </span>
               )}
               <div className="flex items-center gap-2 mb-1">
-                {tier.highlight && <Zap className="h-4 w-4 text-violet-600" />}
+                {tier.highlight && <Zap className="h-4 w-4 text-violet-400" />}
                 <h2 className="text-xl font-bold">{tier.name}</h2>
               </div>
               <p className="text-sm text-slate-400 mb-4">{tier.description}</p>
@@ -163,20 +163,20 @@ export default function PricingPage() {
               <ul className="mb-8 flex-1 space-y-2">
                 {tier.features.map((f) => (
                   <li key={f} className="flex items-start gap-2 text-sm">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
                     <span className="text-slate-300">{f}</span>
                   </li>
                 ))}
               </ul>
 
               {tier.comingSoon ? (
-                <div className="rounded-xl border border-slate-200 px-4 py-3 text-center text-sm text-slate-500">
+                <div className="rounded-xl border border-white/10 px-4 py-3 text-center text-sm text-slate-500">
                   Coming Soon
                 </div>
               ) : tier.cta ? (
                 <>
                   {checkoutError && (
-                    <p className="mb-2 text-xs text-red-500">{checkoutError}</p>
+                    <p className="mb-2 text-xs text-red-400">{checkoutError}</p>
                   )}
                   <button
                     onClick={handleUpgrade}
@@ -187,7 +187,7 @@ export default function PricingPage() {
                   </button>
                 </>
               ) : (
-                <div className="rounded-xl border border-slate-200 px-4 py-3 text-center text-sm text-slate-400">
+                <div className="rounded-xl border border-white/10 px-4 py-3 text-center text-sm text-slate-400">
                   Current plan
                 </div>
               )}
