@@ -2,7 +2,7 @@
 
 import { useState, KeyboardEvent } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { QRCodeSVG } from "qrcode.react";
+import { QRCodeCanvas } from "qrcode.react";
 import { X, Copy, Check, Tag } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
@@ -136,7 +136,10 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
         ) : (
           <div className="space-y-6">
             <div className="flex justify-center rounded-xl bg-white p-6">
-              <QRCodeSVG value={feedbackUrl} size={180} />
+              <QRCodeCanvas value={feedbackUrl} size={180} id="qr-modal-display" />
+            </div>
+            <div className="hidden">
+              <QRCodeCanvas value={feedbackUrl} size={512} id="qr-modal-download" />
             </div>
 
             <div className="rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-center">
@@ -160,6 +163,19 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
                 Go live →
               </a>
             </div>
+            <button
+              onClick={() => {
+                const canvas = document.getElementById("qr-modal-download") as HTMLCanvasElement;
+                if (!canvas) return;
+                const link = document.createElement("a");
+                link.download = `learnfast-${created.code}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+              }}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-slate-400 hover:bg-white/5 hover:text-white transition"
+            >
+              Download QR (PNG)
+            </button>
           </div>
         )}
       </div>

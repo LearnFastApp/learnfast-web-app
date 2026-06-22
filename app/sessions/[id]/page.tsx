@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { QRCodeSVG } from "qrcode.react";
+import { QRCodeCanvas } from "qrcode.react";
 import { ArrowLeft, Copy, Check, Users, PenLine, PlayCircle, Headphones, FileText, TrendingUp } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
@@ -331,7 +331,11 @@ export default function LiveSessionPage() {
               Share with audience
             </h2>
             <div className="flex justify-center rounded-xl bg-white p-4 mb-4">
-              <QRCodeSVG value={feedbackUrl} size={160} />
+              <QRCodeCanvas value={feedbackUrl} size={160} id="qr-display" />
+            </div>
+            {/* Hidden high-res canvas for download */}
+            <div className="hidden">
+              <QRCodeCanvas value={feedbackUrl} size={512} id="qr-download" />
             </div>
             <div className="rounded-xl bg-[#1a2135] px-4 py-3 text-center mb-3">
               <p className="text-xs text-slate-400 mb-1">Code</p>
@@ -339,10 +343,23 @@ export default function LiveSessionPage() {
             </div>
             <button
               onClick={copyUrl}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-300 hover:bg-white/5"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-300 hover:bg-white/5 mb-2"
             >
               {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
               {copied ? "Copied!" : "Copy link"}
+            </button>
+            <button
+              onClick={() => {
+                const canvas = document.getElementById("qr-download") as HTMLCanvasElement;
+                if (!canvas) return;
+                const link = document.createElement("a");
+                link.download = `learnfast-${session.code}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+              }}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-300 hover:bg-white/5"
+            >
+              Download QR (PNG)
             </button>
           </div>
         </div>
