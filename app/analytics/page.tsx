@@ -58,6 +58,16 @@ export default function AnalyticsPage() {
   const [sessions, setSessions] = useState<SessionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTag, setSelectedTag] = useState<string>("all");
+  const [activeDims, setActiveDims] = useState<Set<Dimension>>(new Set(DIMENSIONS));
+
+  function toggleDim(dim: Dimension) {
+    setActiveDims((prev) => {
+      const next = new Set(prev);
+      if (next.has(dim)) { if (next.size > 1) next.delete(dim); }
+      else next.add(dim);
+      return next;
+    });
+  }
 
   useEffect(() => {
     if (authLoading) return;
@@ -220,8 +230,35 @@ export default function AnalyticsPage() {
             </section>
 
             <section className="rounded-2xl border border-white/10 bg-[#111827] p-6">
-              <h2 className="text-lg font-bold mb-1">Performance over time</h2>
-              <p className="text-sm text-slate-400 mb-6">All five dimensions across your sessions.</p>
+              <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+                <div>
+                  <h2 className="text-lg font-bold mb-1">Performance over time</h2>
+                  <p className="text-sm text-slate-400">Toggle dimensions to focus your view.</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {DIMENSIONS.map((dim) => {
+                    const active = activeDims.has(dim);
+                    return (
+                      <button
+                        key={dim}
+                        onClick={() => toggleDim(dim)}
+                        className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition border"
+                        style={{
+                          borderColor: active ? DIM_COLORS[dim] : "rgba(255,255,255,0.1)",
+                          backgroundColor: active ? `${DIM_COLORS[dim]}22` : "transparent",
+                          color: active ? DIM_COLORS[dim] : "#64748b",
+                        }}
+                      >
+                        <span
+                          className="h-2 w-2 rounded-full"
+                          style={{ backgroundColor: active ? DIM_COLORS[dim] : "#64748b" }}
+                        />
+                        {dim}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                   <CartesianGrid stroke="#ffffff08" />
@@ -231,8 +268,7 @@ export default function AnalyticsPage() {
                     contentStyle={{ backgroundColor: "#1a2135", border: "1px solid #ffffff15", borderRadius: "12px" }}
                     labelStyle={{ color: "#ffffff" }}
                   />
-                  <Legend wrapperStyle={{ paddingTop: "16px" }} />
-                  {DIMENSIONS.map((dim) => (
+                  {DIMENSIONS.filter((dim) => activeDims.has(dim)).map((dim) => (
                     <Line
                       key={dim}
                       type="monotone"
@@ -263,7 +299,7 @@ export default function AnalyticsPage() {
               <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
                 <h2 className="text-lg font-bold mb-4">Dimension trends</h2>
                 <div className="space-y-4">
-                  {DIMENSIONS.map((dim) => {
+                  {DIMENSIONS.filter((dim) => activeDims.has(dim)).map((dim) => {
                     const t = trend(filtered, dim);
                     const score = overallAverages[dim];
                     return (
