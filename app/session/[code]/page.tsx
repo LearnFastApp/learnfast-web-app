@@ -187,7 +187,7 @@ export default function FeedbackPage() {
                     onChange={(e) =>
                       setScores((prev) => ({ ...prev, [dim]: Number(e.target.value) }))
                     }
-                    className="w-full accent-violet-500 mb-3"
+                    className="slider-gradient mb-3"
                   />
 
                   <p className="text-sm text-slate-400 italic leading-relaxed">

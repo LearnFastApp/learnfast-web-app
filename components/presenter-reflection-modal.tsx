@@ -141,7 +141,7 @@ export default function PresenterReflectionModal({ sessionId, presenterId, onClo
                   onChange={(e) =>
                     setScores((prev) => ({ ...prev, [dim]: Number(e.target.value) }))
                   }
-                  className="w-full accent-cyan-400 mb-3"
+                  className="slider-gradient mb-3"
                 />
 
                 <p className="text-sm text-slate-400 italic leading-relaxed">
