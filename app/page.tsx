@@ -142,7 +142,7 @@ export default function Home() {
                   <span className="flex-1">{item.label}</span>
                   {item.comingSoon && (
                     <span className="rounded-md bg-violet-500/20 px-2 py-0.5 text-xs text-violet-400">
-                      Soon
+                      Coming Soon
                     </span>
                   )}
                 </a>
