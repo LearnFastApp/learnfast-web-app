@@ -93,7 +93,7 @@ export default function LoginPage() {
     <main className="min-h-screen bg-[#05070d] flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="mb-10 flex items-center gap-3">
-          <div className="flex items-center justify-center rounded-xl overflow-hidden bg-white px-2 py-1.5">
+          <div className="flex items-center justify-center px-2 py-1.5">
             <img src="/logo.png" alt="LearnFast" className="h-7 w-auto" />
           </div>
           <div>
