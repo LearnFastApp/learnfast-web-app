@@ -60,8 +60,9 @@ export default function Home() {
     if (!user) return;
     getDoc(doc(db, "presenters", user.uid)).then((snap) => {
       if (snap.exists()) {
-        const status = snap.data().subscriptionStatus;
-        if (status === "active") setSubscriptionStatus("active");
+        const data = snap.data();
+        if (data.subscriptionStatus === "active") setSubscriptionStatus("active");
+        if (!data.onboardingSeen) setShowOnboarding(true);
       }
     });
   }, [user]);
@@ -77,9 +78,6 @@ export default function Home() {
       setSessions(
         snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Session, "id">) }))
       );
-      if (snap.empty && !localStorage.getItem("learnfast_onboarding_seen")) {
-        setShowOnboarding(true);
-      }
     });
   }, [user]);
 
@@ -101,6 +99,13 @@ export default function Home() {
 
   function handleSignOut() {
     signOut(auth).then(() => router.replace("/auth/login"));
+  }
+
+  async function markOnboardingSeen() {
+    setShowOnboarding(false);
+    if (user) {
+      await updateDoc(doc(db, "presenters", user.uid), { onboardingSeen: true });
+    }
   }
 
   function handleSessionCreated(sessionId: string) {
@@ -129,8 +134,8 @@ export default function Home() {
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
       {showOnboarding && (
         <OnboardingModal
-          onClose={() => setShowOnboarding(false)}
-          onCreateSession={() => { setShowOnboarding(false); setShowModal(true); }}
+          onClose={markOnboardingSeen}
+          onCreateSession={() => { markOnboardingSeen(); setShowModal(true); }}
         />
       )}
       <MobileNav onCreateSession={() => {

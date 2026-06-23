@@ -54,12 +54,10 @@ export default function OnboardingModal({ onClose, onCreateSession }: Props) {
   const [step, setStep] = useState(0);
 
   function dismiss() {
-    localStorage.setItem("learnfast_onboarding_seen", "1");
     onClose();
   }
 
   function handleCreate() {
-    localStorage.setItem("learnfast_onboarding_seen", "1");
     onCreateSession();
   }
 
