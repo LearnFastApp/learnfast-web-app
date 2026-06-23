@@ -128,7 +128,7 @@ export default function Home() {
       )}
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
       <MobileNav onCreateSession={() => {
-        if (subscriptionStatus !== "active" && sessions.length >= 2) {
+        if (subscriptionStatus !== "active" && sessions.length >= 5) {
           setShowUpgrade(true);
         } else {
           setShowModal(true);
@@ -204,7 +204,7 @@ export default function Home() {
 
             <button
               onClick={() => {
-                if (subscriptionStatus !== "active" && sessions.length >= 2) {
+                if (subscriptionStatus !== "active" && sessions.length >= 5) {
                   setShowUpgrade(true);
                 } else {
                   setShowModal(true);
@@ -217,7 +217,7 @@ export default function Home() {
             </button>
           </header>
 
-          {subscriptionStatus !== "active" && sessions.length >= 2 && (
+          {subscriptionStatus !== "active" && sessions.length >= 5 && (
             <div className="flex items-center justify-between border-b border-amber-500/20 bg-amber-500/5 px-6 py-3 lg:px-8">
               <p className="text-sm text-amber-300">
                 You&apos;ve used both your free sessions.
