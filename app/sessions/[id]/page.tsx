@@ -77,6 +77,13 @@ function getLowestDimension(averages: Record<Dimension, number>): Dimension | nu
   return dims.reduce((lowest, current) => current[1] < lowest[1] ? current : lowest)[0];
 }
 
+function getSecondLowestDimension(averages: Record<Dimension, number>): Dimension | null {
+  const dims = (Object.entries(averages) as [Dimension, number][]).filter(([, v]) => v > 0);
+  if (dims.length < 2) return null;
+  const sorted = [...dims].sort((a, b) => a[1] - b[1]);
+  return sorted[1][0];
+}
+
 function average(values: number[]): number {
   if (!values.length) return 0;
   return Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10;
@@ -105,6 +112,7 @@ export default function LiveSessionPage() {
     articles: { title: string; url: string; source: string }[];
   } | null>(null);
   const [resourcesLoading, setResourcesLoading] = useState(false);
+  const [secondaryArticle, setSecondaryArticle] = useState<{ title: string; url: string; source: string } | null>(null);
   const [resourceTab, setResourceTab] = useState<"videos" | "ted" | "podcasts" | "articles">("videos");
   const [podcasts, setPodcasts] = useState<{ title: string; author: string; description: string; image: string; link: string }[]>([]);
   const [podcastsLoading, setPodcastsLoading] = useState(false);
@@ -150,6 +158,7 @@ export default function LiveSessionPage() {
   );
 
   const lowestDimension = getLowestDimension(audienceAverages);
+  const secondLowestDimension = getSecondLowestDimension(audienceAverages);
 
   useEffect(() => {
     if (!lowestDimension) return;
@@ -165,6 +174,17 @@ export default function LiveSessionPage() {
       .then((data) => { setPodcasts(data.podcasts ?? []); setPodcastsLoading(false); })
       .catch(() => setPodcastsLoading(false));
   }, [lowestDimension]);
+
+  useEffect(() => {
+    if (!secondLowestDimension) return;
+    fetch(`/api/resources?dimension=${secondLowestDimension}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const articles = data.articles as { title: string; url: string; source: string }[];
+        if (articles?.length) setSecondaryArticle(articles[0]);
+      })
+      .catch(() => {});
+  }, [secondLowestDimension]);
 
   const radarData = DIMENSIONS.map((dim) => ({
     dimension: dim.charAt(0).toUpperCase() + dim.slice(1),
@@ -597,6 +617,29 @@ export default function LiveSessionPage() {
               </div>
             );
           })()}
+
+          {secondLowestDimension && secondaryArticle && responses.length > 0 && subscriptionStatus === "active" && (
+            <div className="rounded-2xl border border-white/10 bg-[#111827] p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <TrendingUp className="h-3.5 w-3.5 text-slate-500" />
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Also worth working on · {DIMENSION_LABELS[secondLowestDimension]}: {audienceAverages[secondLowestDimension]}/100
+                </p>
+              </div>
+              <a
+                href={secondaryArticle.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start justify-between gap-3 rounded-xl border border-white/10 bg-[#0f1424] px-4 py-3 hover:border-violet-500/40 transition group"
+              >
+                <div>
+                  <p className="text-sm text-slate-200 leading-snug mb-1 group-hover:text-white transition">{secondaryArticle.title}</p>
+                  <p className="text-xs text-slate-500">{secondaryArticle.source}</p>
+                </div>
+                <span className="text-slate-600 group-hover:text-violet-400 transition shrink-0 mt-0.5">→</span>
+              </a>
+            </div>
+          )}
 
           <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
             <h2 className="mb-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">
