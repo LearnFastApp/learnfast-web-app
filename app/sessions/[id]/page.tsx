@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { doc, getDoc, setDoc, collection, query, where, onSnapshot, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, collection, query, where, onSnapshot, serverTimestamp } from "firebase/firestore";
 import { useParams, useRouter } from "next/navigation";
 import {
   Radar,
@@ -88,6 +88,9 @@ export default function LiveSessionPage() {
   const router = useRouter();
 
   const [session, setSession] = useState<{ title: string; code: string } | null>(null);
+  const [sessionStatus, setSessionStatus] = useState<"active" | "closed">("active");
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [ending, setEnding] = useState(false);
   const [responses, setResponses] = useState<FeedbackResponse[]>([]);
   const [reflection, setReflection] = useState<PresenterReflection | null>(null);
   const [showReflection, setShowReflection] = useState(false);
@@ -115,6 +118,7 @@ export default function LiveSessionPage() {
       if (snap.exists()) {
         const data = snap.data();
         setSession({ title: data.title, code: data.code });
+        if (data.status === "closed") setSessionStatus("closed");
       }
     });
 
@@ -182,6 +186,14 @@ export default function LiveSessionPage() {
     }
   }
 
+  async function endSession() {
+    setEnding(true);
+    await updateDoc(doc(db, "sessions", id), { status: "closed", endedAt: serverTimestamp() });
+    setSessionStatus("closed");
+    setShowEndConfirm(false);
+    setEnding(false);
+  }
+
   const feedbackUrl = session ? `${window.location.origin}/session/${session.code}` : "";
 
   function copyUrl() {
@@ -200,6 +212,33 @@ export default function LiveSessionPage() {
 
   return (
     <main className="min-h-screen bg-[#05070d] text-white">
+      {/* End session confirmation */}
+      {showEndConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#111827] p-6 text-center">
+            <h2 className="text-lg font-bold text-white mb-2">End this session?</h2>
+            <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+              Audience members will no longer be able to submit feedback. Your results are saved and you can still view them any time.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowEndConfirm(false)}
+                className="flex-1 rounded-xl border border-white/10 py-2.5 text-sm text-slate-400 hover:bg-white/5 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={endSession}
+                disabled={ending}
+                className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white hover:bg-red-400 transition disabled:opacity-50"
+              >
+                {ending ? "Ending…" : "End session"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showReflection && user && (
         <PresenterReflectionModal
           sessionId={id}
@@ -218,7 +257,10 @@ export default function LiveSessionPage() {
           <p className="text-xs text-slate-400">
             Code: <span className="font-mono font-bold text-white">{session.code}</span>
             {" · "}
-            <span className="text-green-400">● Live</span>
+            {sessionStatus === "closed"
+              ? <span className="text-slate-500">● Session ended</span>
+              : <span className="text-green-400">● Live</span>
+            }
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -233,8 +275,49 @@ export default function LiveSessionPage() {
             <PenLine className="h-4 w-4" />
             {reflection ? "Edit reflection" : "Rate yourself"}
           </button>
+          {sessionStatus === "active" && (
+            <button
+              onClick={() => setShowEndConfirm(true)}
+              className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-400 hover:bg-red-500/20 transition"
+            >
+              End session
+            </button>
+          )}
         </div>
       </header>
+
+      {sessionStatus === "closed" && (
+        <div className="mx-6 mt-6 rounded-2xl border border-violet-500/40 bg-gradient-to-r from-violet-500/10 to-blue-500/5 p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex-1">
+              <p className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-1">Session complete</p>
+              <h2 className="text-lg font-bold text-white mb-1">
+                {responses.length} response{responses.length !== 1 ? "s" : ""} collected
+              </h2>
+              <p className="text-sm text-slate-400">
+                Your session has ended. Audience feedback is locked in — review your results below and get to work on what matters most.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 shrink-0">
+              {subscriptionStatus !== "active" ? (
+                <a
+                  href="/pricing"
+                  className="inline-block rounded-xl bg-violet-500 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition text-center"
+                >
+                  Unlock improvement resources →
+                </a>
+              ) : (
+                <a
+                  href="#recommended"
+                  className="inline-block rounded-xl bg-violet-500 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition text-center"
+                >
+                  View your resources →
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 p-6 lg:p-8 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
@@ -381,7 +464,7 @@ export default function LiveSessionPage() {
           {lowestDimension && responses.length > 0 && (() => {
             const rec = RECOMMENDATIONS[lowestDimension];
             return (
-              <div className="rounded-2xl border border-violet-500/30 bg-gradient-to-b from-violet-500/10 to-[#111827] p-6">
+              <div id="recommended" className="rounded-2xl border border-violet-500/30 bg-gradient-to-b from-violet-500/10 to-[#111827] p-6">
                 <div className="mb-3 flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-violet-400" />
                   <h2 className="text-sm font-semibold text-violet-300 uppercase tracking-wider">

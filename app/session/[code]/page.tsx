@@ -89,19 +89,18 @@ export default function FeedbackPage() {
   const [comment, setComment] = useState("");
   const [commenterName, setCommenterName] = useState("");
   const [anonymous, setAnonymous] = useState(true);
+  const [sessionEnded, setSessionEnded] = useState(false);
 
   useEffect(() => {
     async function loadSession() {
-      const q = query(
-        collection(db, "sessions"),
-        where("code", "==", code.toUpperCase()),
-        where("status", "==", "active")
-      );
+      const q = query(collection(db, "sessions"), where("code", "==", code.toUpperCase()));
       const snap = await getDocs(q);
       if (snap.empty) { setNotFound(true); return; }
       const docSnap = snap.docs[0];
+      const data = docSnap.data();
+      if (data.status === "closed") { setSessionEnded(true); return; }
       setSessionId(docSnap.id);
-      setSessionTitle(docSnap.data().title ?? "");
+      setSessionTitle(data.title ?? "");
     }
     loadSession();
   }, [code]);
@@ -133,6 +132,24 @@ export default function FeedbackPage() {
           <h1 className="text-xl font-bold text-white mb-2">Session not found</h1>
           <p className="text-slate-400">Check the code and try again.</p>
           <a href="/join" className="mt-6 inline-block text-violet-400 underline">Enter a different code</a>
+        </div>
+      </main>
+    );
+  }
+
+  if (sessionEnded) {
+    return (
+      <main className="min-h-screen bg-[#05070d] flex items-center justify-center p-6">
+        <div className="text-center max-w-sm">
+          <p className="text-4xl mb-4">🎤</p>
+          <h1 className="text-xl font-bold text-white mb-2">This session has ended</h1>
+          <p className="text-slate-400 mb-6">The presenter has closed feedback for this session. Thanks for attending!</p>
+          <a
+            href="https://app.learnfastapp.com"
+            className="inline-block rounded-xl bg-violet-500 px-6 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition"
+          >
+            Try LearnFast yourself →
+          </a>
         </div>
       </main>
     );
