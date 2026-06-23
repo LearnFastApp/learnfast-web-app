@@ -21,6 +21,7 @@ import { useAuth } from "@/lib/auth-context";
 import CreateSessionModal from "@/components/create-session-modal";
 import UpgradeModal from "@/components/upgrade-modal";
 import MobileNav from "@/components/mobile-nav";
+import OnboardingModal from "@/components/onboarding-modal";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/", active: true },
@@ -44,6 +45,7 @@ export default function Home() {
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<"free" | "active">("free");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [editingTagsId, setEditingTagsId] = useState<string | null>(null);
@@ -74,6 +76,9 @@ export default function Home() {
       setSessions(
         snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Session, "id">) }))
       );
+      if (snap.empty && !localStorage.getItem("learnfast_onboarding_seen")) {
+        setShowOnboarding(true);
+      }
     });
   }, [user]);
 
@@ -121,6 +126,12 @@ export default function Home() {
         />
       )}
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
+      {showOnboarding && (
+        <OnboardingModal
+          onClose={() => setShowOnboarding(false)}
+          onCreateSession={() => { setShowOnboarding(false); setShowModal(true); }}
+        />
+      )}
       <MobileNav onCreateSession={() => {
         if (subscriptionStatus !== "active" && sessions.length >= 5) {
           setShowUpgrade(true);
