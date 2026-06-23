@@ -192,6 +192,12 @@ export default function LiveSessionPage() {
     setSessionStatus("closed");
     setShowEndConfirm(false);
     setEnding(false);
+    // Fire-and-forget — don't block UI on email delivery
+    fetch("/api/sessions/send-summary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId: id }),
+    }).catch(() => {});
   }
 
   const feedbackUrl = session ? `${window.location.origin}/session/${session.code}` : "";
