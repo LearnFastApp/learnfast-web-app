@@ -187,6 +187,10 @@ export default function FeedbackPage() {
                     </div>
                   </div>
 
+                  <p className="text-sm text-slate-400 italic leading-relaxed mb-3">
+                    &ldquo;{narrative}&rdquo;
+                  </p>
+
                   <input
                     type="range"
                     min={0}
@@ -195,12 +199,8 @@ export default function FeedbackPage() {
                     onChange={(e) =>
                       setScores((prev) => ({ ...prev, [dim]: Number(e.target.value) }))
                     }
-                    className="slider-gradient mb-3"
+                    className="slider-gradient"
                   />
-
-                  <p className="text-sm text-slate-400 italic leading-relaxed">
-                    &ldquo;{narrative}&rdquo;
-                  </p>
                 </div>
               );
             })}
