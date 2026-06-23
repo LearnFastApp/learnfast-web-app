@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, KeyboardEvent } from "react";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { useState, useEffect, KeyboardEvent } from "react";
+import { collection, addDoc, getDocs, updateDoc, doc, query, where, orderBy, limit, serverTimestamp } from "firebase/firestore";
 import { QRCodeCanvas } from "qrcode.react";
 import { X, Copy, Check, Tag } from "lucide-react";
 import { db } from "@/lib/firebase";
@@ -9,6 +9,13 @@ import { useAuth } from "@/lib/auth-context";
 
 function generateCode(): string {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+interface PendingCommitment {
+  sessionId: string;
+  sessionTitle: string;
+  dimension: string;
+  text: string;
 }
 
 interface Props {
@@ -24,6 +31,49 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState<{ id: string; code: string } | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const [pendingCommitment, setPendingCommitment] = useState<PendingCommitment | null>(null);
+  const [checkInNotes, setCheckInNotes] = useState("");
+  const [checkInDone, setCheckInDone] = useState(false);
+  const [checkInSaving, setCheckInSaving] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    getDocs(query(
+      collection(db, "sessions"),
+      where("presenterId", "==", user.uid),
+      where("status", "==", "closed"),
+      orderBy("createdAt", "desc"),
+      limit(5)
+    )).then((snap) => {
+      for (const d of snap.docs) {
+        const data = d.data();
+        if (data.commitment && !data.commitmentReview) {
+          setPendingCommitment({
+            sessionId: d.id,
+            sessionTitle: data.title || "Untitled session",
+            dimension: data.commitment.dimension,
+            text: data.commitment.text,
+          });
+          break;
+        }
+      }
+    });
+  }, [user]);
+
+  async function submitCheckIn(skip = false) {
+    if (!pendingCommitment) return;
+    setCheckInSaving(true);
+    await updateDoc(doc(db, "sessions", pendingCommitment.sessionId), {
+      commitmentReview: {
+        notes: skip ? "" : checkInNotes.trim(),
+        skipped: skip,
+        appliedAt: serverTimestamp(),
+      },
+    });
+    setCheckInSaving(false);
+    setCheckInDone(true);
+  }
 
   const feedbackUrl = created
     ? `${window.location.origin}/session/${created.code}`
@@ -70,19 +120,56 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  const showCheckIn = pendingCommitment && !checkInDone;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#111827] p-8 shadow-2xl">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-bold text-white">
-            {created ? "Session ready" : "New session"}
+            {showCheckIn ? "Before you start" : created ? "Session ready" : "New session"}
           </h2>
           <button onClick={onClose} className="text-slate-400 hover:text-white">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {!created ? (
+        {showCheckIn ? (
+          <div className="space-y-4">
+            <div className="rounded-xl bg-violet-500/10 border border-violet-500/20 p-4">
+              <p className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-1">
+                Last session — {pendingCommitment.dimension}
+              </p>
+              <p className="text-sm text-white leading-relaxed">&ldquo;{pendingCommitment.text}&rdquo;</p>
+              <p className="text-xs text-slate-500 mt-1">from {pendingCommitment.sessionTitle}</p>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm text-slate-300 font-medium">How did it go?</label>
+              <textarea
+                autoFocus
+                rows={4}
+                value={checkInNotes}
+                onChange={(e) => setCheckInNotes(e.target.value)}
+                placeholder="e.g. I practised the opening twice before the session — felt much more natural. Still lost flow when Q&A started…"
+                className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-sm text-white placeholder-slate-500 outline-none focus:border-violet-500 resize-none"
+              />
+            </div>
+            <button
+              onClick={() => submitCheckIn(false)}
+              disabled={!checkInNotes.trim() || checkInSaving}
+              className="w-full rounded-xl bg-violet-500 px-4 py-3 font-semibold text-white hover:bg-violet-400 disabled:opacity-50 transition"
+            >
+              {checkInSaving ? "Saving…" : "Save reflection & continue →"}
+            </button>
+            <button
+              onClick={() => submitCheckIn(true)}
+              disabled={checkInSaving}
+              className="w-full text-sm text-slate-500 hover:text-slate-300 transition"
+            >
+              Skip for now
+            </button>
+          </div>
+        ) : !created ? (
           <form onSubmit={handleCreate} className="space-y-4">
             <div>
               <label className="mb-2 block text-sm text-slate-400">Session title (optional)</label>

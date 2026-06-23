@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { doc, getDoc, setDoc, updateDoc, collection, query, where, onSnapshot, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, getDocs, setDoc, updateDoc, collection, query, where, orderBy, limit, onSnapshot, serverTimestamp } from "firebase/firestore";
 import { useParams, useRouter } from "next/navigation";
 import {
   Radar,
@@ -117,6 +117,12 @@ export default function LiveSessionPage() {
   const [podcasts, setPodcasts] = useState<{ title: string; author: string; description: string; image: string; link: string }[]>([]);
   const [podcastsLoading, setPodcastsLoading] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<"free" | "active">("free");
+  const [savedCommitment, setSavedCommitment] = useState<{ dimension: Dimension; text: string } | null>(null);
+  const [draftDimension, setDraftDimension] = useState<Dimension>("clarity");
+  const [draftText, setDraftText] = useState("");
+  const [commitmentSaving, setCommitmentSaving] = useState(false);
+  const [commitmentSaved, setCommitmentSaved] = useState(false);
+  const [prevAverages, setPrevAverages] = useState<Record<Dimension, number> | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -127,6 +133,11 @@ export default function LiveSessionPage() {
         const data = snap.data();
         setSession({ title: data.title, code: data.code });
         if (data.status === "closed") setSessionStatus("closed");
+        if (data.commitment) {
+          setSavedCommitment({ dimension: data.commitment.dimension, text: data.commitment.text });
+          setDraftDimension(data.commitment.dimension);
+          setDraftText(data.commitment.text);
+        }
       }
     });
 
@@ -152,6 +163,28 @@ export default function LiveSessionPage() {
     return () => { unsubFeedback(); unsubReflection(); unsubNotes(); };
   }, [id, user, authLoading, router]);
 
+  useEffect(() => {
+    if (!user) return;
+    getDocs(query(
+      collection(db, "sessions"),
+      where("presenterId", "==", user.uid),
+      where("status", "==", "closed"),
+      orderBy("createdAt", "desc"),
+      limit(10)
+    )).then(async (snap) => {
+      const prev = snap.docs.find((d) => d.id !== id);
+      if (!prev) return;
+      const respSnap = await getDocs(query(collection(db, "feedback_responses"), where("sessionId", "==", prev.id)));
+      const prevResponses = respSnap.docs.map((d) => d.data() as FeedbackResponse);
+      if (!prevResponses.length) return;
+      setPrevAverages(DIMENSIONS.reduce((acc, dim) => {
+        const vals = prevResponses.map((r) => r[dim]).filter((v) => typeof v === "number");
+        acc[dim] = vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
+        return acc;
+      }, {} as Record<Dimension, number>));
+    });
+  }, [user, id]);
+
   const audienceAverages = DIMENSIONS.reduce(
     (acc, dim) => ({ ...acc, [dim]: average(responses.map((r) => r[dim])) }),
     {} as Record<Dimension, number>
@@ -159,6 +192,10 @@ export default function LiveSessionPage() {
 
   const lowestDimension = getLowestDimension(audienceAverages);
   const secondLowestDimension = getSecondLowestDimension(audienceAverages);
+
+  useEffect(() => {
+    if (lowestDimension && !savedCommitment) setDraftDimension(lowestDimension);
+  }, [lowestDimension, savedCommitment]);
 
   useEffect(() => {
     if (!lowestDimension) return;
@@ -218,6 +255,18 @@ export default function LiveSessionPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId: id }),
     }).catch(() => {});
+  }
+
+  async function saveCommitment() {
+    if (!draftText.trim()) return;
+    setCommitmentSaving(true);
+    await updateDoc(doc(db, "sessions", id), {
+      commitment: { dimension: draftDimension, text: draftText.trim(), setAt: serverTimestamp() },
+    });
+    setSavedCommitment({ dimension: draftDimension, text: draftText.trim() });
+    setCommitmentSaving(false);
+    setCommitmentSaved(true);
+    setTimeout(() => setCommitmentSaved(false), 2000);
   }
 
   const feedbackUrl = session ? `${window.location.origin}/session/${session.code}` : "";
@@ -404,16 +453,26 @@ export default function LiveSessionPage() {
                 </ResponsiveContainer>
 
                 <div className="mt-4 grid grid-cols-5 gap-3">
-                  {DIMENSIONS.map((dim) => (
-                    <div key={dim} className="text-center">
-                      <p className="text-xs text-slate-400 capitalize mb-1">{dim}</p>
-                      <p className="text-xl font-bold text-violet-300">{audienceAverages[dim]}</p>
-                      {reflection && (
-                        <p className="text-sm font-semibold text-cyan-400">{reflection[dim]}</p>
-                      )}
-                      <p className="text-xs text-slate-500">/100</p>
-                    </div>
-                  ))}
+                  {DIMENSIONS.map((dim) => {
+                    const delta = prevAverages && audienceAverages[dim] > 0 && prevAverages[dim] > 0
+                      ? Math.round(audienceAverages[dim] - prevAverages[dim])
+                      : null;
+                    return (
+                      <div key={dim} className="text-center">
+                        <p className="text-xs text-slate-400 capitalize mb-1">{dim}</p>
+                        <p className="text-xl font-bold text-violet-300">{audienceAverages[dim]}</p>
+                        {delta !== null && delta !== 0 && (
+                          <p className={`text-xs font-bold ${delta > 0 ? "text-green-400" : "text-red-400"}`}>
+                            {delta > 0 ? "↑" : "↓"}{Math.abs(delta)}
+                          </p>
+                        )}
+                        {reflection && (
+                          <p className="text-sm font-semibold text-cyan-400">{reflection[dim]}</p>
+                        )}
+                        <p className="text-xs text-slate-500">/100</p>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {reflection && responses.length > 0 && (
@@ -485,6 +544,56 @@ export default function LiveSessionPage() {
               ) : "Save notes"}
             </button>
           </div>
+          {sessionStatus === "closed" && responses.length > 0 && (
+            <div className="rounded-2xl border border-violet-500/20 bg-[#111827] p-6">
+              <p className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-1">Next session focus</p>
+              <p className="text-xs text-slate-500 mb-4">Commit to one area to improve before your next session.</p>
+              {savedCommitment ? (
+                <div>
+                  <div className="rounded-xl bg-violet-500/10 border border-violet-500/20 p-4 mb-3">
+                    <p className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-1 capitalize">
+                      {DIMENSION_LABELS[savedCommitment.dimension]}
+                    </p>
+                    <p className="text-sm text-white leading-relaxed">{savedCommitment.text}</p>
+                  </div>
+                  <button
+                    onClick={() => { setSavedCommitment(null); setDraftText(""); }}
+                    className="text-xs text-slate-500 hover:text-slate-300 transition"
+                  >
+                    Change commitment
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <select
+                    value={draftDimension}
+                    onChange={(e) => setDraftDimension(e.target.value as Dimension)}
+                    className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-2.5 text-sm text-white outline-none focus:border-violet-500"
+                  >
+                    {DIMENSIONS.map((d) => (
+                      <option key={d} value={d} className="bg-[#1a2135]">
+                        {DIMENSION_LABELS[d]}{lowestDimension === d ? " (weakest)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <textarea
+                    value={draftText}
+                    onChange={(e) => setDraftText(e.target.value)}
+                    rows={3}
+                    placeholder="e.g. I'll practise my opening without notes to improve eye contact and energy…"
+                    className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-sm text-white placeholder-slate-600 outline-none focus:border-violet-500 resize-none"
+                  />
+                  <button
+                    onClick={saveCommitment}
+                    disabled={!draftText.trim() || commitmentSaving}
+                    className="w-full rounded-xl bg-violet-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-400 disabled:opacity-50 transition"
+                  >
+                    {commitmentSaving ? "Saving…" : commitmentSaved ? "✓ Committed!" : "Set my focus →"}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">
