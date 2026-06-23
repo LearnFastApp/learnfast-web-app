@@ -12,7 +12,7 @@ import {
   Legend,
 } from "recharts";
 import { QRCodeCanvas } from "qrcode.react";
-import { ArrowLeft, Copy, Check, Users, PenLine, PlayCircle, TrendingUp } from "lucide-react";
+import { ArrowLeft, Copy, Check, Users, PenLine, PlayCircle, TrendingUp, Lock } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import PresenterReflectionModal from "@/components/presenter-reflection-modal";
@@ -379,117 +379,118 @@ export default function LiveSessionPage() {
                 <p className="mb-1 font-bold text-white">{rec.title}</p>
                 <p className="mb-4 text-xs text-slate-400 leading-relaxed">{rec.description}</p>
 
-                {subscriptionStatus !== "active" ? (
-                  <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-5 text-center">
-                    <p className="text-sm font-semibold text-white mb-1">Unlock learning resources</p>
-                    <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-                      Get videos, TED talks, podcasts and articles matched to your session results — included in Lite for £1.99/month.
-                    </p>
-                    <a
-                      href="/pricing"
-                      className="inline-block rounded-lg bg-violet-500 px-4 py-2 text-xs font-semibold text-white hover:bg-violet-400 transition"
-                    >
-                      Upgrade to Lite →
-                    </a>
-                  </div>
-                ) : null}
-
-                {subscriptionStatus === "active" && resourcesLoading && (
+                {resourcesLoading && (
                   <p className="text-xs text-slate-500 animate-pulse">Finding resources…</p>
                 )}
 
-                {subscriptionStatus === "active" && !resourcesLoading && resources && (
-                  <>
-                    <div className="grid grid-cols-4 rounded-lg border border-white/10 bg-[#0f1424] p-0.5 mb-3">
-                      {(["videos", "ted", "podcasts", "articles"] as const).map((tab) => (
-                        <button
-                          key={tab}
-                          onClick={() => setResourceTab(tab)}
-                          className={`rounded-md py-1.5 text-xs font-semibold transition ${
-                            resourceTab === tab
-                              ? "bg-violet-500 text-white"
-                              : "text-slate-400 hover:text-white"
-                          }`}
-                        >
-                          {tab === "videos" ? "Videos" : tab === "ted" ? "TED" : tab === "podcasts" ? "Podcasts" : "Read"}
-                        </button>
-                      ))}
+                {!resourcesLoading && resources && (
+                  <div className="relative">
+                    <div className={subscriptionStatus !== "active" ? "blur-sm pointer-events-none select-none" : ""}>
+                      <div className="grid grid-cols-4 rounded-lg border border-white/10 bg-[#0f1424] p-0.5 mb-3">
+                        {(["videos", "ted", "podcasts", "articles"] as const).map((tab) => (
+                          <button
+                            key={tab}
+                            onClick={() => setResourceTab(tab)}
+                            className={`rounded-md py-1.5 text-xs font-semibold transition ${
+                              resourceTab === tab
+                                ? "bg-violet-500 text-white"
+                                : "text-slate-400 hover:text-white"
+                            }`}
+                          >
+                            {tab === "videos" ? "Videos" : tab === "ted" ? "TED" : tab === "podcasts" ? "Podcasts" : "Read"}
+                          </button>
+                        ))}
+                      </div>
+
+                      {(resourceTab === "videos" || resourceTab === "ted") && (
+                        <div className="space-y-2">
+                          {(resourceTab === "videos" ? resources.videos : resources.tedTalks).map((video) => (
+                            <a
+                              key={video.videoId}
+                              href={`https://www.youtube.com/watch?v=${video.videoId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-start gap-3 rounded-xl border border-white/10 bg-[#1a2135] p-3 hover:border-violet-500/40 transition"
+                            >
+                              {video.thumbnail && (
+                                <img src={video.thumbnail} alt="" className="w-20 h-12 rounded-lg object-cover shrink-0" />
+                              )}
+                              <div className="min-w-0">
+                                <p className="text-xs text-slate-200 leading-snug line-clamp-2 mb-1">{video.title}</p>
+                                <p className="text-xs text-slate-500 flex items-center gap-1">
+                                  <PlayCircle className="h-3 w-3 text-violet-400" />
+                                  {video.channelTitle}
+                                </p>
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      )}
+
+                      {resourceTab === "podcasts" && (
+                        <div className="space-y-2">
+                          {podcastsLoading && (
+                            <p className="text-xs text-slate-500 animate-pulse">Finding podcasts…</p>
+                          )}
+                          {!podcastsLoading && podcasts.map((pod) => (
+                            <a
+                              key={pod.link}
+                              href={pod.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-start gap-3 rounded-xl border border-white/10 bg-[#1a2135] p-3 hover:border-violet-500/40 transition"
+                            >
+                              {pod.image && (
+                                <img src={pod.image} alt="" className="w-12 h-12 rounded-lg object-cover shrink-0" />
+                              )}
+                              <div className="min-w-0">
+                                <p className="text-xs text-slate-200 leading-snug line-clamp-1 mb-0.5 font-semibold">{pod.title}</p>
+                                <p className="text-xs text-violet-400 mb-1">{pod.author}</p>
+                                <p className="text-xs text-slate-500 line-clamp-2">{pod.description}</p>
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      )}
+
+                      {resourceTab === "articles" && (
+                        <div className="space-y-2">
+                          {resources.articles.map((article) => (
+                            <a
+                              key={article.url}
+                              href={article.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex flex-col gap-1 rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 hover:border-violet-500/40 transition"
+                            >
+                              <p className="text-xs text-slate-200 leading-snug line-clamp-2">{article.title}</p>
+                              <p className="text-xs text-slate-500">{article.source}</p>
+                            </a>
+                          ))}
+                        </div>
+                      )}
+
+                      <p className="mt-3 text-xs text-slate-500 text-center">
+                        Based on lowest audience score · {DIMENSION_LABELS[lowestDimension]}: {audienceAverages[lowestDimension]}/100
+                      </p>
                     </div>
 
-                    {(resourceTab === "videos" || resourceTab === "ted") && (
-                      <div className="space-y-2">
-                        {(resourceTab === "videos" ? resources.videos : resources.tedTalks).map((video) => (
-                          <a
-                            key={video.videoId}
-                            href={`https://www.youtube.com/watch?v=${video.videoId}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-start gap-3 rounded-xl border border-white/10 bg-[#1a2135] p-3 hover:border-violet-500/40 transition"
-                          >
-                            {video.thumbnail && (
-                              <img src={video.thumbnail} alt="" className="w-20 h-12 rounded-lg object-cover shrink-0" />
-                            )}
-                            <div className="min-w-0">
-                              <p className="text-xs text-slate-200 leading-snug line-clamp-2 mb-1">{video.title}</p>
-                              <p className="text-xs text-slate-500 flex items-center gap-1">
-                                <PlayCircle className="h-3 w-3 text-violet-400" />
-                                {video.channelTitle}
-                              </p>
-                            </div>
-                          </a>
-                        ))}
+                    {subscriptionStatus !== "active" && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-[#0f1424]/80 backdrop-blur-[2px]">
+                        <Lock className="h-5 w-5 text-violet-400 mb-2" />
+                        <p className="text-sm font-semibold text-white mb-1">Unlock learning resources</p>
+                        <p className="text-xs text-slate-400 text-center mb-4 px-6 leading-relaxed">
+                          Videos, TED talks, podcasts & articles matched to your session results
+                        </p>
+                        <a
+                          href="/pricing"
+                          className="inline-block rounded-lg bg-violet-500 px-4 py-2 text-xs font-semibold text-white hover:bg-violet-400 transition"
+                        >
+                          Upgrade to Lite →
+                        </a>
                       </div>
                     )}
-
-                    {resourceTab === "podcasts" && (
-                      <div className="space-y-2">
-                        {podcastsLoading && (
-                          <p className="text-xs text-slate-500 animate-pulse">Finding podcasts…</p>
-                        )}
-                        {!podcastsLoading && podcasts.map((pod) => (
-                          <a
-                            key={pod.link}
-                            href={pod.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-start gap-3 rounded-xl border border-white/10 bg-[#1a2135] p-3 hover:border-violet-500/40 transition"
-                          >
-                            {pod.image && (
-                              <img src={pod.image} alt="" className="w-12 h-12 rounded-lg object-cover shrink-0" />
-                            )}
-                            <div className="min-w-0">
-                              <p className="text-xs text-slate-200 leading-snug line-clamp-1 mb-0.5 font-semibold">{pod.title}</p>
-                              <p className="text-xs text-violet-400 mb-1">{pod.author}</p>
-                              <p className="text-xs text-slate-500 line-clamp-2">{pod.description}</p>
-                            </div>
-                          </a>
-                        ))}
-                      </div>
-                    )}
-
-                    {resourceTab === "articles" && (
-                      <div className="space-y-2">
-                        {resources.articles.map((article) => (
-                          <a
-                            key={article.url}
-                            href={article.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex flex-col gap-1 rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 hover:border-violet-500/40 transition"
-                          >
-                            <p className="text-xs text-slate-200 leading-snug line-clamp-2">{article.title}</p>
-                            <p className="text-xs text-slate-500">{article.source}</p>
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {subscriptionStatus === "active" && (
-                  <p className="mt-3 text-xs text-slate-500 text-center">
-                    Based on lowest audience score · {DIMENSION_LABELS[lowestDimension]}: {audienceAverages[lowestDimension]}/100
-                  </p>
+                  </div>
                 )}
               </div>
             );
