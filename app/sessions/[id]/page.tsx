@@ -437,6 +437,23 @@ export default function LiveSessionPage() {
               </div>
             </div>
 
+            {sessionStatus === "active" && responses.length > 0 && responses.length < 5 && (
+              <div className="mb-4 flex items-center gap-2 rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-2.5">
+                <span className="text-amber-400 text-sm">⚡</span>
+                <p className="text-sm text-amber-300">
+                  {responses.length} response{responses.length !== 1 ? "s" : ""} so far — aim for 5+ for reliable results.
+                </p>
+              </div>
+            )}
+            {sessionStatus === "closed" && responses.length > 0 && responses.length < 5 && (
+              <div className="mb-4 flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-4 py-2.5">
+                <span className="text-slate-400 text-sm">ℹ</span>
+                <p className="text-sm text-slate-400">
+                  Based on {responses.length} response{responses.length !== 1 ? "s" : ""} — treat as indicative. 5+ responses gives statistically reliable data.
+                </p>
+              </div>
+            )}
+
             {responses.length === 0 && !reflection ? (
               <div className="flex h-64 items-center justify-center text-slate-500">
                 Waiting for responses…
