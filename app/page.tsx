@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { collection, query, where, orderBy, onSnapshot, doc, deleteDoc, updateDoc, getDoc, getDocs } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, doc, deleteDoc, updateDoc, getDoc, getDocs, getCountFromServer } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import {
@@ -38,6 +38,7 @@ interface Session {
   id: string;
   title: string;
   code: string;
+  status: "active" | "closed";
   tags?: string[];
   createdAt: { toDate: () => Date } | null;
   commitment?: { dimension: string; text: string };
@@ -80,6 +81,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"sessions" | "reflections">("sessions");
   const [reflections, setReflections] = useState<ReflectionEntry[]>([]);
   const [reflectionsLoading, setReflectionsLoading] = useState(false);
+  const [responseCounts, setResponseCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (!loading && !user) router.replace("/auth/login");
@@ -128,6 +130,20 @@ export default function Home() {
       setReflectionsLoading(false);
     }).catch(() => setReflectionsLoading(false));
   }, [user]);
+
+  useEffect(() => {
+    if (!sessions.length) return;
+    Promise.all(
+      sessions.map((s) =>
+        getCountFromServer(query(collection(db, "feedback_responses"), where("sessionId", "==", s.id)))
+          .then((snap) => ({ id: s.id, count: snap.data().count }))
+      )
+    ).then((counts) => {
+      const map: Record<string, number> = {};
+      counts.forEach((c) => { map[c.id] = c.count; });
+      setResponseCounts(map);
+    }).catch(() => {});
+  }, [sessions]);
 
   async function handleDeleteSession(sessionId: string) {
     if (!confirm("Delete this session? This cannot be undone.")) return;
@@ -325,11 +341,31 @@ export default function Home() {
                         className="group rounded-2xl border border-white/10 bg-[#111827] p-5 hover:border-violet-500/40 transition"
                       >
                         <a href={`/sessions/${s.id}`} className="block">
-                          <p className="font-semibold mb-1">{s.title}</p>
-                          <p className="text-xs text-slate-400 font-mono">{s.code}</p>
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <p className="font-semibold leading-snug">{s.title}</p>
+                            {s.status === "active" ? (
+                              <span className="shrink-0 flex items-center gap-1 rounded-full bg-green-500/15 px-2 py-0.5 text-xs font-semibold text-green-400">
+                                <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
+                                Live
+                              </span>
+                            ) : (
+                              <span className="shrink-0 rounded-full bg-white/5 px-2 py-0.5 text-xs text-slate-500">
+                                Ended
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <p className="text-xs text-slate-400 font-mono">{s.code}</p>
+                            {responseCounts[s.id] !== undefined && (
+                              <span className="flex items-center gap-1 text-xs text-slate-500">
+                                <Users className="h-3 w-3" />
+                                {responseCounts[s.id]} response{responseCounts[s.id] !== 1 ? "s" : ""}
+                              </span>
+                            )}
+                          </div>
                           {s.createdAt && (
-                            <p className="mt-2 text-xs text-slate-500">
-                              {s.createdAt.toDate().toLocaleDateString()}
+                            <p className="mt-1.5 text-xs text-slate-600">
+                              {s.createdAt.toDate().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                             </p>
                           )}
                         </a>
