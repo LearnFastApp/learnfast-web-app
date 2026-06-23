@@ -12,7 +12,7 @@ import {
   Legend,
 } from "recharts";
 import { QRCodeCanvas } from "qrcode.react";
-import { ArrowLeft, Copy, Check, Users, PenLine, PlayCircle, TrendingUp, Lock } from "lucide-react";
+import { ArrowLeft, Copy, Check, Users, PenLine, PlayCircle, TrendingUp, Lock, StopCircle } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import PresenterReflectionModal from "@/components/presenter-reflection-modal";
@@ -270,17 +270,18 @@ export default function LiveSessionPage() {
           </div>
           <button
             onClick={() => setShowReflection(true)}
-            className="flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-300 hover:bg-cyan-400/20"
+            className="flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-3 py-2 text-sm font-semibold text-cyan-300 hover:bg-cyan-400/20"
           >
             <PenLine className="h-4 w-4" />
-            {reflection ? "Edit reflection" : "Rate yourself"}
+            <span className="hidden sm:inline">{reflection ? "Edit reflection" : "Rate yourself"}</span>
           </button>
           {sessionStatus === "active" && (
             <button
               onClick={() => setShowEndConfirm(true)}
-              className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-400 hover:bg-red-500/20 transition"
+              className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-semibold text-red-400 hover:bg-red-500/20 transition"
             >
-              End session
+              <StopCircle className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">End session</span>
             </button>
           )}
         </div>
