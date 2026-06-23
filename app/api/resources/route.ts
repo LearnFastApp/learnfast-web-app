@@ -34,9 +34,9 @@ interface ArticleResult {
 const ARTICLES: Record<string, ArticleResult[]> = {
   clarity: [
     {
-      title: "How to Give a Killer Presentation",
-      url: "https://hbr.org/2013/06/how-to-give-a-killer-presentation",
-      source: "Harvard Business Review",
+      title: "The Feynman Technique: How to Learn Anything",
+      url: "https://fs.blog/feynman-technique/",
+      source: "Farnam Street",
     },
     {
       title: "Public Speaking Tips — Clarity & Structure",
@@ -44,43 +44,43 @@ const ARTICLES: Record<string, ArticleResult[]> = {
       source: "Skills You Need",
     },
     {
-      title: "Presentation Skills: Speaking Clearly",
-      url: "https://www.toastmasters.org/resources/public-speaking-tips",
-      source: "Toastmasters International",
+      title: "How to Speak So That People Want to Listen",
+      url: "https://www.presentation-guru.com/how-to-speak-so-that-people-want-to-listen/",
+      source: "Presentation Guru",
     },
   ],
   engagement: [
-    {
-      title: "Structure Your Presentation Like a Story",
-      url: "https://hbr.org/2012/10/structure-your-presentation-li",
-      source: "Harvard Business Review",
-    },
     {
       title: "10 Ways to Immediately Engage Your Audience",
       url: "https://www.presentation-guru.com/10-ways-to-immediately-engage-your-audience/",
       source: "Presentation Guru",
     },
     {
-      title: "Audience Engagement — Public Speaking Tips",
+      title: "How to Engage an Audience When Public Speaking",
+      url: "https://www.skillsyouneed.com/present/engaging-an-audience.html",
+      source: "Skills You Need",
+    },
+    {
+      title: "Audience Engagement Tips from Toastmasters",
       url: "https://www.toastmasters.org/resources/public-speaking-tips",
       source: "Toastmasters International",
     },
   ],
   energy: [
     {
-      title: "Speech Delivery — Vocal & Physical Presence",
+      title: "Speech Delivery — Vocal Variety & Physical Presence",
       url: "https://www.skillsyouneed.com/present/speech-delivery.html",
       source: "Skills You Need",
     },
     {
-      title: "Vocal Variety & Energy as a Speaker",
-      url: "https://www.toastmasters.org/resources/public-speaking-tips",
-      source: "Toastmasters International",
-    },
-    {
-      title: "How to Project Confidence and Energy on Stage",
+      title: "How to Project Confidence When Presenting",
       url: "https://www.presentation-guru.com/how-to-project-confidence-when-presenting/",
       source: "Presentation Guru",
+    },
+    {
+      title: "Vocal Variety: How to Add Energy to Your Voice",
+      url: "https://www.toastmasters.org/resources/public-speaking-tips",
+      source: "Toastmasters International",
     },
   ],
   understanding: [
@@ -95,24 +95,24 @@ const ARTICLES: Record<string, ArticleResult[]> = {
       source: "Skills You Need",
     },
     {
-      title: "Making Technical Content Accessible",
-      url: "https://www.toastmasters.org/resources/public-speaking-tips",
-      source: "Toastmasters International",
+      title: "Making Your Message Land — Simplicity in Presenting",
+      url: "https://www.presentation-guru.com/making-complex-information-simple/",
+      source: "Presentation Guru",
     },
   ],
   connection: [
-    {
-      title: "How Great Leaders Connect With Any Audience",
-      url: "https://hbr.org/2013/06/how-to-give-a-killer-presentation",
-      source: "Harvard Business Review",
-    },
     {
       title: "9 Ways to Connect With Your Audience",
       url: "https://www.presentation-guru.com/9-ways-to-connect-with-your-audience/",
       source: "Presentation Guru",
     },
     {
-      title: "Building Rapport With Your Audience",
+      title: "Building Rapport — Skills You Need",
+      url: "https://www.skillsyouneed.com/ips/rapport.html",
+      source: "Skills You Need",
+    },
+    {
+      title: "Storytelling Tips for Presenters",
       url: "https://www.toastmasters.org/resources/public-speaking-tips",
       source: "Toastmasters International",
     },
