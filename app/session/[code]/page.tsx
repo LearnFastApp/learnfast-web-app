@@ -151,8 +151,21 @@ export default function FeedbackPage() {
       <main className="min-h-screen bg-[#05070d] flex items-center justify-center p-6">
         <div className="text-center max-w-sm">
           <div className="mb-4 text-5xl">✅</div>
-          <h1 className="mb-2 text-2xl font-bold text-white">Thanks!</h1>
-          <p className="text-slate-400">Your feedback has been recorded. It helps the presenter improve.</p>
+          <h1 className="mb-2 text-2xl font-bold text-white">Thanks for your feedback!</h1>
+          <p className="text-slate-400 mb-8">Your scores have been recorded and will help the presenter understand exactly where to improve.</p>
+
+          <div className="rounded-2xl border border-violet-500/30 bg-violet-500/5 p-6">
+            <p className="text-sm font-semibold text-white mb-1">Do you present too?</p>
+            <p className="text-sm text-slate-400 mb-4 leading-relaxed">
+              LearnFast helps presenters collect real-time audience feedback and get matched learning resources — so every session makes you better.
+            </p>
+            <a
+              href="https://app.learnfastapp.com"
+              className="inline-block rounded-xl bg-violet-500 px-6 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition"
+            >
+              Try it for free →
+            </a>
+          </div>
         </div>
       </main>
     );
