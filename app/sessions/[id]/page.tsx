@@ -754,48 +754,17 @@ export default function LiveSessionPage() {
             <h2 className="mb-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">
               Share with audience
             </h2>
-            <div
-              className="relative flex justify-center rounded-xl bg-white p-4 mb-4 cursor-pointer group"
-              onDoubleClick={async () => {
-                const canvas = document.getElementById("qr-download") as HTMLCanvasElement;
-                if (!canvas) return;
-                canvas.toBlob(async (blob) => {
-                  if (!blob) return;
-                  try {
-                    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-                    setQrCopied(true);
-                    setTimeout(() => setQrCopied(false), 2000);
-                  } catch {
-                    // fallback: copy URL if image clipboard not supported
-                    navigator.clipboard.writeText(feedbackUrl);
-                    setQrCopied(true);
-                    setTimeout(() => setQrCopied(false), 2000);
-                  }
-                });
-              }}
-            >
+            <div className="flex justify-center rounded-xl bg-white p-4 mb-4">
               <QRCodeCanvas value={feedbackUrl} size={160} id="qr-display" />
-              <div className={`absolute inset-0 flex items-center justify-center rounded-xl bg-black/50 transition-opacity ${qrCopied ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
-                <p className="text-xs font-semibold text-white">
-                  {qrCopied ? "✓ Copied!" : "Double-click to copy"}
-                </p>
-              </div>
             </div>
             {/* Hidden high-res canvas for download */}
             <div className="hidden">
-              <QRCodeCanvas value={feedbackUrl} size={512} id="qr-download" />
+              <QRCodeCanvas value={feedbackUrl} size={1024} id="qr-download" />
             </div>
             <div className="rounded-xl bg-[#1a2135] px-4 py-3 text-center mb-3">
               <p className="text-xs text-slate-400 mb-1">Code</p>
               <p className="text-2xl font-bold tracking-widest">{session.code}</p>
             </div>
-            <button
-              onClick={copyUrl}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-300 hover:bg-white/5 mb-2"
-            >
-              {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
-              {copied ? "Copied!" : "Copy link"}
-            </button>
             <button
               onClick={() => {
                 const canvas = document.getElementById("qr-download") as HTMLCanvasElement;
@@ -805,9 +774,16 @@ export default function LiveSessionPage() {
                 link.href = canvas.toDataURL("image/png");
                 link.click();
               }}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition mb-2"
+            >
+              Download QR for Keynote / Slides
+            </button>
+            <button
+              onClick={copyUrl}
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-300 hover:bg-white/5"
             >
-              Download QR (PNG)
+              {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
+              {copied ? "Copied!" : "Copy join link"}
             </button>
           </div>
         </div>

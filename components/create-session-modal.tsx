@@ -227,7 +227,7 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
               <QRCodeCanvas value={feedbackUrl} size={180} id="qr-modal-display" />
             </div>
             <div className="hidden">
-              <QRCodeCanvas value={feedbackUrl} size={512} id="qr-modal-download" />
+              <QRCodeCanvas value={feedbackUrl} size={1024} id="qr-modal-download" />
             </div>
 
             <div className="rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-center">
@@ -235,6 +235,19 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
               <p className="text-3xl font-bold tracking-widest text-white">{created.code}</p>
             </div>
 
+            <button
+              onClick={() => {
+                const canvas = document.getElementById("qr-modal-download") as HTMLCanvasElement;
+                if (!canvas) return;
+                const link = document.createElement("a");
+                link.download = `learnfast-${created.code}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+              }}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition"
+            >
+              Download QR for Keynote / Slides
+            </button>
             <div className="flex gap-3">
               <button
                 onClick={copyUrl}
@@ -246,24 +259,11 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
 
               <a
                 href={`/sessions/${created.id}`}
-                className="flex flex-1 items-center justify-center rounded-xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white hover:bg-violet-400"
+                className="flex flex-1 items-center justify-center rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-white hover:bg-white/5"
               >
                 Go live →
               </a>
             </div>
-            <button
-              onClick={() => {
-                const canvas = document.getElementById("qr-modal-download") as HTMLCanvasElement;
-                if (!canvas) return;
-                const link = document.createElement("a");
-                link.download = `learnfast-${created.code}.png`;
-                link.href = canvas.toDataURL("image/png");
-                link.click();
-              }}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-slate-400 hover:bg-white/5 hover:text-white transition"
-            >
-              Download QR (PNG)
-            </button>
           </div>
         )}
       </div>
