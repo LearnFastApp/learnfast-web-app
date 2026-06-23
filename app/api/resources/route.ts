@@ -34,117 +34,122 @@ interface ArticleResult {
 const ARTICLES: Record<string, ArticleResult[]> = {
   clarity: [
     {
-      title: "The Feynman Technique: How to Learn Anything",
-      url: "https://fs.blog/feynman-technique/",
-      source: "Farnam Street",
+      title: "Presentation Skills: How to Structure and Deliver with Clarity",
+      url: "https://www.mindtools.com/pages/article/PresentationSkills.htm",
+      source: "MindTools",
     },
-    {
-      title: "Public Speaking Tips — Clarity & Structure",
-      url: "https://www.skillsyouneed.com/present/presentation-tips.html",
-      source: "Skills You Need",
-    },
-    {
-      title: "How to Speak So That People Want to Listen",
-      url: "https://www.presentation-guru.com/how-to-speak-so-that-people-want-to-listen/",
-      source: "Presentation Guru",
-    },
-    {
-      title: "How to Outline a Speech or Presentation",
-      url: "https://sixminutes.dlugan.com/speech-preparation-5-outlines/",
-      source: "Six Minutes",
-    },
-    {
-      title: "Ten Tips for Clear Communication",
-      url: "https://mannerofspeaking.org/2010/05/22/ten-tips-for-clear-communication/",
-      source: "Manner of Speaking",
-    },
-  ],
-  engagement: [
-    {
-      title: "10 Ways to Immediately Engage Your Audience",
-      url: "https://www.presentation-guru.com/10-ways-to-immediately-engage-your-audience/",
-      source: "Presentation Guru",
-    },
-    {
-      title: "How to Engage an Audience When Public Speaking",
-      url: "https://www.skillsyouneed.com/present/engaging-an-audience.html",
-      source: "Skills You Need",
-    },
-    {
-      title: "Audience Engagement Tips from Toastmasters",
-      url: "https://www.toastmasters.org/resources/public-speaking-tips",
-      source: "Toastmasters International",
-    },
-    {
-      title: "How to Open a Presentation and Hook Your Audience",
-      url: "https://sixminutes.dlugan.com/speech-introduction/",
-      source: "Six Minutes",
-    },
-    {
-      title: "How to Get an Audience to Listen to Your Presentation",
-      url: "https://blog.ted.com/how-to-get-your-audience-to-listen-and-engage-with-your-presentation/",
-      source: "TED Blog",
-    },
-  ],
-  energy: [
-    {
-      title: "Speech Delivery — Vocal Variety & Physical Presence",
-      url: "https://www.skillsyouneed.com/present/speech-delivery.html",
-      source: "Skills You Need",
-    },
-    {
-      title: "How to Project Confidence When Presenting",
-      url: "https://www.presentation-guru.com/how-to-project-confidence-when-presenting/",
-      source: "Presentation Guru",
-    },
-    {
-      title: "Vocal Variety: How to Add Energy to Your Voice",
-      url: "https://sixminutes.dlugan.com/vocal-variety-speech/",
-      source: "Six Minutes",
-    },
-    {
-      title: "Using Body Language Effectively When Presenting",
-      url: "https://mannerofspeaking.org/2011/04/04/body-language-for-speakers/",
-      source: "Manner of Speaking",
-    },
-    {
-      title: "Stage Presence and Commanding Attention",
-      url: "https://www.toastmasters.org/resources/public-speaking-tips",
-      source: "Toastmasters International",
-    },
-  ],
-  understanding: [
     {
       title: "The Feynman Technique: Explain Anything Simply",
       url: "https://fs.blog/feynman-technique/",
       source: "Farnam Street",
     },
     {
-      title: "How to Explain Complex Ideas Clearly",
+      title: "Communication Skills: Building Better Conversations",
+      url: "https://www.mindtools.com/az4wxv7/communication-skills",
+      source: "MindTools",
+    },
+    {
+      title: "Presentation Preparation: How to Plan Your Talk",
+      url: "https://www.mindtools.com/pages/article/presentation-preparation.htm",
+      source: "MindTools",
+    },
+    {
+      title: "Communication Skills: What They Are and How to Improve",
+      url: "https://www.coursera.org/articles/communication-skills",
+      source: "Coursera",
+    },
+  ],
+  engagement: [
+    {
+      title: "Audience Analysis: Understanding Who You're Talking To",
+      url: "https://www.mindtools.com/az4wxv7/audience-analysis",
+      source: "MindTools",
+    },
+    {
+      title: "Storytelling: A Powerful Tool for Presenters and Leaders",
+      url: "https://www.mindtools.com/pages/article/storytelling.htm",
+      source: "MindTools",
+    },
+    {
+      title: "How to Give Engaging Presentations",
+      url: "https://www.entrepreneur.com/leadership/how-to-give-engaging-presentations/299983",
+      source: "Entrepreneur",
+    },
+    {
+      title: "Active Listening: Hear What People Are Really Saying",
+      url: "https://www.mindtools.com/pages/article/ActiveListening.htm",
+      source: "MindTools",
+    },
+    {
+      title: "Communication Skills: The Art of Connecting",
+      url: "https://positivepsychology.com/communication-skills/",
+      source: "Positive Psychology",
+    },
+  ],
+  energy: [
+    {
+      title: "Using Your Vocal Tone to Command Attention",
+      url: "https://www.mindtools.com/pages/article/vocal-tone.htm",
+      source: "MindTools",
+    },
+    {
+      title: "Body Language: Communicate More Effectively",
+      url: "https://www.mindtools.com/pages/article/body-language.htm",
+      source: "MindTools",
+    },
+    {
+      title: "Overcoming Nervousness: Staying Calm Under Pressure",
+      url: "https://www.mindtools.com/pages/article/nervousness.htm",
+      source: "MindTools",
+    },
+    {
+      title: "Vocal Communication: Using Your Voice Powerfully",
+      url: "https://www.mindtools.com/pages/article/vocal-communication.htm",
+      source: "MindTools",
+    },
+    {
+      title: "10 Tips for Effective Public Speaking",
+      url: "https://www.entrepreneur.com/leadership/10-tips-for-effective-public-speaking/227713",
+      source: "Entrepreneur",
+    },
+  ],
+  understanding: [
+    {
+      title: "The Feynman Technique: Make Complex Ideas Stick",
+      url: "https://fs.blog/feynman-technique/",
+      source: "Farnam Street",
+    },
+    {
+      title: "Public Speaking: How to Inform and Inspire",
+      url: "https://www.coursera.org/articles/public-speaking",
+      source: "Coursera",
+    },
+    {
+      title: "Presentation Tips for Clearer, More Effective Talks",
       url: "https://www.skillsyouneed.com/present/presentation-tips.html",
       source: "Skills You Need",
     },
     {
-      title: "Making Complex Information Simple",
-      url: "https://www.presentation-guru.com/making-complex-information-simple/",
-      source: "Presentation Guru",
+      title: "Active Listening: The Key to Understanding Your Audience",
+      url: "https://positivepsychology.com/active-listening-techniques/",
+      source: "Positive Psychology",
     },
     {
-      title: "Using Analogies to Explain Difficult Concepts",
-      url: "https://sixminutes.dlugan.com/analogy/",
-      source: "Six Minutes",
-    },
-    {
-      title: "How to Make Your Ideas Clear to Your Audience",
-      url: "https://mannerofspeaking.org/2013/09/08/how-to-be-a-clearer-speaker/",
-      source: "Manner of Speaking",
+      title: "7 Tips for Improving Public Speaking Skills",
+      url: "https://www.entrepreneur.com/leadership/7-tips-for-improving-public-speaking-skills/299980",
+      source: "Entrepreneur",
     },
   ],
   connection: [
     {
-      title: "9 Ways to Connect With Your Audience",
-      url: "https://www.presentation-guru.com/9-ways-to-connect-with-your-audience/",
-      source: "Presentation Guru",
+      title: "Building Rapport: Creating Strong Relationships",
+      url: "https://www.mindtools.com/pages/article/building-rapport.htm",
+      source: "MindTools",
+    },
+    {
+      title: "Empathy: A Key Skill for Connecting With Others",
+      url: "https://www.mindtools.com/pages/article/empathy.htm",
+      source: "MindTools",
     },
     {
       title: "Building Rapport With Your Audience",
@@ -152,19 +157,14 @@ const ARTICLES: Record<string, ArticleResult[]> = {
       source: "Skills You Need",
     },
     {
-      title: "Storytelling for Presentations — The Complete Guide",
-      url: "https://sixminutes.dlugan.com/storytelling-for-presentations/",
-      source: "Six Minutes",
+      title: "The Secret of Charismatic People",
+      url: "https://www.entrepreneur.com/living/the-secret-of-charismatic-people/234374",
+      source: "Entrepreneur",
     },
     {
-      title: "How Great Speakers Connect With an Audience",
-      url: "https://blog.ted.com/how-to-connect-with-your-audience/",
-      source: "TED Blog",
-    },
-    {
-      title: "The Power of Vulnerability in Public Speaking",
-      url: "https://mannerofspeaking.org/2013/02/17/vulnerability-public-speaking/",
-      source: "Manner of Speaking",
+      title: "Storytelling: Connect Through Narrative",
+      url: "https://www.mindtools.com/pages/article/storytelling.htm",
+      source: "MindTools",
     },
   ],
 };
