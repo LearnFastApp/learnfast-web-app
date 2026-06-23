@@ -405,12 +405,12 @@ export default function LiveSessionPage() {
                   Unlock improvement resources →
                 </a>
               ) : (
-                <a
-                  href="#recommended"
-                  className="inline-block rounded-xl bg-violet-500 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition text-center"
+                <button
+                  onClick={() => document.getElementById("recommended")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                  className="rounded-xl bg-violet-500 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition"
                 >
                   View your resources →
-                </a>
+                </button>
               )}
             </div>
           </div>
