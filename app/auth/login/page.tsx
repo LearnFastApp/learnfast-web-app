@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -93,7 +94,7 @@ export default function LoginPage() {
     <main className="min-h-screen bg-[#05070d] flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="mb-10 grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5">
-          <img src="/icon-mark.png" alt="" className="h-14 w-auto row-span-2 self-center" />
+          <Image src="/icon-mark.png" alt="" width={80} height={58} className="row-span-2 self-center" priority />
           <p className="self-end leading-none text-[1.35rem] font-bold tracking-tight" style={{ color: '#5bb8f5' }}>
             LEARN<span className="font-light">FAST</span>
           </p>
