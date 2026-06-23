@@ -256,6 +256,9 @@ export default function LiveSessionPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId: id }),
     }).catch(() => {});
+
+    // Prompt self-reflection immediately — before results are visible
+    if (!reflection) setShowReflection(true);
   }
 
   async function saveCommitment() {
@@ -362,6 +365,24 @@ export default function LiveSessionPage() {
           )}
         </div>
       </header>
+
+      {sessionStatus === "closed" && !reflection && (
+        <div className="mx-6 mt-6 rounded-2xl border border-cyan-500/40 bg-cyan-500/5 p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <PenLine className="h-5 w-5 text-cyan-400 shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-white">Add your self-reflection</p>
+              <p className="text-xs text-slate-400">Rate yourself before reading the audience scores to keep your assessment unbiased.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowReflection(true)}
+            className="shrink-0 rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-400 transition"
+          >
+            Rate yourself →
+          </button>
+        </div>
+      )}
 
       {sessionStatus === "closed" && (
         <div className="mx-6 mt-6 rounded-2xl border border-violet-500/40 bg-gradient-to-r from-violet-500/10 to-blue-500/5 p-6">
