@@ -34,9 +34,9 @@ interface ArticleResult {
 const ARTICLES: Record<string, ArticleResult[]> = {
   clarity: [
     {
-      title: "Presentation Skills: How to Structure and Deliver with Clarity",
-      url: "https://www.mindtools.com/pages/article/PresentationSkills.htm",
-      source: "MindTools",
+      title: "How to Structure a Presentation That's Easy to Follow",
+      url: "https://visme.co/blog/presentation-tips/",
+      source: "Visme",
     },
     {
       title: "The Feynman Technique: Explain Anything Simply",
@@ -44,31 +44,36 @@ const ARTICLES: Record<string, ArticleResult[]> = {
       source: "Farnam Street",
     },
     {
-      title: "Communication Skills: Building Better Conversations",
-      url: "https://www.mindtools.com/az4wxv7/communication-skills",
-      source: "MindTools",
-    },
-    {
-      title: "Presentation Preparation: How to Plan Your Talk",
-      url: "https://www.mindtools.com/pages/article/presentation-preparation.htm",
-      source: "MindTools",
-    },
-    {
       title: "Communication Skills: What They Are and How to Improve",
       url: "https://www.coursera.org/articles/communication-skills",
       source: "Coursera",
     },
+    {
+      title: "How to End a Presentation With Impact",
+      url: "https://visme.co/blog/how-to-end-a-presentation/",
+      source: "Visme",
+    },
+    {
+      title: "Presentation Tips for Clearer Communication",
+      url: "https://www.skillsyouneed.com/present/presentation-tips.html",
+      source: "Skills You Need",
+    },
   ],
   engagement: [
     {
-      title: "Audience Analysis: Understanding Who You're Talking To",
-      url: "https://www.mindtools.com/az4wxv7/audience-analysis",
-      source: "MindTools",
+      title: "Active Listening: The Art of Empathetic Conversation",
+      url: "https://positivepsychology.com/active-listening/",
+      source: "Positive Psychology",
     },
     {
-      title: "Storytelling: A Powerful Tool for Presenters and Leaders",
-      url: "https://www.mindtools.com/pages/article/storytelling.htm",
-      source: "MindTools",
+      title: "Communication Skills: The Art of Connecting",
+      url: "https://positivepsychology.com/communication-skills/",
+      source: "Positive Psychology",
+    },
+    {
+      title: "Public Speaking: How to Inform and Inspire",
+      url: "https://www.coursera.org/articles/public-speaking",
+      source: "Coursera",
     },
     {
       title: "How to Give Engaging Presentations",
@@ -76,36 +81,31 @@ const ARTICLES: Record<string, ArticleResult[]> = {
       source: "Entrepreneur",
     },
     {
-      title: "Active Listening: Hear What People Are Really Saying",
-      url: "https://www.mindtools.com/pages/article/ActiveListening.htm",
-      source: "MindTools",
-    },
-    {
-      title: "Communication Skills: The Art of Connecting",
-      url: "https://positivepsychology.com/communication-skills/",
-      source: "Positive Psychology",
+      title: "20 Public Speaking Tips With Great Examples",
+      url: "https://visme.co/blog/public-speaking-tips/",
+      source: "Visme",
     },
   ],
   energy: [
     {
-      title: "Using Your Vocal Tone to Command Attention",
-      url: "https://www.mindtools.com/pages/article/vocal-tone.htm",
-      source: "MindTools",
+      title: "Vocal Power: How to Command a Room With Your Voice",
+      url: "https://www.entrepreneur.com/leadership/vocal-power-how-to-command-a-room-with-your-voice/299987",
+      source: "Entrepreneur",
     },
     {
-      title: "Body Language: Communicate More Effectively",
-      url: "https://www.mindtools.com/pages/article/body-language.htm",
-      source: "MindTools",
+      title: "Body Language Tips for Speakers",
+      url: "https://www.entrepreneur.com/leadership/body-language-tips-for-speakers/299986",
+      source: "Entrepreneur",
     },
     {
-      title: "Overcoming Nervousness: Staying Calm Under Pressure",
-      url: "https://www.mindtools.com/pages/article/nervousness.htm",
-      source: "MindTools",
+      title: "What Is Self-Confidence? 9 Proven Ways to Increase It",
+      url: "https://positivepsychology.com/self-confidence/",
+      source: "Positive Psychology",
     },
     {
-      title: "Vocal Communication: Using Your Voice Powerfully",
-      url: "https://www.mindtools.com/pages/article/vocal-communication.htm",
-      source: "MindTools",
+      title: "Nonverbal Communication Skills: What the Research Says",
+      url: "https://positivepsychology.com/nonverbal-communication/",
+      source: "Positive Psychology",
     },
     {
       title: "10 Tips for Effective Public Speaking",
@@ -120,23 +120,23 @@ const ARTICLES: Record<string, ArticleResult[]> = {
       source: "Farnam Street",
     },
     {
-      title: "Public Speaking: How to Inform and Inspire",
-      url: "https://www.coursera.org/articles/public-speaking",
-      source: "Coursera",
-    },
-    {
-      title: "Presentation Tips for Clearer, More Effective Talks",
-      url: "https://www.skillsyouneed.com/present/presentation-tips.html",
-      source: "Skills You Need",
-    },
-    {
-      title: "Active Listening: The Key to Understanding Your Audience",
+      title: "Active Listening Techniques: How to Really Hear Your Audience",
       url: "https://positivepsychology.com/active-listening-techniques/",
       source: "Positive Psychology",
     },
     {
       title: "7 Tips for Improving Public Speaking Skills",
       url: "https://www.entrepreneur.com/leadership/7-tips-for-improving-public-speaking-skills/299980",
+      source: "Entrepreneur",
+    },
+    {
+      title: "Active Listening: Hear What People Are Really Saying",
+      url: "https://www.mindtools.com/pages/article/ActiveListening.htm",
+      source: "MindTools",
+    },
+    {
+      title: "5 Surprising Charisma Tips That Actually Work",
+      url: "https://www.entrepreneur.com/living/5-surprising-charisma-tips/234375",
       source: "Entrepreneur",
     },
   ],
@@ -147,14 +147,14 @@ const ARTICLES: Record<string, ArticleResult[]> = {
       source: "MindTools",
     },
     {
-      title: "Empathy: A Key Skill for Connecting With Others",
-      url: "https://www.mindtools.com/pages/article/empathy.htm",
-      source: "MindTools",
+      title: "How to Build Rapport: 18 Examples and Techniques",
+      url: "https://positivepsychology.com/rapport/",
+      source: "Positive Psychology",
     },
     {
-      title: "Building Rapport With Your Audience",
-      url: "https://www.skillsyouneed.com/ips/rapport.html",
-      source: "Skills You Need",
+      title: "Empathy in Communication: How to Connect Authentically",
+      url: "https://positivepsychology.com/empathy/",
+      source: "Positive Psychology",
     },
     {
       title: "The Secret of Charismatic People",
@@ -162,9 +162,9 @@ const ARTICLES: Record<string, ArticleResult[]> = {
       source: "Entrepreneur",
     },
     {
-      title: "Storytelling: Connect Through Narrative",
-      url: "https://www.mindtools.com/pages/article/storytelling.htm",
-      source: "MindTools",
+      title: "Building Rapport With Your Audience",
+      url: "https://www.skillsyouneed.com/ips/rapport.html",
+      source: "Skills You Need",
     },
   ],
 };
