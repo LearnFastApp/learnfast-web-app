@@ -29,7 +29,7 @@ export default function LandingPage() {
         <div className="flex items-center gap-3">
           <Image src="/icon-mark.png" alt="LearnFast" width={36} height={26} />
           <span className="text-lg font-bold tracking-tight" style={{ color: "#5bb8f5" }}>
-            LEARN<span className="font-light">FAST</span>
+            LEARN<span className="font-light">FAST</span><sup className="text-[0.5em] font-normal ml-0.5 align-super">™</sup>
           </span>
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
@@ -261,7 +261,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <Image src="/icon-mark.png" alt="LearnFast" width={28} height={20} />
             <span className="text-sm font-bold" style={{ color: "#5bb8f5" }}>
-              LEARN<span className="font-light">FAST</span>
+              LEARN<span className="font-light">FAST</span><sup className="text-[0.5em] font-normal ml-0.5 align-super">™</sup>
             </span>
           </div>
           <p className="text-xs text-slate-600">© {new Date().getFullYear()} LearnFast. Feedback Intelligence.</p>

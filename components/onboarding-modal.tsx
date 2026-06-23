@@ -64,7 +64,7 @@ export default function OnboardingModal({ onClose, onCreateSession }: Props) {
   const steps = [
     // Step 0 — What is LearnFast
     <div key="step0" className="flex flex-col items-center text-center">
-      <p className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-2">Welcome to LearnFast</p>
+      <p className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-2">Welcome to LearnFast™</p>
       <h2 className="text-2xl font-bold text-white mb-3">Real feedback.<br />Real improvement.</h2>
       <p className="text-sm text-slate-400 mb-6 max-w-xs leading-relaxed">
         Create a session, share the code or QR with your audience, and get honest scores across 5 dimensions — in real time.

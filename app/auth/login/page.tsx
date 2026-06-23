@@ -96,7 +96,7 @@ export default function LoginPage() {
         <div className="mb-10 grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5">
           <Image src="/icon-mark.png" alt="" width={80} height={58} className="row-span-2 self-center" priority />
           <p className="self-end leading-none text-[1.35rem] font-bold tracking-tight" style={{ color: '#5bb8f5' }}>
-            LEARN<span className="font-light">FAST</span>
+            LEARN<span className="font-light">FAST</span><sup className="text-[0.5em] font-normal ml-0.5 align-super">™</sup>
           </p>
           <p className="self-start text-sm text-slate-400 leading-tight">Feedback Intelligence</p>
         </div>
