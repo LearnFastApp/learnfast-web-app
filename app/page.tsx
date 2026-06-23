@@ -30,12 +30,6 @@ const navItems = [
   { label: "Settings", icon: Settings, href: "/settings" },
 ];
 
-const resources = [
-  "Executive Presence Mastery",
-  "Strategic Communication for Modern Leaders",
-  "Building High-Performance Teams",
-  "The Art of Difficult Conversations",
-];
 
 interface Session {
   id: string;
@@ -308,35 +302,6 @@ export default function Home() {
               )}
             </section>
 
-            {/* Featured resources */}
-            <section className="rounded-2xl border border-white/10 bg-[#111827] p-6">
-              <div className="mb-5 flex items-center justify-between">
-                <h2 className="text-xl font-bold">Featured Learning Resources</h2>
-                <p className="text-sm text-violet-300">View all resources →</p>
-              </div>
-
-              <div className="grid gap-5 md:grid-cols-2">
-                {resources.map((resource) => (
-                  <div
-                    key={resource}
-                    className="rounded-xl border border-white/10 bg-[#1a2135] p-5"
-                  >
-                    <div className="mb-4 flex items-center gap-3">
-                      <div className="rounded-lg bg-blue-500/20 p-3 text-blue-300">
-                        <BookOpen className="h-5 w-5" />
-                      </div>
-                      <span className="rounded-full bg-blue-500/20 px-3 py-1 text-xs text-blue-300">
-                        Resource
-                      </span>
-                    </div>
-                    <h3 className="mb-2 font-bold">{resource}</h3>
-                    <p className="text-sm text-slate-400">
-                      Suggested based on your current feedback profile.
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </section>
 
             <section className="rounded-2xl border border-white/10 bg-gradient-to-r from-cyan-500/10 via-violet-500/10 to-blue-500/10 p-6">
               <div className="flex items-center gap-3">
