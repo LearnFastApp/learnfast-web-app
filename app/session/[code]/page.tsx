@@ -31,7 +31,7 @@ const NARRATIVES: Record<Dimension, { max: number; text: string }[]> = {
   ],
   energy: [
     { max: 40, text: "To be honest, lacked energy, appeared disengaged and failed to capture attention." },
-    { max: 60, text: "Ok but I needed more to seek the ideas to me." },
+    { max: 60, text: "Ok but I needed more to sell the ideas to me." },
     { max: 80, text: "Engaging and energetic, maintaining interest most of the time." },
     { max: 100, text: "Loved it, had me bought in and energised!" },
   ],
