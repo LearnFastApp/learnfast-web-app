@@ -40,6 +40,8 @@ interface Session {
   code: string;
   tags?: string[];
   createdAt: { toDate: () => Date } | null;
+  commitment?: { dimension: string; text: string };
+  commitmentReview?: { notes: string; skipped: boolean };
 }
 
 interface ReflectionEntry {
@@ -398,22 +400,40 @@ export default function Home() {
                         <a
                           key={r.sessionId}
                           href={`/sessions/${r.sessionId}`}
-                          className="group flex flex-col gap-3 rounded-2xl border border-white/10 bg-[#111827] p-5 hover:border-cyan-500/30 transition sm:flex-row sm:items-center"
+                          className="group flex flex-col gap-3 rounded-2xl border border-white/10 bg-[#111827] p-5 hover:border-cyan-500/30 transition"
                         >
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-white truncate">{session?.title ?? "Session"}</p>
-                            <p className="text-xs text-slate-500 mt-0.5">
-                              {r.submittedAt ? r.submittedAt.toDate().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
-                            </p>
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-white truncate">{session?.title ?? "Session"}</p>
+                              <p className="text-xs text-slate-500 mt-0.5">
+                                {r.submittedAt ? r.submittedAt.toDate().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                              </p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {DIMENSIONS.map((dim) => (
+                                <span key={dim} className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${scoreBadgeClass(r[dim])}`}>
+                                  <span className="text-white/50 font-normal">{DIM_LABELS[dim].slice(0, 3)} </span>{r[dim]}
+                                </span>
+                              ))}
+                            </div>
+                            <span className="hidden sm:block text-slate-600 group-hover:text-cyan-400 transition shrink-0">→</span>
                           </div>
-                          <div className="flex flex-wrap gap-2">
-                            {DIMENSIONS.map((dim) => (
-                              <span key={dim} className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${scoreBadgeClass(r[dim])}`}>
-                                <span className="text-white/50 font-normal">{DIM_LABELS[dim].slice(0, 3)} </span>{r[dim]}
-                              </span>
-                            ))}
-                          </div>
-                          <span className="hidden sm:block text-slate-600 group-hover:text-cyan-400 transition shrink-0">→</span>
+                          {(session?.commitment?.text || (session?.commitmentReview?.notes && !session.commitmentReview.skipped)) && (
+                            <div className="border-t border-white/5 pt-3 space-y-2.5">
+                              {session?.commitment?.text && (
+                                <div>
+                                  <p className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-1">Next session focus — {session.commitment.dimension}</p>
+                                  <p className="text-sm text-slate-300 leading-relaxed">&ldquo;{session.commitment.text}&rdquo;</p>
+                                </div>
+                              )}
+                              {session?.commitmentReview?.notes && !session.commitmentReview.skipped && (
+                                <div>
+                                  <p className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-1">How it went</p>
+                                  <p className="text-sm text-slate-300 leading-relaxed">&ldquo;{session.commitmentReview.notes}&rdquo;</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </a>
                       );
                     })}
