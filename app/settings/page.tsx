@@ -43,6 +43,7 @@ export default function SettingsPage() {
 
   // Billing
   const [portalLoading, setPortalLoading] = useState(false);
+  const [portalError, setPortalError] = useState("");
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth/login");
@@ -120,16 +121,29 @@ export default function SettingsPage() {
   }
 
   async function handleManageBilling() {
-    if (!presenter.stripeCustomerId) return;
+    if (!presenter.stripeCustomerId) {
+      setPortalError("No billing account found. Please contact support.");
+      return;
+    }
     setPortalLoading(true);
-    const res = await fetch("/api/stripe/portal", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ customerId: presenter.stripeCustomerId }),
-    });
-    const data = await res.json();
-    if (data.url) window.location.href = data.url;
-    else setPortalLoading(false);
+    setPortalError("");
+    try {
+      const res = await fetch("/api/stripe/portal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerId: presenter.stripeCustomerId }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setPortalError(data.error ?? "Failed to open billing portal. Please try again.");
+        setPortalLoading(false);
+      }
+    } catch {
+      setPortalError("Network error. Please try again.");
+      setPortalLoading(false);
+    }
   }
 
   if (authLoading || !user) {
@@ -294,13 +308,18 @@ export default function SettingsPage() {
           </div>
 
           {isActive ? (
-            <button
-              onClick={handleManageBilling}
-              disabled={portalLoading}
-              className="w-full rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 disabled:opacity-50 transition"
-            >
-              {portalLoading ? "Opening portal…" : "Manage billing →"}
-            </button>
+            <>
+              <button
+                onClick={handleManageBilling}
+                disabled={portalLoading}
+                className="w-full rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 disabled:opacity-50 transition"
+              >
+                {portalLoading ? "Opening portal…" : "Manage billing →"}
+              </button>
+              {portalError && (
+                <p className="mt-2 text-sm text-red-400">{portalError}</p>
+              )}
+            </>
           ) : (
             <a
               href="/pricing"
