@@ -28,7 +28,7 @@ const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/", active: true },
   { label: "Session Calendar", icon: Calendar, href: "#", comingSoon: true },
   { label: "Analytics", icon: BarChart3, href: "/analytics" },
-  { label: "Learning Hub", icon: BookOpen, href: "#", comingSoon: true },
+  { label: "Premium Resource Hub", icon: BookOpen, href: "#", comingSoon: true },
   { label: "Settings", icon: Settings, href: "/settings" },
 ];
 
