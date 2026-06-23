@@ -48,6 +48,16 @@ const ARTICLES: Record<string, ArticleResult[]> = {
       url: "https://www.presentation-guru.com/how-to-speak-so-that-people-want-to-listen/",
       source: "Presentation Guru",
     },
+    {
+      title: "How to Outline a Speech or Presentation",
+      url: "https://sixminutes.dlugan.com/speech-preparation-5-outlines/",
+      source: "Six Minutes",
+    },
+    {
+      title: "Ten Tips for Clear Communication",
+      url: "https://mannerofspeaking.org/2010/05/22/ten-tips-for-clear-communication/",
+      source: "Manner of Speaking",
+    },
   ],
   engagement: [
     {
@@ -65,6 +75,16 @@ const ARTICLES: Record<string, ArticleResult[]> = {
       url: "https://www.toastmasters.org/resources/public-speaking-tips",
       source: "Toastmasters International",
     },
+    {
+      title: "How to Open a Presentation and Hook Your Audience",
+      url: "https://sixminutes.dlugan.com/speech-introduction/",
+      source: "Six Minutes",
+    },
+    {
+      title: "How to Get an Audience to Listen to Your Presentation",
+      url: "https://blog.ted.com/how-to-get-your-audience-to-listen-and-engage-with-your-presentation/",
+      source: "TED Blog",
+    },
   ],
   energy: [
     {
@@ -79,6 +99,16 @@ const ARTICLES: Record<string, ArticleResult[]> = {
     },
     {
       title: "Vocal Variety: How to Add Energy to Your Voice",
+      url: "https://sixminutes.dlugan.com/vocal-variety-speech/",
+      source: "Six Minutes",
+    },
+    {
+      title: "Using Body Language Effectively When Presenting",
+      url: "https://mannerofspeaking.org/2011/04/04/body-language-for-speakers/",
+      source: "Manner of Speaking",
+    },
+    {
+      title: "Stage Presence and Commanding Attention",
       url: "https://www.toastmasters.org/resources/public-speaking-tips",
       source: "Toastmasters International",
     },
@@ -95,9 +125,19 @@ const ARTICLES: Record<string, ArticleResult[]> = {
       source: "Skills You Need",
     },
     {
-      title: "Making Your Message Land — Simplicity in Presenting",
+      title: "Making Complex Information Simple",
       url: "https://www.presentation-guru.com/making-complex-information-simple/",
       source: "Presentation Guru",
+    },
+    {
+      title: "Using Analogies to Explain Difficult Concepts",
+      url: "https://sixminutes.dlugan.com/analogy/",
+      source: "Six Minutes",
+    },
+    {
+      title: "How to Make Your Ideas Clear to Your Audience",
+      url: "https://mannerofspeaking.org/2013/09/08/how-to-be-a-clearer-speaker/",
+      source: "Manner of Speaking",
     },
   ],
   connection: [
@@ -107,14 +147,24 @@ const ARTICLES: Record<string, ArticleResult[]> = {
       source: "Presentation Guru",
     },
     {
-      title: "Building Rapport — Skills You Need",
+      title: "Building Rapport With Your Audience",
       url: "https://www.skillsyouneed.com/ips/rapport.html",
       source: "Skills You Need",
     },
     {
-      title: "Storytelling Tips for Presenters",
-      url: "https://www.toastmasters.org/resources/public-speaking-tips",
-      source: "Toastmasters International",
+      title: "Storytelling for Presentations — The Complete Guide",
+      url: "https://sixminutes.dlugan.com/storytelling-for-presentations/",
+      source: "Six Minutes",
+    },
+    {
+      title: "How Great Speakers Connect With an Audience",
+      url: "https://blog.ted.com/how-to-connect-with-your-audience/",
+      source: "TED Blog",
+    },
+    {
+      title: "The Power of Vulnerability in Public Speaking",
+      url: "https://mannerofspeaking.org/2013/02/17/vulnerability-public-speaking/",
+      source: "Manner of Speaking",
     },
   ],
 };
