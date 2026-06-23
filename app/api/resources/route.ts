@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getAdminDb } from "@/lib/firebase-admin";
+import { articlesByDimension } from "@/lib/articles";
 
 export const dynamic = "force-dynamic";
 
@@ -31,147 +33,10 @@ interface ArticleResult {
   source: string;
 }
 
-const ARTICLES: Record<string, ArticleResult[]> = {
-  clarity: [
-    {
-      title: "How to Structure a Presentation That's Easy to Follow",
-      url: "https://visme.co/blog/presentation-tips/",
-      source: "Visme",
-    },
-    {
-      title: "The Feynman Technique: Explain Anything Simply",
-      url: "https://fs.blog/feynman-technique/",
-      source: "Farnam Street",
-    },
-    {
-      title: "Communication Skills: What They Are and How to Improve",
-      url: "https://www.coursera.org/articles/communication-skills",
-      source: "Coursera",
-    },
-    {
-      title: "How to End a Presentation With Impact",
-      url: "https://visme.co/blog/how-to-end-a-presentation/",
-      source: "Visme",
-    },
-    {
-      title: "Presentation Tips for Clearer Communication",
-      url: "https://www.skillsyouneed.com/present/presentation-tips.html",
-      source: "Skills You Need",
-    },
-  ],
-  engagement: [
-    {
-      title: "Active Listening: The Art of Empathetic Conversation",
-      url: "https://positivepsychology.com/active-listening/",
-      source: "Positive Psychology",
-    },
-    {
-      title: "Communication Skills: The Art of Connecting",
-      url: "https://positivepsychology.com/communication-skills/",
-      source: "Positive Psychology",
-    },
-    {
-      title: "Public Speaking: How to Inform and Inspire",
-      url: "https://www.coursera.org/articles/public-speaking",
-      source: "Coursera",
-    },
-    {
-      title: "How to Give Engaging Presentations",
-      url: "https://www.entrepreneur.com/leadership/how-to-give-engaging-presentations/299983",
-      source: "Entrepreneur",
-    },
-    {
-      title: "20 Public Speaking Tips With Great Examples",
-      url: "https://visme.co/blog/public-speaking-tips/",
-      source: "Visme",
-    },
-  ],
-  energy: [
-    {
-      title: "Vocal Power: How to Command a Room With Your Voice",
-      url: "https://www.entrepreneur.com/leadership/vocal-power-how-to-command-a-room-with-your-voice/299987",
-      source: "Entrepreneur",
-    },
-    {
-      title: "Body Language Tips for Speakers",
-      url: "https://www.entrepreneur.com/leadership/body-language-tips-for-speakers/299986",
-      source: "Entrepreneur",
-    },
-    {
-      title: "What Is Self-Confidence? 9 Proven Ways to Increase It",
-      url: "https://positivepsychology.com/self-confidence/",
-      source: "Positive Psychology",
-    },
-    {
-      title: "Nonverbal Communication Skills: What the Research Says",
-      url: "https://positivepsychology.com/nonverbal-communication/",
-      source: "Positive Psychology",
-    },
-    {
-      title: "10 Tips for Effective Public Speaking",
-      url: "https://www.entrepreneur.com/leadership/10-tips-for-effective-public-speaking/227713",
-      source: "Entrepreneur",
-    },
-  ],
-  understanding: [
-    {
-      title: "The Feynman Technique: Make Complex Ideas Stick",
-      url: "https://fs.blog/feynman-technique/",
-      source: "Farnam Street",
-    },
-    {
-      title: "Active Listening Techniques: How to Really Hear Your Audience",
-      url: "https://positivepsychology.com/active-listening-techniques/",
-      source: "Positive Psychology",
-    },
-    {
-      title: "7 Tips for Improving Public Speaking Skills",
-      url: "https://www.entrepreneur.com/leadership/7-tips-for-improving-public-speaking-skills/299980",
-      source: "Entrepreneur",
-    },
-    {
-      title: "Active Listening: Hear What People Are Really Saying",
-      url: "https://www.mindtools.com/pages/article/ActiveListening.htm",
-      source: "MindTools",
-    },
-    {
-      title: "5 Surprising Charisma Tips That Actually Work",
-      url: "https://www.entrepreneur.com/living/5-surprising-charisma-tips/234375",
-      source: "Entrepreneur",
-    },
-  ],
-  connection: [
-    {
-      title: "Building Rapport: Creating Strong Relationships",
-      url: "https://www.mindtools.com/pages/article/building-rapport.htm",
-      source: "MindTools",
-    },
-    {
-      title: "How to Build Rapport: 18 Examples and Techniques",
-      url: "https://positivepsychology.com/rapport/",
-      source: "Positive Psychology",
-    },
-    {
-      title: "Empathy in Communication: How to Connect Authentically",
-      url: "https://positivepsychology.com/empathy/",
-      source: "Positive Psychology",
-    },
-    {
-      title: "The Secret of Charismatic People",
-      url: "https://www.entrepreneur.com/living/the-secret-of-charismatic-people/234374",
-      source: "Entrepreneur",
-    },
-    {
-      title: "Building Rapport With Your Audience",
-      url: "https://www.skillsyouneed.com/ips/rapport.html",
-      source: "Skills You Need",
-    },
-  ],
-};
-
 interface CacheEntry {
   videos: VideoResult[];
   tedTalks: VideoResult[];
+  articles: ArticleResult[];
   ts: number;
 }
 
@@ -207,6 +72,23 @@ function buildYouTubeUrl(query: string, maxResults: number, apiKey: string) {
   );
 }
 
+async function getHealthyArticles(dimension: string): Promise<ArticleResult[]> {
+  const all = articlesByDimension(dimension);
+  try {
+    const db = getAdminDb();
+    const snap = await db
+      .collection("resource_health")
+      .where("dimension", "==", dimension)
+      .where("status", "==", "broken")
+      .get();
+    const brokenUrls = new Set(snap.docs.map((d) => d.data().url as string));
+    return all.filter((a) => !brokenUrls.has(a.url));
+  } catch {
+    // If health check unavailable, serve all articles rather than none
+    return all;
+  }
+}
+
 export async function GET(req: NextRequest) {
   const dimension = req.nextUrl.searchParams.get("dimension");
 
@@ -219,7 +101,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       videos: cached.videos,
       tedTalks: cached.tedTalks,
-      articles: ARTICLES[dimension],
+      articles: cached.articles,
     });
   }
 
@@ -228,9 +110,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "YouTube API not configured" }, { status: 500 });
   }
 
-  const [videoRes, tedRes] = await Promise.all([
+  const [videoRes, tedRes, articles] = await Promise.all([
     fetch(buildYouTubeUrl(VIDEO_QUERIES[dimension], 3, apiKey)),
     fetch(buildYouTubeUrl(TED_QUERIES[dimension], 3, apiKey)),
+    getHealthyArticles(dimension),
   ]);
 
   if (!videoRes.ok || !tedRes.ok) {
@@ -242,7 +125,7 @@ export async function GET(req: NextRequest) {
   const videos = parseVideos(videoJson);
   const tedTalks = parseVideos(tedJson);
 
-  cache.set(dimension, { videos, tedTalks, ts: Date.now() });
+  cache.set(dimension, { videos, tedTalks, articles, ts: Date.now() });
 
-  return NextResponse.json({ videos, tedTalks, articles: ARTICLES[dimension] });
+  return NextResponse.json({ videos, tedTalks, articles });
 }

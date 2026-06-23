@@ -153,3 +153,68 @@ export async function sendSummaryEmail(opts: SummaryEmailOptions) {
     html: buildHtml(opts),
   });
 }
+
+export interface BrokenLink {
+  title: string;
+  url: string;
+  dimension: string;
+  reason: string;
+}
+
+export async function sendResourceAlertEmail(brokenLinks: BrokenLink[]) {
+  const from = `LearnFast <${process.env.GMAIL_USER}>`;
+  const adminEmail = process.env.ADMIN_ALERT_EMAIL || process.env.GMAIL_USER!;
+
+  const rows = brokenLinks
+    .map(
+      (l) => `
+      <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+        <td style="padding:10px 0;color:#f87171;font-size:13px;font-weight:600;width:100px;text-transform:capitalize;">${l.dimension}</td>
+        <td style="padding:10px 16px;color:#cbd5e1;font-size:13px;">${l.title}</td>
+        <td style="padding:10px 0;font-size:11px;color:#475569;font-family:monospace;">${l.reason}</td>
+      </tr>
+      <tr><td colspan="3" style="padding:2px 0 6px;">
+        <a href="${l.url}" style="color:#60a5fa;font-size:11px;font-family:monospace;">${l.url}</a>
+      </td></tr>`
+    )
+    .join("");
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Resource health alert</title></head>
+<body style="background:#05070d;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center" style="padding:40px 16px;">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+        <tr><td style="padding-bottom:24px;">
+          <p style="color:#ffffff;font-size:18px;font-weight:700;margin:0;">LearnFast</p>
+          <p style="color:#334155;font-size:11px;margin:3px 0 0;text-transform:uppercase;letter-spacing:0.08em;">Resource Health Alert</p>
+        </td></tr>
+        <tr><td style="background:#111827;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:32px;">
+          <p style="color:#f87171;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;">
+            ${brokenLinks.length} broken link${brokenLinks.length !== 1 ? "s" : ""} detected
+          </p>
+          <p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">
+            The daily resource health check found the following articles are no longer accessible.
+            They have been automatically hidden from users until fixed.
+          </p>
+          <table cellpadding="0" cellspacing="0" width="100%">${rows}</table>
+          <div style="border-top:1px solid rgba(255,255,255,0.08);margin-top:24px;padding-top:20px;">
+            <p style="color:#64748b;font-size:12px;margin:0;">
+              Update the article list in <code style="color:#a78bfa;">lib/articles.ts</code> to replace broken links.
+            </p>
+          </div>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await getTransporter().sendMail({
+    from,
+    to: adminEmail,
+    subject: `[LearnFast] ${brokenLinks.length} broken resource link${brokenLinks.length !== 1 ? "s" : ""} detected`,
+    html,
+  });
+}
