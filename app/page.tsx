@@ -24,6 +24,7 @@ import CreateSessionModal from "@/components/create-session-modal";
 import UpgradeModal from "@/components/upgrade-modal";
 import MobileNav from "@/components/mobile-nav";
 import OnboardingModal from "@/components/onboarding-modal";
+import LandingPage from "@/components/landing-page";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/", active: true },
@@ -83,9 +84,7 @@ export default function Home() {
   const [reflectionsLoading, setReflectionsLoading] = useState(false);
   const [responseCounts, setResponseCounts] = useState<Record<string, number>>({});
 
-  useEffect(() => {
-    if (!loading && !user) router.replace("/auth/login");
-  }, [user, loading, router]);
+  // No redirect — unauthenticated visitors see the landing page below
 
   useEffect(() => {
     if (!user) return;
@@ -177,13 +176,15 @@ export default function Home() {
     router.push(`/sessions/${sessionId}`);
   }
 
-  if (loading || !user) {
+  if (loading) {
     return (
-      <main className="min-h-screen bg-[#05070d] flex items-center justify-center">
-        <p className="text-slate-400 animate-pulse">Loading…</p>
+      <main className="min-h-screen bg-[#07080f] flex items-center justify-center">
+        <p className="text-slate-600 animate-pulse">Loading…</p>
       </main>
     );
   }
+
+  if (!user) return <LandingPage />;
 
   const displayName = user.displayName ?? user.email?.split("@")[0] ?? "Presenter";
 
