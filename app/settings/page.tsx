@@ -7,9 +7,10 @@ import {
   updatePassword,
   reauthenticateWithCredential,
   EmailAuthProvider,
+  signOut,
 } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { User, Lock, CreditCard, Check, Zap } from "lucide-react";
+import { User, Lock, CreditCard, Check, Zap, LogOut } from "lucide-react";
 import MobileNav from "@/components/mobile-nav";
 import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
@@ -329,6 +330,15 @@ export default function SettingsPage() {
             </a>
           )}
         </section>
+
+        {/* Sign out */}
+        <button
+          onClick={async () => { await signOut(auth); router.replace("/"); }}
+          className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-[#111827] px-5 py-4 text-sm font-semibold text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition"
+        >
+          <LogOut className="h-4 w-4" />
+          Sign out
+        </button>
 
       </div>
     </main>
