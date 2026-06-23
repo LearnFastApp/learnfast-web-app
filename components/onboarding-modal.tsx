@@ -97,9 +97,9 @@ export default function OnboardingModal({ onClose, onCreateSession }: Props) {
       <p className="text-sm text-slate-400 mb-5 text-center">Every session is scored across these five areas.</p>
       <div className="space-y-3">
         {DIMENSIONS.map((d) => (
-          <div key={d.name} className="flex items-start gap-3 rounded-xl border border-white/5 bg-[#0f1424] px-4 py-3">
-            <span className={`mt-0.5 text-sm font-bold w-24 shrink-0 ${d.color}`}>{d.name}</span>
-            <p className="text-sm text-slate-400 leading-relaxed">{d.desc}</p>
+          <div key={d.name} className="rounded-xl border border-white/5 bg-[#0f1424] px-4 py-3">
+            <span className={`text-sm font-bold ${d.color}`}>{d.name}</span>
+            <p className="text-sm text-slate-400 leading-relaxed mt-0.5">{d.desc}</p>
           </div>
         ))}
       </div>
