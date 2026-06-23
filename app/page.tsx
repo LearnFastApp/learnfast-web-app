@@ -277,7 +277,7 @@ export default function Home() {
           {subscriptionStatus !== "active" && sessions.length >= 5 && (
             <div className="flex items-center justify-between border-b border-amber-500/20 bg-amber-500/5 px-6 py-3 lg:px-8">
               <p className="text-sm text-amber-300">
-                You&apos;ve used both your free sessions.
+                You&apos;ve reached your 5 free session limit.
               </p>
               <button
                 onClick={() => setShowUpgrade(true)}
