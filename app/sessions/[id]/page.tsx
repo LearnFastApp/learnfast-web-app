@@ -94,6 +94,7 @@ export default function LiveSessionPage() {
   const [copied, setCopied] = useState(false);
   const [notes, setNotes] = useState("");
   const [notesSaved, setNotesSaved] = useState(false);
+  const [notesSaveError, setNotesSaveError] = useState(false);
   const [resources, setResources] = useState<{
     videos: { videoId: string; title: string; channelTitle: string; thumbnail: string }[];
     tedTalks: { videoId: string; title: string; channelTitle: string; thumbnail: string }[];
@@ -168,9 +169,16 @@ export default function LiveSessionPage() {
   }));
 
   async function saveNotes() {
-    await setDoc(doc(db, "session_notes", id), { notes, updatedAt: serverTimestamp() }, { merge: true });
-    setNotesSaved(true);
-    setTimeout(() => setNotesSaved(false), 2000);
+    try {
+      await setDoc(doc(db, "session_notes", id), { notes, updatedAt: serverTimestamp() }, { merge: true });
+      setNotesSaved(true);
+      setNotesSaveError(false);
+      setTimeout(() => setNotesSaved(false), 2000);
+    } catch (e) {
+      console.error("Failed to save notes:", e);
+      setNotesSaveError(true);
+      setTimeout(() => setNotesSaveError(false), 3000);
+    }
   }
 
   const feedbackUrl = session ? `${window.location.origin}/session/${session.code}` : "";
@@ -350,6 +358,7 @@ export default function LiveSessionPage() {
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
+              onBlur={saveNotes}
               rows={4}
               placeholder="e.g. Lost the room around the 10-min mark, picked up again after the example…"
               className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-sm text-white placeholder-slate-600 outline-none focus:border-violet-500 resize-none mb-3"
@@ -360,6 +369,8 @@ export default function LiveSessionPage() {
             >
               {notesSaved ? (
                 <><span className="text-green-400">✓</span> Saved</>
+              ) : notesSaveError ? (
+                <><span className="text-red-400">✕</span> Save failed — check connection</>
               ) : "Save notes"}
             </button>
           </div>
