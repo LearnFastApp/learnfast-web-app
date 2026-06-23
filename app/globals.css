@@ -129,6 +129,11 @@
   }
 }
 
+/* iOS safe area — mobile nav clears the home indicator */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 /* Gradient slider — yellow (0) to green (100) */
 .slider-gradient {
   -webkit-appearance: none;

@@ -56,7 +56,7 @@ export default function LandingPage() {
 
       {/* Hero */}
       <section className="relative flex flex-col items-center justify-center text-center pt-40 pb-28 px-6 lg:px-12">
-        <div className="absolute inset-0 bg-gradient-radial from-violet-900/20 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(109,40,217,0.18) 0%, transparent 70%)" }} />
 
         <p className="text-xs font-semibold tracking-[0.3em] text-slate-400 uppercase mb-6">
           Presentation Feedback Technology

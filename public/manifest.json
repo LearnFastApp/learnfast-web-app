@@ -2,7 +2,7 @@
   "name": "LearnFast",
   "short_name": "LearnFast",
   "description": "Presentation feedback intelligence for presenters.",
-  "start_url": "/",
+  "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#05070d",
   "theme_color": "#05070d",
