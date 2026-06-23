@@ -134,7 +134,7 @@ export default function Home() {
           <div className="mb-12 flex items-center gap-3">
             <img src="/icon-mark.png" alt="LearnFast" className="h-9 w-9 shrink-0" />
             <div>
-              <img src="/logo.png" alt="LearnFast" className="h-5 w-auto mb-0.5" />
+              <img src="/logo.png" alt="LearnFast" className="w-full h-auto mb-0.5" />
               <p className="text-xs text-slate-400">Feedback Intelligence</p>
             </div>
           </div>
