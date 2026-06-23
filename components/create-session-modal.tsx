@@ -31,6 +31,8 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState<{ id: string; code: string } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [qrCopied, setQrCopied] = useState(false);
+  const [qrCopyFailed, setQrCopyFailed] = useState(false);
 
   const [pendingCommitment, setPendingCommitment] = useState<PendingCommitment | null>(null);
   const [checkInNotes, setCheckInNotes] = useState("");
@@ -236,6 +238,31 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
             </div>
 
             <button
+              onClick={async () => {
+                const canvas = document.getElementById("qr-modal-download") as HTMLCanvasElement;
+                if (!canvas) return;
+                setQrCopyFailed(false);
+                try {
+                  await navigator.clipboard.write([
+                    new ClipboardItem({
+                      "image/png": new Promise<Blob>((resolve, reject) =>
+                        canvas.toBlob((b) => b ? resolve(b) : reject(new Error("no blob")), "image/png")
+                      ),
+                    }),
+                  ]);
+                  setQrCopied(true);
+                  setTimeout(() => setQrCopied(false), 2000);
+                } catch {
+                  setQrCopyFailed(true);
+                  setTimeout(() => setQrCopyFailed(false), 3000);
+                }
+              }}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition"
+            >
+              {qrCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {qrCopied ? "QR image copied!" : qrCopyFailed ? "Copy not supported — use Download" : "Copy QR image"}
+            </button>
+            <button
               onClick={() => {
                 const canvas = document.getElementById("qr-modal-download") as HTMLCanvasElement;
                 if (!canvas) return;
@@ -244,9 +271,9 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
                 link.href = canvas.toDataURL("image/png");
                 link.click();
               }}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition"
             >
-              Download QR for Keynote / Slides
+              Download QR (PNG)
             </button>
             <div className="flex gap-3">
               <button

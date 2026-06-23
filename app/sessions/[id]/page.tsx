@@ -103,6 +103,7 @@ export default function LiveSessionPage() {
   const [showReflection, setShowReflection] = useState(false);
   const [copied, setCopied] = useState(false);
   const [qrCopied, setQrCopied] = useState(false);
+  const [qrCopyFailed, setQrCopyFailed] = useState(false);
   const [notes, setNotes] = useState("");
   const [notesSaved, setNotesSaved] = useState(false);
   const [notesSaveError, setNotesSaveError] = useState(false);
@@ -766,6 +767,31 @@ export default function LiveSessionPage() {
               <p className="text-2xl font-bold tracking-widest">{session.code}</p>
             </div>
             <button
+              onClick={async () => {
+                const canvas = document.getElementById("qr-download") as HTMLCanvasElement;
+                if (!canvas) return;
+                setQrCopyFailed(false);
+                try {
+                  await navigator.clipboard.write([
+                    new ClipboardItem({
+                      "image/png": new Promise<Blob>((resolve, reject) =>
+                        canvas.toBlob((b) => b ? resolve(b) : reject(new Error("no blob")), "image/png")
+                      ),
+                    }),
+                  ]);
+                  setQrCopied(true);
+                  setTimeout(() => setQrCopied(false), 2000);
+                } catch {
+                  setQrCopyFailed(true);
+                  setTimeout(() => setQrCopyFailed(false), 3000);
+                }
+              }}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition mb-2"
+            >
+              {qrCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {qrCopied ? "QR image copied!" : qrCopyFailed ? "Copy not supported — use Download" : "Copy QR image"}
+            </button>
+            <button
               onClick={() => {
                 const canvas = document.getElementById("qr-download") as HTMLCanvasElement;
                 if (!canvas) return;
@@ -774,9 +800,9 @@ export default function LiveSessionPage() {
                 link.href = canvas.toDataURL("image/png");
                 link.click();
               }}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition mb-2"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-300 hover:bg-white/5 mb-2"
             >
-              Download QR for Keynote / Slides
+              Download QR (PNG)
             </button>
             <button
               onClick={copyUrl}
