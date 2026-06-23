@@ -396,7 +396,7 @@ export default function LiveSessionPage() {
 
                 {!resourcesLoading && resources && (
                   <div className="relative">
-                    <div className={subscriptionStatus !== "active" ? "blur-sm pointer-events-none select-none" : ""}>
+                    <div className={subscriptionStatus !== "active" ? "blur-[2px] pointer-events-none select-none" : ""}>
                       <div className="grid grid-cols-4 rounded-lg border border-white/10 bg-[#0f1424] p-0.5 mb-3">
                         {(["videos", "ted", "podcasts", "articles"] as const).map((tab) => (
                           <button
@@ -487,7 +487,7 @@ export default function LiveSessionPage() {
                     </div>
 
                     {subscriptionStatus !== "active" && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-[#0f1424]/80 backdrop-blur-[2px]">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-[#0f1424]/60">
                         <Lock className="h-5 w-5 text-violet-400 mb-2" />
                         <p className="text-sm font-semibold text-white mb-1">Unlock learning resources</p>
                         <p className="text-xs text-slate-400 text-center mb-4 px-6 leading-relaxed">
