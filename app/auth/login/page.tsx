@@ -92,14 +92,12 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-[#05070d] flex items-center justify-center p-6">
       <div className="w-full max-w-md">
-        <div className="mb-10 flex items-center gap-3">
-          <div className="flex items-center justify-center px-2 py-1.5">
-            <img src="/logo.png" alt="LearnFast" className="h-7 w-auto" />
-          </div>
-          <div>
-            <p className="text-xl font-bold text-white">LearnFast</p>
-            <p className="text-xs text-slate-400">Feedback Intelligence</p>
-          </div>
+        <div className="mb-10 grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5">
+          <img src="/icon-mark.png" alt="" className="h-14 w-auto row-span-2 self-center" />
+          <p className="self-end leading-none text-[1.35rem] font-bold tracking-tight" style={{ color: '#5bb8f5' }}>
+            LEARN<span className="font-light">FAST</span>
+          </p>
+          <p className="self-start text-sm text-slate-400 leading-tight">Feedback Intelligence</p>
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-[#111827] p-8">
