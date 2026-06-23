@@ -113,12 +113,18 @@ export default function Home() {
     setReflectionsLoading(true);
     getDocs(query(
       collection(db, "presenter_reflections"),
-      where("presenterId", "==", user.uid),
-      orderBy("submittedAt", "desc")
+      where("presenterId", "==", user.uid)
     )).then((snap) => {
-      setReflections(snap.docs.map((d) => ({ sessionId: d.id, ...(d.data() as Omit<ReflectionEntry, "sessionId">) })));
+      const entries = snap.docs
+        .map((d) => ({ sessionId: d.id, ...(d.data() as Omit<ReflectionEntry, "sessionId">) }))
+        .sort((a, b) => {
+          const aTime = a.submittedAt?.toDate().getTime() ?? 0;
+          const bTime = b.submittedAt?.toDate().getTime() ?? 0;
+          return bTime - aTime;
+        });
+      setReflections(entries);
       setReflectionsLoading(false);
-    });
+    }).catch(() => setReflectionsLoading(false));
   }, [user]);
 
   async function handleDeleteSession(sessionId: string) {
