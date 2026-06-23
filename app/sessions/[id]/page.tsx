@@ -103,6 +103,7 @@ export default function LiveSessionPage() {
   const [resourceTab, setResourceTab] = useState<"videos" | "ted" | "podcasts" | "articles">("videos");
   const [podcasts, setPodcasts] = useState<{ title: string; author: string; description: string; image: string; link: string }[]>([]);
   const [podcastsLoading, setPodcastsLoading] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<"free" | "active">("free");
 
   useEffect(() => {
     if (authLoading) return;
@@ -112,6 +113,12 @@ export default function LiveSessionPage() {
       if (snap.exists()) {
         const data = snap.data();
         setSession({ title: data.title, code: data.code });
+      }
+    });
+
+    getDoc(doc(db, "presenters", user.uid)).then((snap) => {
+      if (snap.exists() && snap.data().subscriptionStatus === "active") {
+        setSubscriptionStatus("active");
       }
     });
 
@@ -372,11 +379,26 @@ export default function LiveSessionPage() {
                 <p className="mb-1 font-bold text-white">{rec.title}</p>
                 <p className="mb-4 text-xs text-slate-400 leading-relaxed">{rec.description}</p>
 
-                {resourcesLoading && (
+                {subscriptionStatus !== "active" ? (
+                  <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-5 text-center">
+                    <p className="text-sm font-semibold text-white mb-1">Unlock learning resources</p>
+                    <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+                      Get videos, TED talks, podcasts and articles matched to your session results — included in Lite for £1.99/month.
+                    </p>
+                    <a
+                      href="/pricing"
+                      className="inline-block rounded-lg bg-violet-500 px-4 py-2 text-xs font-semibold text-white hover:bg-violet-400 transition"
+                    >
+                      Upgrade to Lite →
+                    </a>
+                  </div>
+                ) : null}
+
+                {subscriptionStatus === "active" && resourcesLoading && (
                   <p className="text-xs text-slate-500 animate-pulse">Finding resources…</p>
                 )}
 
-                {!resourcesLoading && resources && (
+                {subscriptionStatus === "active" && !resourcesLoading && resources && (
                   <>
                     <div className="grid grid-cols-4 rounded-lg border border-white/10 bg-[#0f1424] p-0.5 mb-3">
                       {(["videos", "ted", "podcasts", "articles"] as const).map((tab) => (
@@ -464,9 +486,11 @@ export default function LiveSessionPage() {
                   </>
                 )}
 
-                <p className="mt-3 text-xs text-slate-500 text-center">
-                  Based on lowest audience score · {DIMENSION_LABELS[lowestDimension]}: {audienceAverages[lowestDimension]}/100
-                </p>
+                {subscriptionStatus === "active" && (
+                  <p className="mt-3 text-xs text-slate-500 text-center">
+                    Based on lowest audience score · {DIMENSION_LABELS[lowestDimension]}: {audienceAverages[lowestDimension]}/100
+                  </p>
+                )}
               </div>
             );
           })()}
