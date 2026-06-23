@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
+import { collection, query, where, orderBy, getDocs, doc, getDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import {
   LineChart,
@@ -97,6 +97,7 @@ export default function AnalyticsPage() {
   const [selectedTag, setSelectedTag] = useState<string>("all");
   const [activeDims, setActiveDims] = useState<Set<Dimension>>(new Set(DIMENSIONS));
   const [showInsights, setShowInsights] = useState(true);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<"free" | "active">("free");
 
   function toggleDim(dim: Dimension) {
     setActiveDims((prev) => {
@@ -110,6 +111,12 @@ export default function AnalyticsPage() {
   useEffect(() => {
     if (authLoading) return;
     if (!user) { router.replace("/auth/login"); return; }
+
+    getDoc(doc(db, "presenters", user.uid)).then((snap) => {
+      if (snap.exists() && snap.data().subscriptionStatus === "active") {
+        setSubscriptionStatus("active");
+      }
+    });
 
     async function load() {
       const sessSnap = await getDocs(
@@ -230,7 +237,46 @@ export default function AnalyticsPage() {
         )}
       </header>
 
-      <div className="p-6 lg:p-8 space-y-8">
+      {subscriptionStatus !== "active" && (
+        <div className="relative">
+          <div className="p-6 lg:p-8 space-y-8 pointer-events-none select-none blur-[3px] opacity-60">
+            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {[["Sessions analysed", "—", "responses"], ["Overall average", "—", "across all dimensions /100"], ["Strongest area", "—", "avg —/100"], ["Focus area", "—", "avg —/100"]].map(([label, val, sub]) => (
+                <div key={label} className="rounded-2xl border border-white/10 bg-[#111827] p-5">
+                  <p className="text-sm text-slate-400 mb-1">{label}</p>
+                  <p className="text-3xl font-bold">{val}</p>
+                  <p className="text-xs text-slate-500 mt-1">{sub}</p>
+                </div>
+              ))}
+            </section>
+            <div className="rounded-2xl border border-white/10 bg-[#111827] p-6 h-64" />
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="rounded-2xl border border-white/10 bg-[#111827] p-6 h-64" />
+              <div className="rounded-2xl border border-white/10 bg-[#111827] p-6 h-64" />
+            </div>
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="rounded-2xl border border-violet-500/40 bg-[#111827]/95 p-8 text-center max-w-sm mx-4 shadow-2xl">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/15 border border-violet-500/30 mx-auto">
+                <BarChart3 className="h-6 w-6 text-violet-400" />
+              </div>
+              <p className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-2">Lite feature</p>
+              <h2 className="text-xl font-bold text-white mb-2">Analytics & trend tracking</h2>
+              <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+                See how your scores move across sessions, detect patterns, and prove your improvement over time.
+              </p>
+              <a
+                href="/pricing"
+                className="block w-full rounded-xl bg-violet-500 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition text-center"
+              >
+                Start 7-day free trial →
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {subscriptionStatus === "active" && <div className="p-6 lg:p-8 space-y-8">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <BarChart3 className="h-12 w-12 text-slate-600 mb-4" />
@@ -387,7 +433,7 @@ export default function AnalyticsPage() {
             </section>
           </>
         )}
-      </div>
+      </div>}
     </main>
   );
 }
