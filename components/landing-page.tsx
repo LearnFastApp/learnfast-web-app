@@ -37,16 +37,16 @@ export default function LandingPage() {
           <a href="#how-it-works" className="hover:text-white transition">HOW IT WORKS</a>
           <a href="#pricing" className="hover:text-white transition">PRICING</a>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => router.push("/auth/login")}
-            className="text-sm text-slate-400 hover:text-white transition px-4 py-2"
+            className="hidden sm:block text-sm text-slate-400 hover:text-white transition px-4 py-2"
           >
             Sign in
           </button>
           <button
             onClick={() => router.push("/auth/login")}
-            className="text-sm font-bold px-5 py-2.5 rounded-sm text-white transition"
+            className="text-xs sm:text-sm font-bold px-3 sm:px-5 py-2 sm:py-2.5 rounded-sm text-white transition whitespace-nowrap"
             style={{ backgroundColor: "#d13b1a" }}
           >
             START FREE →
@@ -61,10 +61,10 @@ export default function LandingPage() {
         <p className="text-xs font-semibold tracking-[0.3em] text-slate-400 uppercase mb-6">
           Presentation Feedback Technology
         </p>
-        <h1 className="text-5xl md:text-7xl lg:text-8xl font-light leading-none tracking-tight mb-2 text-slate-300">
+        <h1 className="text-4xl md:text-7xl lg:text-8xl font-light leading-tight tracking-tight mb-2 text-slate-300">
           REAL-TIME FEEDBACK
         </h1>
-        <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-none tracking-tight mb-8">
+        <h1 className="text-4xl md:text-7xl lg:text-8xl font-bold leading-tight tracking-tight mb-8">
           FOR EVERY PRESENTER
         </h1>
         <p className="max-w-xl text-lg text-slate-400 leading-relaxed mb-10">
@@ -170,7 +170,7 @@ export default function LandingPage() {
           {[
             { label: "Corporate Trainers", desc: "Run post-session feedback that's actionable, not just a form." },
             { label: "Team Leaders", desc: "Understand how your briefings and presentations land with your team." },
-            { label: "Executive Coaches", desc: "Give clients a data-driven mirror for their communication style." },
+            { label: "University Lecturers", desc: "Understand how your lectures land and improve student engagement each term." },
           ].map((item) => (
             <div key={item.label} className="rounded-xl border border-white/10 bg-[#0f1424] p-6">
               <p className="font-bold text-sm uppercase tracking-wider mb-2">{item.label}</p>
@@ -244,8 +244,8 @@ export default function LandingPage() {
       {/* Final CTA */}
       <section className="py-32 px-6 lg:px-12 text-center">
         <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-6">Get Started Today</p>
-        <h2 className="text-5xl md:text-7xl font-light text-slate-300 leading-none mb-2">EVERY GREAT PRESENTER</h2>
-        <h2 className="text-5xl md:text-7xl font-bold leading-none mb-10">STARTED SOMEWHERE</h2>
+        <h2 className="text-4xl md:text-7xl font-light text-slate-300 leading-tight mb-2">EVERY GREAT PRESENTER</h2>
+        <h2 className="text-4xl md:text-7xl font-bold leading-tight mb-10">STARTED SOMEWHERE</h2>
         <button
           onClick={() => router.push("/auth/login")}
           className="px-10 py-5 text-sm font-bold tracking-wider text-white transition rounded-sm"
