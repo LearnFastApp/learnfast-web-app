@@ -142,10 +142,10 @@ export default function Home() {
 
       <div className="flex min-h-screen">
         <aside className="hidden w-72 border-r border-white/10 bg-[#0f1424] p-6 lg:flex lg:flex-col">
-          <div className="mb-12 grid grid-cols-[auto_1fr] gap-x-3 items-center">
-            <img src="/icon-mark.png" alt="" className="h-8 w-auto row-span-2 self-center" />
-            <img src="/logo.png" alt="LearnFast" className="h-[22px] w-auto self-end" />
-            <p className="text-xs text-slate-400 self-start leading-tight">Feedback Intelligence</p>
+          <div className="mb-12 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 items-center">
+            <img src="/icon-mark.png" alt="" className="h-10 w-auto row-span-2 self-center" />
+            <img src="/logo.png" alt="LearnFast" className="h-7 w-auto" />
+            <p className="text-xs text-slate-400 leading-tight">Feedback Intelligence</p>
           </div>
 
           <nav className="space-y-2">
