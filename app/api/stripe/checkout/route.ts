@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
       mode: "subscription",
       payment_method_types: ["card"],
       line_items: [{ price: STRIPE_PRICE_ID, quantity: 1 }],
+      subscription_data: { trial_period_days: 7 },
       success_url: `${APP_URL}/pricing?success=true`,
       cancel_url: `${APP_URL}/pricing?cancelled=true`,
       customer_email: email ?? undefined,

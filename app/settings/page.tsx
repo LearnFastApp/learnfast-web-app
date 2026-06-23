@@ -287,7 +287,7 @@ export default function SettingsPage() {
               </div>
             </div>
             {isActive ? (
-              <span className="text-lg font-bold text-white">£1.99<span className="text-sm font-normal text-slate-400">/mo</span></span>
+              <span className="text-lg font-bold text-white">£3.99<span className="text-sm font-normal text-slate-400">/mo</span></span>
             ) : (
               <span className="text-lg font-bold text-white">£0</span>
             )}
@@ -306,7 +306,7 @@ export default function SettingsPage() {
               href="/pricing"
               className="block w-full rounded-xl bg-violet-500 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-violet-400 transition"
             >
-              Upgrade to Lite — £1.99/month
+              Upgrade to Lite — £3.99/month
             </a>
           )}
         </section>

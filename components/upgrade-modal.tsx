@@ -50,21 +50,22 @@ export default function UpgradeModal({ onClose }: Props) {
         </div>
 
         <p className="text-sm text-slate-300 leading-relaxed mb-6">
-          Your free plan includes <strong className="text-white">2 meeting feedback connections</strong>. Upgrade to LearnFast Lite for unlimited sessions and the full analytics suite.
+          You&apos;ve used your <strong className="text-white">5 free sessions</strong>. Upgrade to Lite for unlimited sessions, trend analytics, and session-matched learning resources.
         </p>
 
         <div className="rounded-xl border border-violet-500/20 bg-[#1a2135] p-4 mb-6">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-1">
             <span className="font-semibold text-white">Lite</span>
             <span className="text-2xl font-bold text-white">
-              £1.99<span className="text-sm font-normal text-slate-400">/month</span>
+              £3.99<span className="text-sm font-normal text-slate-400">/month</span>
             </span>
           </div>
+          <p className="text-xs text-violet-400 mb-3">7 days free — no charge until your trial ends</p>
           <ul className="space-y-1.5 text-sm text-slate-300">
             {[
               "Unlimited sessions & feedback connections",
-              "Full analytics & trend detection",
-              "Weekly & monthly reporting",
+              "Full analytics & trend tracking",
+              "Session-matched resources after every session",
               "Reflective practice tracker",
             ].map((f) => (
               <li key={f} className="flex items-center gap-2">
@@ -82,7 +83,7 @@ export default function UpgradeModal({ onClose }: Props) {
           disabled={loading}
           className="w-full rounded-xl bg-violet-500 px-4 py-3 font-semibold text-white hover:bg-violet-400 disabled:opacity-50 transition mb-3"
         >
-          {loading ? "Redirecting to checkout…" : "Upgrade to Lite — £1.99/month"}
+          {loading ? "Redirecting to checkout…" : "Start 7-day free trial"}
         </button>
         <button
           onClick={onClose}
