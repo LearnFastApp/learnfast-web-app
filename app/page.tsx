@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { collection, query, where, orderBy, onSnapshot, doc, deleteDoc, updateDoc, getDoc } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, doc, deleteDoc, updateDoc, getDoc, getDocs } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import {
@@ -11,6 +11,7 @@ import {
   Calendar,
   LayoutDashboard,
   LogOut,
+  PenLine,
   Plus,
   Settings,
   Tag,
@@ -41,6 +42,29 @@ interface Session {
   createdAt: { toDate: () => Date } | null;
 }
 
+interface ReflectionEntry {
+  sessionId: string;
+  clarity: number;
+  engagement: number;
+  energy: number;
+  understanding: number;
+  connection: number;
+  submittedAt: { toDate: () => Date } | null;
+}
+
+const DIMENSIONS = ["clarity", "engagement", "energy", "understanding", "connection"] as const;
+const DIM_LABELS: Record<string, string> = {
+  clarity: "Clarity", engagement: "Engagement", energy: "Energy",
+  understanding: "Understanding", connection: "Connection",
+};
+
+function scoreBadgeClass(score: number) {
+  if (score <= 40) return "bg-red-500/15 text-red-400";
+  if (score <= 60) return "bg-amber-500/15 text-amber-400";
+  if (score <= 80) return "bg-blue-500/15 text-blue-400";
+  return "bg-green-500/15 text-green-400";
+}
+
 export default function Home() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -51,6 +75,9 @@ export default function Home() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [editingTagsId, setEditingTagsId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState("");
+  const [activeTab, setActiveTab] = useState<"sessions" | "reflections">("sessions");
+  const [reflections, setReflections] = useState<ReflectionEntry[]>([]);
+  const [reflectionsLoading, setReflectionsLoading] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/auth/login");
@@ -78,6 +105,19 @@ export default function Home() {
       setSessions(
         snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Session, "id">) }))
       );
+    });
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    setReflectionsLoading(true);
+    getDocs(query(
+      collection(db, "presenter_reflections"),
+      where("presenterId", "==", user.uid),
+      orderBy("submittedAt", "desc")
+    )).then((snap) => {
+      setReflections(snap.docs.map((d) => ({ sessionId: d.id, ...(d.data() as Omit<ReflectionEntry, "sessionId">) })));
+      setReflectionsLoading(false);
     });
   }, [user]);
 
@@ -240,82 +280,141 @@ export default function Home() {
             </div>
           )}
 
-          <div className="space-y-8 p-6 pb-24 lg:pb-8 lg:p-8">
-            {/* Recent sessions */}
-            <section>
-              <h2 className="mb-4 text-lg font-bold">Your sessions</h2>
-              {sessions.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-slate-500">
-                  No sessions yet — hit <strong className="text-slate-300">Create Session</strong> to start.
-                </div>
-              ) : (
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {sessions.map((s) => (
-                    <div
-                      key={s.id}
-                      className="group rounded-2xl border border-white/10 bg-[#111827] p-5 hover:border-violet-500/40 transition"
-                    >
-                      <a href={`/sessions/${s.id}`} className="block">
-                        <p className="font-semibold mb-1">{s.title}</p>
-                        <p className="text-xs text-slate-400 font-mono">{s.code}</p>
-                        {s.createdAt && (
-                          <p className="mt-2 text-xs text-slate-500">
-                            {s.createdAt.toDate().toLocaleDateString()}
-                          </p>
-                        )}
-                      </a>
-
-                      {/* Tags */}
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {(s.tags ?? []).map((tag) => (
-                          <span
-                            key={tag}
-                            className="group/tag flex items-center gap-1 rounded-lg bg-violet-500/20 px-2 py-0.5 text-xs text-violet-300"
-                          >
-                            <Tag className="h-3 w-3" />
-                            {tag}
-                            <button
-                              onClick={() => handleRemoveTag(s.id, s.tags ?? [], tag)}
-                              className="ml-0.5 opacity-0 group-hover/tag:opacity-100 hover:text-white transition"
-                            >×</button>
-                          </span>
-                        ))}
-                        {editingTagsId === s.id ? (
-                          <input
-                            autoFocus
-                            type="text"
-                            placeholder="add tag…"
-                            value={tagInput}
-                            onChange={(e) => setTagInput(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === ",") { e.preventDefault(); handleAddTag(s.id, s.tags ?? []); }
-                              if (e.key === "Escape") { setEditingTagsId(null); setTagInput(""); }
-                            }}
-                            onBlur={() => { handleAddTag(s.id, s.tags ?? []); setEditingTagsId(null); }}
-                            className="rounded-lg border border-violet-500/40 bg-[#1a2135] px-2 py-0.5 text-xs text-white outline-none w-24"
-                          />
-                        ) : (
-                          <button
-                            onClick={() => { setEditingTagsId(s.id); setTagInput(""); }}
-                            className="rounded-lg border border-dashed border-white/20 px-2 py-0.5 text-xs text-slate-600 hover:text-slate-300 hover:border-white/40 transition opacity-0 group-hover:opacity-100"
-                          >
-                            + tag
-                          </button>
-                        )}
-                      </div>
-
-                      <button
-                        onClick={() => handleDeleteSession(s.id)}
-                        className="mt-3 flex items-center gap-1.5 text-xs text-slate-600 hover:text-red-400 transition opacity-0 group-hover:opacity-100"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Delete
-                      </button>
-                    </div>
-                  ))}
-                </div>
+          {/* Tabs */}
+          <div className="flex gap-1 border-b border-white/10 px-6 lg:px-8 pt-6">
+            <button
+              onClick={() => setActiveTab("sessions")}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-lg transition border-b-2 -mb-px ${activeTab === "sessions" ? "border-violet-500 text-white" : "border-transparent text-slate-400 hover:text-white"}`}
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              Sessions
+            </button>
+            <button
+              onClick={() => setActiveTab("reflections")}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-lg transition border-b-2 -mb-px ${activeTab === "reflections" ? "border-cyan-400 text-white" : "border-transparent text-slate-400 hover:text-white"}`}
+            >
+              <PenLine className="h-4 w-4" />
+              Reflections
+              {reflections.length > 0 && (
+                <span className="rounded-full bg-cyan-500/20 px-2 py-0.5 text-xs text-cyan-400">{reflections.length}</span>
               )}
-            </section>
+            </button>
+          </div>
+
+          <div className="space-y-8 p-6 pb-24 lg:pb-8 lg:p-8">
+            {activeTab === "sessions" ? (
+              <section>
+                <h2 className="mb-4 text-lg font-bold">Your sessions</h2>
+                {sessions.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-slate-500">
+                    No sessions yet — hit <strong className="text-slate-300">Create Session</strong> to start.
+                  </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {sessions.map((s) => (
+                      <div
+                        key={s.id}
+                        className="group rounded-2xl border border-white/10 bg-[#111827] p-5 hover:border-violet-500/40 transition"
+                      >
+                        <a href={`/sessions/${s.id}`} className="block">
+                          <p className="font-semibold mb-1">{s.title}</p>
+                          <p className="text-xs text-slate-400 font-mono">{s.code}</p>
+                          {s.createdAt && (
+                            <p className="mt-2 text-xs text-slate-500">
+                              {s.createdAt.toDate().toLocaleDateString()}
+                            </p>
+                          )}
+                        </a>
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                          {(s.tags ?? []).map((tag) => (
+                            <span
+                              key={tag}
+                              className="group/tag flex items-center gap-1 rounded-lg bg-violet-500/20 px-2 py-0.5 text-xs text-violet-300"
+                            >
+                              <Tag className="h-3 w-3" />
+                              {tag}
+                              <button
+                                onClick={() => handleRemoveTag(s.id, s.tags ?? [], tag)}
+                                className="ml-0.5 opacity-0 group-hover/tag:opacity-100 hover:text-white transition"
+                              >×</button>
+                            </span>
+                          ))}
+                          {editingTagsId === s.id ? (
+                            <input
+                              autoFocus
+                              type="text"
+                              placeholder="add tag…"
+                              value={tagInput}
+                              onChange={(e) => setTagInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === ",") { e.preventDefault(); handleAddTag(s.id, s.tags ?? []); }
+                                if (e.key === "Escape") { setEditingTagsId(null); setTagInput(""); }
+                              }}
+                              onBlur={() => { handleAddTag(s.id, s.tags ?? []); setEditingTagsId(null); }}
+                              className="rounded-lg border border-violet-500/40 bg-[#1a2135] px-2 py-0.5 text-xs text-white outline-none w-24"
+                            />
+                          ) : (
+                            <button
+                              onClick={() => { setEditingTagsId(s.id); setTagInput(""); }}
+                              className="rounded-lg border border-dashed border-white/20 px-2 py-0.5 text-xs text-slate-600 hover:text-slate-300 hover:border-white/40 transition opacity-0 group-hover:opacity-100"
+                            >
+                              + tag
+                            </button>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleDeleteSession(s.id)}
+                          className="mt-3 flex items-center gap-1.5 text-xs text-slate-600 hover:text-red-400 transition opacity-0 group-hover:opacity-100"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            ) : (
+              <section>
+                <h2 className="mb-1 text-lg font-bold">Reflection log</h2>
+                <p className="mb-6 text-sm text-slate-400">Your self-assessed scores across all sessions.</p>
+                {reflectionsLoading ? (
+                  <p className="text-slate-500 animate-pulse text-sm">Loading…</p>
+                ) : reflections.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-slate-500">
+                    No reflections yet — rate yourself at the end of a session to build your log.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {reflections.map((r) => {
+                      const session = sessions.find((s) => s.id === r.sessionId);
+                      return (
+                        <a
+                          key={r.sessionId}
+                          href={`/sessions/${r.sessionId}`}
+                          className="group flex flex-col gap-3 rounded-2xl border border-white/10 bg-[#111827] p-5 hover:border-cyan-500/30 transition sm:flex-row sm:items-center"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-white truncate">{session?.title ?? "Session"}</p>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              {r.submittedAt ? r.submittedAt.toDate().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {DIMENSIONS.map((dim) => (
+                              <span key={dim} className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${scoreBadgeClass(r[dim])}`}>
+                                <span className="text-white/50 font-normal">{DIM_LABELS[dim].slice(0, 3)} </span>{r[dim]}
+                              </span>
+                            ))}
+                          </div>
+                          <span className="hidden sm:block text-slate-600 group-hover:text-cyan-400 transition shrink-0">→</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            )}
 
 
             <section className="rounded-2xl border border-white/10 bg-gradient-to-r from-cyan-500/10 via-violet-500/10 to-blue-500/10 p-6">
