@@ -12,7 +12,7 @@ import {
   Legend,
 } from "recharts";
 import { QRCodeCanvas } from "qrcode.react";
-import { ArrowLeft, Copy, Check, Users, PenLine, PlayCircle, TrendingUp } from "lucide-react";
+import { ArrowLeft, Copy, Check, Users, PenLine, PlayCircle, TrendingUp, Lock } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import PresenterReflectionModal from "@/components/presenter-reflection-modal";
@@ -105,6 +105,7 @@ export default function LiveSessionPage() {
   const [resourceTab, setResourceTab] = useState<"videos" | "ted" | "podcasts" | "articles">("videos");
   const [podcasts, setPodcasts] = useState<{ title: string; author: string; description: string; image: string; link: string }[]>([]);
   const [podcastsLoading, setPodcastsLoading] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<"free" | "active">("free");
 
   useEffect(() => {
     if (authLoading) return;
@@ -117,6 +118,11 @@ export default function LiveSessionPage() {
       }
     });
 
+    getDoc(doc(db, "presenters", user.uid)).then((snap) => {
+      if (snap.exists() && snap.data().subscriptionStatus === "active") {
+        setSubscriptionStatus("active");
+      }
+    });
 
     const q = query(collection(db, "feedback_responses"), where("sessionId", "==", id));
     const unsubFeedback = onSnapshot(q, (snap) => {
@@ -391,7 +397,7 @@ export default function LiveSessionPage() {
 
                 {!resourcesLoading && resources && (
                   <div className="relative">
-                    <div>
+                    <div className={subscriptionStatus !== "active" ? "blur-[2px] pointer-events-none select-none" : ""}>
                       <div className="grid grid-cols-4 rounded-lg border border-white/10 bg-[#0f1424] p-0.5 mb-3">
                         {(["videos", "ted", "podcasts", "articles"] as const).map((tab) => (
                           <button
@@ -481,6 +487,21 @@ export default function LiveSessionPage() {
                       </p>
                     </div>
 
+                    {subscriptionStatus !== "active" && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-[#0f1424]/60">
+                        <Lock className="h-5 w-5 text-violet-400 mb-2" />
+                        <p className="text-sm font-semibold text-white mb-1">Unlock learning resources</p>
+                        <p className="text-xs text-slate-400 text-center mb-4 px-6 leading-relaxed">
+                          Videos, TED talks, podcasts & articles matched to your session results
+                        </p>
+                        <a
+                          href="/pricing"
+                          className="inline-block rounded-lg bg-violet-500 px-4 py-2 text-xs font-semibold text-white hover:bg-violet-400 transition"
+                        >
+                          Upgrade to Lite →
+                        </a>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
