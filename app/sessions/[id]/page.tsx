@@ -92,6 +92,7 @@ export default function LiveSessionPage() {
   const [reflection, setReflection] = useState<PresenterReflection | null>(null);
   const [showReflection, setShowReflection] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [qrCopied, setQrCopied] = useState(false);
   const [notes, setNotes] = useState("");
   const [notesSaved, setNotesSaved] = useState(false);
   const [notesSaveError, setNotesSaveError] = useState(false);
@@ -511,8 +512,32 @@ export default function LiveSessionPage() {
             <h2 className="mb-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">
               Share with audience
             </h2>
-            <div className="flex justify-center rounded-xl bg-white p-4 mb-4">
+            <div
+              className="relative flex justify-center rounded-xl bg-white p-4 mb-4 cursor-pointer group"
+              onDoubleClick={async () => {
+                const canvas = document.getElementById("qr-download") as HTMLCanvasElement;
+                if (!canvas) return;
+                canvas.toBlob(async (blob) => {
+                  if (!blob) return;
+                  try {
+                    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+                    setQrCopied(true);
+                    setTimeout(() => setQrCopied(false), 2000);
+                  } catch {
+                    // fallback: copy URL if image clipboard not supported
+                    navigator.clipboard.writeText(feedbackUrl);
+                    setQrCopied(true);
+                    setTimeout(() => setQrCopied(false), 2000);
+                  }
+                });
+              }}
+            >
               <QRCodeCanvas value={feedbackUrl} size={160} id="qr-display" />
+              <div className={`absolute inset-0 flex items-center justify-center rounded-xl bg-black/50 transition-opacity ${qrCopied ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
+                <p className="text-xs font-semibold text-white">
+                  {qrCopied ? "✓ Copied!" : "Double-click to copy"}
+                </p>
+              </div>
             </div>
             {/* Hidden high-res canvas for download */}
             <div className="hidden">
