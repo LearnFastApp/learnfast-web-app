@@ -34,7 +34,7 @@ export default function CallbackPage() {
           },
           { merge: true }
         );
-        router.replace("/");
+        router.replace("/dashboard");
       })
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : "Sign-in failed.");

@@ -20,9 +20,9 @@ export default function MobileNav({ onCreateSession }: Props) {
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#0f1424] lg:hidden safe-bottom">
       <div className="flex items-center">
         <a
-          href="/"
+          href="/dashboard"
           className={`flex flex-1 flex-col items-center gap-1 py-3 text-xs transition ${
-            pathname === "/" ? "text-violet-400" : "text-slate-500 hover:text-white"
+            pathname === "/dashboard" ? "text-violet-400" : "text-slate-500 hover:text-white"
           }`}
         >
           <LayoutDashboard className="h-5 w-5" />

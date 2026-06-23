@@ -166,7 +166,7 @@ export default function SettingsPage() {
             <h1 className="text-2xl font-bold">Settings</h1>
             <p className="text-sm text-slate-400">Manage your account and subscription.</p>
           </div>
-          <a href="/" className="text-sm text-slate-400 hover:text-white transition">
+          <a href="/dashboard" className="text-sm text-slate-400 hover:text-white transition">
             ← Dashboard
           </a>
         </div>

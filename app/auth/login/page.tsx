@@ -81,7 +81,7 @@ export default function LoginPage() {
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
-      router.replace("/");
+      router.replace("/dashboard");
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";
       setError(friendlyError(code));

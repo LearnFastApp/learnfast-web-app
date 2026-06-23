@@ -328,7 +328,7 @@ export default function LiveSessionPage() {
       )}
 
       <header className="border-b border-white/10 bg-[#101523] px-6 py-5 flex items-center gap-4">
-        <button onClick={() => router.push("/")} className="text-slate-400 hover:text-white">
+        <button onClick={() => router.push("/dashboard")} className="text-slate-400 hover:text-white">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex-1">

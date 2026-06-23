@@ -212,7 +212,7 @@ export default function AnalyticsPage() {
             <h1 className="text-2xl font-bold">Analytics</h1>
             <p className="text-sm text-slate-400">Performance trends across your sessions.</p>
           </div>
-          <a href="/" className="text-sm text-slate-400 hover:text-white">← Dashboard</a>
+          <a href="/dashboard" className="text-sm text-slate-400 hover:text-white">← Dashboard</a>
         </div>
 
         {allTags.length > 0 && (
