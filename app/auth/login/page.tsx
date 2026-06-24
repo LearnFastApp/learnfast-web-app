@@ -6,6 +6,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
+  sendEmailVerification,
   updateProfile,
 } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
@@ -23,6 +24,7 @@ export default function LoginPage() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [resetSent, setResetSent] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
   const [loading, setLoading] = useState(false);
 
   function friendlyError(code: string): string {
@@ -78,6 +80,9 @@ export default function LoginPage() {
           },
           { merge: true }
         );
+        await sendEmailVerification(result.user);
+        setVerificationSent(true);
+        return;
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
@@ -102,7 +107,25 @@ export default function LoginPage() {
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-[#111827] p-8">
-          {mode !== "reset" && (
+          {verificationSent ? (
+            <div className="text-center">
+              <p className="text-4xl mb-4">📬</p>
+              <h2 className="text-xl font-bold text-white mb-2">Check your email</h2>
+              <p className="text-sm text-slate-400 mb-2">
+                We&apos;ve sent a confirmation link to <span className="text-white">{email}</span>.
+              </p>
+              <p className="text-sm text-slate-400 mb-6">
+                Click the link to verify your account, then sign in below.
+              </p>
+              <button
+                onClick={() => { setVerificationSent(false); setMode("signin"); }}
+                className="w-full rounded-xl bg-violet-500 px-4 py-3 font-semibold text-white hover:bg-violet-400 transition"
+              >
+                Go to sign in
+              </button>
+            </div>
+          ) : null}
+          {!verificationSent && mode !== "reset" && (
             <div className="mb-8 flex rounded-xl border border-white/10 bg-[#0f1424] p-1">
               <button
                 onClick={() => { setMode("signin"); setError(""); }}
@@ -119,7 +142,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          {mode === "reset" ? (
+          {!verificationSent && mode === "reset" ? (
             resetSent ? (
               <div className="text-center">
                 <p className="text-2xl mb-3">📬</p>
