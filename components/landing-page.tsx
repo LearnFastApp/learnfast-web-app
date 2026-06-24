@@ -64,6 +64,14 @@ export default function LandingPage() {
         </div>
         <div className="flex items-center gap-2">
           <button onClick={goToLogin} className="hidden sm:block text-xs text-slate-400 hover:text-white transition px-3 py-2">Sign in</button>
+          <a
+            href="https://ollie-0ffouvku.scoreapp.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden md:block text-xs font-bold px-4 py-2.5 text-white rounded-sm transition whitespace-nowrap border border-white/20 hover:border-white/40"
+          >
+            FREE LEADERSHIP ASSESSMENT
+          </a>
           <button onClick={goToLogin} className="text-xs font-bold px-4 py-2.5 text-white rounded-sm transition whitespace-nowrap" style={{ backgroundColor: RED }}>
             START FREE →
           </button>
