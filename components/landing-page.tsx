@@ -66,10 +66,10 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ── */}
-      <section className="relative flex flex-col items-center justify-center text-center pt-36 pb-24 px-5 lg:px-12 overflow-hidden">
+      <section className="relative text-center pt-36 pb-0 px-5 lg:px-12 overflow-hidden">
 
         {/* Background glow */}
-        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 90% 60% at 50% 0%, rgba(109,40,217,0.2) 0%, transparent 65%)" }} />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 90% 50% at 50% 0%, rgba(109,40,217,0.22) 0%, transparent 60%)" }} />
 
         {/* Ribbon */}
         <div className="absolute top-24 left-0 z-10">
@@ -87,21 +87,21 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <p className="text-[10px] sm:text-xs font-semibold tracking-[0.3em] text-slate-400 uppercase mb-5">
+        <p className="relative text-[10px] sm:text-xs font-semibold tracking-[0.3em] text-slate-400 uppercase mb-5">
           Presentation Feedback Technology
         </p>
-        <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-light leading-tight tracking-tight text-slate-400 mb-1">
+        <h1 className="relative text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-light leading-tight tracking-tight text-slate-400 mb-1">
           INTRODUCING
         </h1>
-        <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-tight tracking-tight mb-6">
+        <h1 className="relative text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-tight tracking-tight mb-6">
           THE LEARNFAST APP
         </h1>
-        <p className="max-w-xl text-base sm:text-lg text-slate-400 leading-relaxed mb-3">
+        <p className="relative max-w-xl mx-auto text-base sm:text-lg text-slate-400 leading-relaxed mb-3">
           Unlock the Power of Real-Time Feedback for Leaders, Managers and Coaches
         </p>
-        <p className="text-sm text-slate-500 mb-10">No download required — works on any device, in your browser.</p>
+        <p className="relative text-sm text-slate-500 mb-10">No download required — works on any device, in your browser.</p>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 mb-16">
+        <div className="relative flex flex-col sm:flex-row items-center justify-center gap-3 mb-16">
           <button onClick={goToLogin} className="px-8 py-4 text-sm font-bold tracking-wider text-white rounded-sm transition w-full sm:w-auto" style={{ backgroundColor: RED }}>
             START FREE — 2 SESSIONS ON US
           </button>
@@ -110,30 +110,18 @@ export default function LandingPage() {
           </button>
         </div>
 
-        {/* Score mockup */}
-        <div className="w-full max-w-2xl mx-auto rounded-2xl border border-white/10 bg-[#0f1118] p-6 sm:p-8">
-          <div className="flex items-center justify-between mb-5">
-            <p className="text-xs text-slate-500 uppercase tracking-widest">Live session · 24 responses</p>
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-green-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
-              LIVE
-            </span>
-          </div>
-          <div className="grid grid-cols-5 gap-2 sm:gap-4 mb-6">
-            {DIMENSIONS.map((d, i) => (
-              <div key={d.name} className="text-center">
-                <p className="text-[10px] sm:text-xs text-slate-500 mb-1.5 truncate">{d.name}</p>
-                <p className="text-xl sm:text-2xl font-black" style={{ color: d.color }}>
-                  {[78, 65, 82, 71, 59][i]}
-                </p>
-                <p className="text-[10px] text-slate-600">/100</p>
-              </div>
-            ))}
-          </div>
-          <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
-            <div className="h-full w-3/4 rounded-full bg-gradient-to-r from-violet-500 via-cyan-400 to-pink-400" />
-          </div>
-          <p className="text-xs text-slate-600 mt-2 text-center">24 of 32 participants responded</p>
+        {/* Laptop mockup — decorative, bleeds off bottom like original site phone mockups */}
+        <div className="relative mx-auto w-full max-w-5xl">
+          {/* Glow beneath laptop */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-32 pointer-events-none" style={{ background: "radial-gradient(ellipse 80% 100% at 50% 100%, rgba(109,40,217,0.25) 0%, transparent 70%)" }} />
+          <Image
+            src="/app-preview.png"
+            alt="LearnFast app — live session results"
+            width={1200}
+            height={750}
+            className="relative w-full object-contain drop-shadow-2xl"
+            priority
+          />
         </div>
       </section>
 
