@@ -50,7 +50,7 @@ export default function UpgradeModal({ onClose }: Props) {
         </div>
 
         <p className="text-sm text-slate-300 leading-relaxed mb-6">
-          You&apos;ve used your <strong className="text-white">5 free sessions</strong>. Upgrade to Lite for unlimited sessions, trend analytics, and session-matched learning resources.
+          You&apos;ve used your <strong className="text-white">2 free sessions</strong>. Upgrade to Lite for unlimited sessions, trend analytics, and session-matched learning resources.
         </p>
 
         <div className="rounded-xl border border-violet-500/20 bg-[#1a2135] p-4 mb-6">

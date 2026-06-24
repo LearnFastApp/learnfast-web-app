@@ -12,7 +12,7 @@ const TIERS = [
     period: null,
     description: "Get started risk-free",
     features: [
-      "5 session feedback connections",
+      "2 session feedback connections",
       "Real-time audience radar chart",
       "Presenter self-reflection",
       "Gap analysis report",

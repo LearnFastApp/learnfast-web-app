@@ -295,7 +295,7 @@ export default function SettingsPage() {
                   <>
                     <span className="font-bold">Free</span>
                     <span className="rounded-full bg-slate-500/20 px-2 py-0.5 text-xs text-slate-400">
-                      {sessionCount}/5 sessions used
+                      {sessionCount}/2 sessions used
                     </span>
                   </>
                 )}

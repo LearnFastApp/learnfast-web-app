@@ -202,7 +202,7 @@ export default function Dashboard() {
         />
       )}
       <MobileNav onCreateSession={() => {
-        if (subscriptionStatus !== "active" && sessions.length >= 5) {
+        if (subscriptionStatus !== "active" && sessions.length >= 2) {
           setShowUpgrade(true);
         } else {
           setShowModal(true);
@@ -248,18 +248,18 @@ export default function Dashboard() {
             <div className="mt-6 rounded-xl border border-white/10 bg-[#0a0d1a] p-4">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Free Plan</p>
-                <p className="text-xs font-bold text-white">{sessions.length}<span className="text-slate-500 font-normal"> / 5</span></p>
+                <p className="text-xs font-bold text-white">{sessions.length}<span className="text-slate-500 font-normal"> / 2</span></p>
               </div>
               <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden mb-3">
                 <div
-                  className={`h-full rounded-full transition-all ${sessions.length >= 5 ? "bg-red-500" : sessions.length >= 3 ? "bg-amber-400" : "bg-violet-500"}`}
-                  style={{ width: `${Math.min((sessions.length / 5) * 100, 100)}%` }}
+                  className={`h-full rounded-full transition-all ${sessions.length >= 2 ? "bg-red-500" : sessions.length >= 1 ? "bg-amber-400" : "bg-violet-500"}`}
+                  style={{ width: `${Math.min((sessions.length / 2) * 100, 100)}%` }}
                 />
               </div>
               <p className="text-xs text-slate-400 mb-3">
-                {sessions.length >= 5
-                  ? "You've used all 5 free sessions."
-                  : `${5 - sessions.length} free session${5 - sessions.length !== 1 ? "s" : ""} remaining.`}
+                {sessions.length >= 2
+                  ? "You've used both free sessions."
+                  : `${2 - sessions.length} free session${2 - sessions.length !== 1 ? "s" : ""} remaining.`}
               </p>
               <button
                 onClick={() => setShowUpgrade(true)}
@@ -302,7 +302,7 @@ export default function Dashboard() {
 
             <button
               onClick={() => {
-                if (subscriptionStatus !== "active" && sessions.length >= 5) {
+                if (subscriptionStatus !== "active" && sessions.length >= 2) {
                   setShowUpgrade(true);
                 } else {
                   setShowModal(true);
@@ -315,10 +315,10 @@ export default function Dashboard() {
             </button>
           </header>
 
-          {subscriptionStatus !== "active" && sessions.length >= 5 && (
+          {subscriptionStatus !== "active" && sessions.length >= 2 && (
             <div className="flex items-center justify-between border-b border-amber-500/20 bg-amber-500/5 px-6 py-3 lg:px-8">
               <p className="text-sm text-amber-300">
-                You&apos;ve reached your 5 free session limit.
+                You&apos;ve used both free sessions.
               </p>
               <button
                 onClick={() => setShowUpgrade(true)}

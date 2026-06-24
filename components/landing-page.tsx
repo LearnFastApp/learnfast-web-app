@@ -76,7 +76,7 @@ export default function LandingPage() {
             className="px-8 py-4 text-sm font-bold tracking-wider text-white transition rounded-sm"
             style={{ backgroundColor: "#d13b1a" }}
           >
-            START FREE — 5 SESSIONS ON US
+            START FREE — 2 SESSIONS ON US
           </button>
           <button
             onClick={() => router.push("/auth/login")}
@@ -193,7 +193,7 @@ export default function LandingPage() {
               <p className="text-5xl font-bold mb-1">£0</p>
               <p className="text-sm text-slate-500 mb-8">No card required</p>
               <ul className="space-y-3 text-sm text-slate-300 mb-8">
-                {["5 feedback sessions", "All 5 scoring dimensions", "Real-time radar chart", "Session notes", "Reflective practice log"].map((f) => (
+                {["2 feedback sessions", "All 5 scoring dimensions", "Real-time radar chart", "Session notes", "Reflective practice log"].map((f) => (
                   <li key={f} className="flex items-center gap-2">
                     <span className="text-green-400">✓</span> {f}
                   </li>
