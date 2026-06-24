@@ -197,20 +197,55 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ── */}
+      {/* ── HOW IT WORKS — visual onboarding ── */}
       <section id="how-it-works" className="py-20 sm:py-28 px-5 lg:px-12">
         <div className="max-w-6xl mx-auto">
           <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4 text-center">Simple by Design</p>
           <h2 className="text-4xl sm:text-6xl font-light text-slate-400 text-center leading-none mb-1">HOW IT</h2>
           <h2 className="text-4xl sm:text-6xl font-black text-center leading-none mb-16">WORKS</h2>
-          <div className="grid gap-8 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {STEPS.map((s) => (
-              <div key={s.n}>
-                <p className="text-6xl font-black text-white/5 mb-3 leading-none">{s.n}</p>
-                <p className="text-sm font-bold uppercase tracking-wider mb-2">{s.title}</p>
-                <p className="text-sm text-slate-400 leading-relaxed">{s.body}</p>
+
+          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+
+            {/* Step 1 — Create session */}
+            <div className="flex flex-col items-center text-center">
+              <p className="text-6xl font-black text-white/5 leading-none mb-4">01</p>
+              <div className="w-full rounded-2xl overflow-hidden border border-white/10 bg-[#0f1118] mb-5" style={{ aspectRatio: "9/16", maxHeight: 260 }}>
+                <Image src="/onboard-2.png" alt="Create a session" width={400} height={711} className="w-full h-full object-cover object-top" />
               </div>
-            ))}
+              <p className="text-sm font-bold uppercase tracking-wider mb-2">Create a Session</p>
+              <p className="text-sm text-slate-400 leading-relaxed">Name your session and get a unique code in seconds.</p>
+            </div>
+
+            {/* Step 2 — Share QR */}
+            <div className="flex flex-col items-center text-center">
+              <p className="text-6xl font-black text-white/5 leading-none mb-4">02</p>
+              <div className="w-full rounded-2xl overflow-hidden border border-white/10 bg-[#0f1118] mb-5" style={{ aspectRatio: "9/16", maxHeight: 260 }}>
+                <Image src="/onboard-1.jpg" alt="Share with your audience" width={400} height={711} className="w-full h-full object-cover object-top" />
+              </div>
+              <p className="text-sm font-bold uppercase tracking-wider mb-2">Share With Your Audience</p>
+              <p className="text-sm text-slate-400 leading-relaxed">Display the QR code or share the link — no app download needed.</p>
+            </div>
+
+            {/* Step 3 — Live feedback */}
+            <div className="flex flex-col items-center text-center">
+              <p className="text-6xl font-black text-white/5 leading-none mb-4">03</p>
+              <div className="w-full rounded-2xl overflow-hidden border border-violet-500/20 bg-[#0f1118] mb-5" style={{ aspectRatio: "9/16", maxHeight: 260 }}>
+                <Image src="/phone-preview.png" alt="Collect live feedback" width={400} height={600} className="w-full h-full object-cover object-top" />
+              </div>
+              <p className="text-sm font-bold uppercase tracking-wider mb-2">Collect Live Feedback</p>
+              <p className="text-sm text-slate-400 leading-relaxed">Watch scores arrive in real time across all 5 dimensions.</p>
+            </div>
+
+            {/* Step 4 — Performance over time */}
+            <div className="flex flex-col items-center text-center">
+              <p className="text-6xl font-black text-white/5 leading-none mb-4">04</p>
+              <div className="w-full rounded-2xl overflow-hidden border border-violet-500/20 bg-[#0f1118] mb-5" style={{ aspectRatio: "9/16", maxHeight: 260 }}>
+                <Image src="/phone-preview-2.png" alt="Track performance over time" width={400} height={600} className="w-full h-full object-cover object-top" />
+              </div>
+              <p className="text-sm font-bold uppercase tracking-wider mb-2">Reflect & Improve</p>
+              <p className="text-sm text-slate-400 leading-relaxed">Review your radar chart, track trends, and commit to your next focus.</p>
+            </div>
+
           </div>
         </div>
       </section>
