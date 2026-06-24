@@ -210,7 +210,7 @@ export default function LandingPage() {
             <div className="flex flex-col items-center text-center">
               <p className="text-6xl font-black text-white/5 leading-none mb-4">01</p>
               <div className="w-full rounded-2xl overflow-hidden border border-white/10 bg-[#0f1118] mb-5" style={{ aspectRatio: "9/16", maxHeight: 260 }}>
-                <Image src="/onboard-2.png" alt="Create a session" width={400} height={711} className="w-full h-full object-cover object-top" />
+                <Image src="/onboard-2.jpg" alt="Create a session" width={400} height={711} className="w-full h-full object-cover object-center" />
               </div>
               <p className="text-sm font-bold uppercase tracking-wider mb-2">Create a Session</p>
               <p className="text-sm text-slate-400 leading-relaxed">Name your session and get a unique code in seconds.</p>
