@@ -254,8 +254,8 @@ export default function LandingPage() {
       <section className="py-16 sm:py-24 px-5 lg:px-12 bg-[#0a0b12] border-y border-white/5">
         <div className="max-w-6xl mx-auto">
           <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4 text-center">Scored Across</p>
-          <h2 className="text-4xl sm:text-6xl font-light text-slate-400 text-center leading-none mb-1">THE</h2>
-          <h2 className="text-4xl sm:text-6xl font-black text-center leading-none mb-6">5 DIMENSIONS</h2>
+          <h2 className="text-3xl sm:text-6xl font-light text-slate-400 text-center leading-none mb-1">THE</h2>
+          <h2 className="text-3xl sm:text-6xl font-black text-center leading-none mb-6">5 DIMENSIONS</h2>
           <p className="text-center text-slate-400 max-w-lg mx-auto mb-12 text-sm">
             Every session gives you a complete picture of your performance across five areas that matter most.
           </p>
