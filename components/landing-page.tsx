@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 const RED = "#d13b1a";
@@ -39,6 +40,10 @@ const PARTNERS = [
 export default function LandingPage() {
   const router = useRouter();
   const goToLogin = () => router.push("/auth/login");
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#08090f] text-white overflow-x-hidden">
