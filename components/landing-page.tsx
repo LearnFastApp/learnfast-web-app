@@ -63,7 +63,7 @@ export default function LandingPage() {
           <a href="#why" className="hover:text-white transition">WHY</a>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={goToLogin} className="hidden sm:block text-xs text-slate-400 hover:text-white transition px-3 py-2">Sign in</button>
+          <button onClick={goToLogin} className="text-xs text-slate-400 hover:text-white transition px-3 py-2">Sign in</button>
           <a
             href="https://ollie-0ffouvku.scoreapp.com"
             target="_blank"
