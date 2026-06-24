@@ -72,16 +72,18 @@ export default function LandingPage() {
         <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 90% 60% at 50% 0%, rgba(109,40,217,0.2) 0%, transparent 65%)" }} />
 
         {/* Ribbon */}
-        <div className="absolute top-24 left-0 flex items-center">
-          <div className="relative">
-            <div className="px-4 py-2 text-white text-xs font-bold tracking-widest leading-tight text-center" style={{ backgroundColor: RED }}>
-              <p>LITE VERSION</p>
-              <p>AVAILABLE NOW</p>
-            </div>
-            <div className="w-full h-3 flex">
-              <div className="flex-1" style={{ backgroundColor: RED }} />
-              <div className="w-0 h-0 border-l-[50px] border-t-[12px]" style={{ borderLeftColor: RED, borderTopColor: "transparent" }} />
-            </div>
+        <div className="absolute top-24 left-0 z-10">
+          <div
+            className="w-28 pt-5 pb-8 text-white text-[10px] font-bold tracking-widest text-center leading-relaxed"
+            style={{
+              backgroundColor: RED,
+              clipPath: "polygon(0 0, 100% 0, 100% 82%, 50% 100%, 0 82%)",
+            }}
+          >
+            <p>LITE</p>
+            <p>VERSION</p>
+            <p>AVAILABLE</p>
+            <p>NOW</p>
           </div>
         </div>
 
@@ -243,13 +245,15 @@ export default function LandingPage() {
               <h2 className="text-3xl sm:text-5xl font-black leading-none">PARTNERS</h2>
             </div>
             <div className="hidden sm:block">
-              <div className="relative">
-                <div className="px-3 py-2 text-white text-[10px] font-bold tracking-widest text-center" style={{ backgroundColor: RED }}>
-                  <p>COMING</p><p>SOON</p>
-                </div>
-                <div className="flex justify-center">
-                  <div className="w-0 h-0 border-l-[24px] border-r-[24px] border-t-[10px]" style={{ borderLeftColor: "transparent", borderRightColor: "transparent", borderTopColor: RED }} />
-                </div>
+              <div
+                className="w-16 pt-3 pb-5 text-white text-[10px] font-bold tracking-widest text-center leading-relaxed"
+                style={{
+                  backgroundColor: RED,
+                  clipPath: "polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%)",
+                }}
+              >
+                <p>COMING</p>
+                <p>SOON</p>
               </div>
             </div>
           </div>
