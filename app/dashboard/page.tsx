@@ -257,15 +257,17 @@ export default function Dashboard() {
               </div>
               <p className="text-xs text-slate-400 mb-3">
                 {sessions.length === 0 && "2 free sessions to explore LearnFast."}
-                {sessions.length === 1 && "1 free session remaining — then start your trial."}
+                {sessions.length === 1 && "1 free session remaining."}
                 {sessions.length >= 2 && "You've used both free sessions. Start your 7-day trial to continue."}
               </p>
               <button
                 onClick={() => setShowUpgrade(true)}
-                className={`w-full rounded-lg px-3 py-2 text-xs font-bold text-white transition ${sessions.length >= 2 ? "bg-amber-500 hover:bg-amber-400" : "bg-violet-500 hover:bg-violet-400"}`}
+                className={`w-full rounded-lg px-3 py-2.5 text-xs font-bold text-white transition ${sessions.length >= 2 ? "bg-amber-500 hover:bg-amber-400" : "bg-violet-500 hover:bg-violet-400"}`}
               >
                 {sessions.length >= 2 ? "Start 7-Day Free Trial →" : "Upgrade to Lite — £3.99/mo"}
               </button>
+              <p className="text-[10px] font-semibold text-slate-400 text-center mt-1.5">7 day free trial</p>
+              <p className="text-[10px] text-slate-600 text-center">cancel anytime</p>
             </div>
           )}
 
