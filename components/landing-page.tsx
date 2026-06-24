@@ -160,7 +160,7 @@ export default function LandingPage() {
 
       {/* ── WHAT WE DO ── */}
       <section id="product" className="py-20 sm:py-28 px-5 lg:px-12 max-w-4xl mx-auto text-center">
-        <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4">What We Do</p>
+        <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4">Performance Insights</p>
         <h2 className="text-4xl sm:text-6xl font-light text-slate-400 leading-none mb-1">WHAT</h2>
         <h2 className="text-4xl sm:text-6xl font-black leading-none mb-8">WE DO</h2>
         <p className="text-base sm:text-lg text-slate-400 leading-relaxed max-w-2xl mx-auto mb-10">
