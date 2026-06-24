@@ -87,7 +87,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <p className="relative text-[10px] sm:text-xs font-semibold tracking-[0.3em] text-slate-400 uppercase mb-5">
+        <p className="relative text-[10px] sm:text-xs font-semibold tracking-[0.3em] text-slate-400 uppercase mb-5 pl-32 sm:pl-0">
           Presentation Feedback Technology
         </p>
         <h1 className="relative text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-light leading-tight tracking-tight text-slate-400 mb-1">
