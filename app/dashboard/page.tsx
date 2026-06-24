@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { collection, query, where, orderBy, onSnapshot, doc, deleteDoc, updateDoc, getDoc, getDocs, getCountFromServer } from "firebase/firestore";
+import { collection, query, where, orderBy, limit, startAfter, onSnapshot, doc, deleteDoc, updateDoc, getDoc, getDocs, getCountFromServer, QueryDocumentSnapshot } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import {
@@ -74,7 +74,13 @@ export default function Dashboard() {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<"free" | "active">("free");
+  const PAGE_SIZE = 10;
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [extraSessions, setExtraSessions] = useState<Session[]>([]);
+  const [lastSnapshotDoc, setLastSnapshotDoc] = useState<QueryDocumentSnapshot | null>(null);
+  const [extraLastDoc, setExtraLastDoc] = useState<QueryDocumentSnapshot | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [editingTagsId, setEditingTagsId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState("");
   const [activeTab, setActiveTab] = useState<"sessions" | "reflections">("sessions");
@@ -106,14 +112,39 @@ export default function Dashboard() {
     const q = query(
       collection(db, "sessions"),
       where("presenterId", "==", user.uid),
-      orderBy("createdAt", "desc")
+      orderBy("createdAt", "desc"),
+      limit(PAGE_SIZE)
     );
     return onSnapshot(q, (snap) => {
-      setSessions(
-        snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Session, "id">) }))
-      );
+      setSessions(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Session, "id">) })));
+      setLastSnapshotDoc(snap.docs[snap.docs.length - 1] ?? null);
+      setHasMore(snap.docs.length === PAGE_SIZE);
+      // Reset extra pages when first page refreshes (e.g. session deleted)
+      setExtraSessions([]);
+      setExtraLastDoc(null);
     });
   }, [user]);
+
+  async function loadMore() {
+    if (!user || loadingMore) return;
+    const cursor = extraLastDoc ?? lastSnapshotDoc;
+    if (!cursor) return;
+    setLoadingMore(true);
+    const snap = await getDocs(query(
+      collection(db, "sessions"),
+      where("presenterId", "==", user.uid),
+      orderBy("createdAt", "desc"),
+      startAfter(cursor),
+      limit(PAGE_SIZE)
+    ));
+    setExtraSessions((prev) => [
+      ...prev,
+      ...snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Session, "id">) })),
+    ]);
+    setExtraLastDoc(snap.docs[snap.docs.length - 1] ?? null);
+    setHasMore(snap.docs.length === PAGE_SIZE);
+    setLoadingMore(false);
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -135,18 +166,23 @@ export default function Dashboard() {
   }, [user]);
 
   useEffect(() => {
-    if (!sessions.length) return;
+    const allSessions = [...sessions, ...extraSessions];
+    if (!allSessions.length) return;
+    const missing = allSessions.filter((s) => responseCounts[s.id] === undefined);
+    if (!missing.length) return;
     Promise.all(
-      sessions.map((s) =>
+      missing.map((s) =>
         getCountFromServer(query(collection(db, "feedback_responses"), where("sessionId", "==", s.id)))
           .then((snap) => ({ id: s.id, count: snap.data().count }))
       )
     ).then((counts) => {
-      const map: Record<string, number> = {};
-      counts.forEach((c) => { map[c.id] = c.count; });
-      setResponseCounts(map);
+      setResponseCounts((prev) => {
+        const map = { ...prev };
+        counts.forEach((c) => { map[c.id] = c.count; });
+        return map;
+      });
     }).catch(() => {});
-  }, [sessions]);
+  }, [sessions, extraSessions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleDeleteSession(sessionId: string) {
     if (!confirm("Delete this session? This cannot be undone.")) return;
@@ -365,7 +401,7 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    {sessions.map((s) => (
+                    {[...sessions, ...extraSessions].map((s) => (
                       <div
                         key={s.id}
                         className="group rounded-2xl border border-white/10 bg-[#111827] p-5 hover:border-violet-500/40 transition"
@@ -445,6 +481,17 @@ export default function Dashboard() {
                         </button>
                       </div>
                     ))}
+                  </div>
+                )}
+                {hasMore && (
+                  <div className="mt-6 flex justify-center">
+                    <button
+                      onClick={loadMore}
+                      disabled={loadingMore}
+                      className="rounded-xl border border-white/10 px-6 py-2.5 text-sm font-semibold text-slate-300 hover:text-white hover:border-white/30 transition disabled:opacity-50"
+                    >
+                      {loadingMore ? "Loading…" : "Load more sessions"}
+                    </button>
                   </div>
                 )}
               </section>

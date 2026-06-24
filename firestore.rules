@@ -36,5 +36,9 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /resource_cache/{dimension} {
+      allow read, write: if false;
+    }
+
   }
 }

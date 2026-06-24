@@ -34,15 +34,29 @@ interface ArticleResult {
   source: string;
 }
 
-interface CacheEntry {
-  videos: VideoResult[];
-  tedTalks: VideoResult[];
-  articles: ArticleResult[];
-  ts: number;
+const CACHE_TTL_MS = 1000 * 60 * 60 * 24;
+
+async function getCachedResources(dimension: string) {
+  const db = getAdminDb();
+  const doc = await db.collection("resource_cache").doc(dimension).get();
+  if (!doc.exists) return null;
+  const data = doc.data()!;
+  const updatedAt: number = data.updatedAt?.toMillis?.() ?? 0;
+  if (Date.now() - updatedAt > CACHE_TTL_MS) return null;
+  return { videos: data.videos, tedTalks: data.tedTalks, articles: data.articles };
 }
 
-const cache = new Map<string, CacheEntry>();
-const CACHE_TTL = 1000 * 60 * 60 * 24;
+async function setCachedResources(
+  dimension: string,
+  payload: { videos: VideoResult[]; tedTalks: VideoResult[]; articles: ArticleResult[] }
+) {
+  const db = getAdminDb();
+  const { FieldValue } = await import("firebase-admin/firestore");
+  await db.collection("resource_cache").doc(dimension).set({
+    ...payload,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+}
 
 function parseVideos(json: { items?: unknown[] }): VideoResult[] {
   return (json.items ?? []).map(
@@ -102,14 +116,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid dimension" }, { status: 400 });
   }
 
-  const cached = cache.get(dimension);
-  if (cached && Date.now() - cached.ts < CACHE_TTL) {
-    return NextResponse.json({
-      videos: cached.videos,
-      tedTalks: cached.tedTalks,
-      articles: cached.articles,
-    });
-  }
+  const cached = await getCachedResources(dimension);
+  if (cached) return NextResponse.json(cached);
 
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (!apiKey) {
@@ -131,7 +139,7 @@ export async function GET(req: NextRequest) {
   const videos = parseVideos(videoJson);
   const tedTalks = parseVideos(tedJson);
 
-  cache.set(dimension, { videos, tedTalks, articles, ts: Date.now() });
+  await setCachedResources(dimension, { videos, tedTalks, articles });
 
   return NextResponse.json({ videos, tedTalks, articles });
 }
