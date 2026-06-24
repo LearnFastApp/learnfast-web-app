@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminDb } from "@/lib/firebase-admin";
+import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
 import { sendSummaryEmail } from "@/lib/email";
 import { generateGapInsight } from "@/lib/gap-insight";
 
@@ -10,6 +10,11 @@ type Dimension = (typeof DIMS)[number];
 
 export async function POST(req: NextRequest) {
   try {
+    const verifiedUid = await verifyAuthToken(req);
+    if (!verifiedUid) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { sessionId } = (await req.json()) as { sessionId: string };
     if (!sessionId) {
       return NextResponse.json({ error: "Missing sessionId" }, { status: 400 });
@@ -23,6 +28,10 @@ export async function POST(req: NextRequest) {
     }
 
     const session = sessionDoc.data()!;
+
+    if (session.presenterId !== verifiedUid) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
 
     // Don't double-send
     if (session.summarySent) {

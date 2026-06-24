@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSessionPresenter(sessionId) {
+      return request.auth != null &&
+        request.auth.uid == get(/databases/$(database)/documents/sessions/$(sessionId)).data.presenterId;
+    }
+
+    match /presenters/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    match /sessions/{sessionId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.presenterId;
+      allow update, delete: if request.auth != null
+        && request.auth.uid == resource.data.presenterId;
+    }
+
+    match /feedback_responses/{responseId} {
+      allow create: if true;
+      allow read: if isSessionPresenter(resource.data.sessionId);
+    }
+
+    match /presenter_reflections/{sessionId} {
+      allow read, write: if isSessionPresenter(sessionId);
+    }
+
+    match /session_notes/{sessionId} {
+      allow read, write: if isSessionPresenter(sessionId);
+    }
+
+  }
+}

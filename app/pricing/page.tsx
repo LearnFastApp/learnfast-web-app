@@ -77,9 +77,10 @@ export default function PricingPage() {
     if (!user) return;
     setCheckoutLoading(true);
     setCheckoutError("");
+    const token = await user.getIdToken();
     const res = await fetch("/api/stripe/checkout", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ uid: user.uid, email: user.email }),
     });
     const data = await res.json();

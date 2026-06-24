@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe, STRIPE_PRICE_ID } from "@/lib/stripe-server";
+import { verifyAuthToken } from "@/lib/firebase-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +9,11 @@ const APP_URL =
 
 export async function POST(req: NextRequest) {
   try {
+    const verifiedUid = await verifyAuthToken(req);
+    if (!verifiedUid) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { uid, email } = (await req.json()) as {
       uid: string;
       email?: string;
@@ -15,6 +21,10 @@ export async function POST(req: NextRequest) {
 
     if (!uid) {
       return NextResponse.json({ error: "Missing uid" }, { status: 400 });
+    }
+
+    if (verifiedUid !== uid) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     const session = await getStripe().checkout.sessions.create({

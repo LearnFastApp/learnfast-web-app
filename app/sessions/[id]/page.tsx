@@ -251,11 +251,13 @@ export default function LiveSessionPage() {
     setShowEndConfirm(false);
     setEnding(false);
     // Fire-and-forget — don't block UI on email delivery
-    fetch("/api/sessions/send-summary", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId: id }),
-    }).catch(() => {});
+    user?.getIdToken().then((token) => {
+      fetch("/api/sessions/send-summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ sessionId: id }),
+      }).catch(() => {});
+    });
 
     // Prompt self-reflection immediately — before results are visible
     if (!reflection) setShowReflection(true);

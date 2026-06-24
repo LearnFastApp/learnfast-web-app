@@ -50,18 +50,18 @@ env:
     availability:
       - RUNTIME
   - variable: CRON_SECRET
-    value: LearnFast12!
+    secret: CRON_SECRET
     availability:
       - RUNTIME
   - variable: YOUTUBE_API_KEY
-    value: AIzaSyAd8ocb4ejxuycD4SSz_JeGM0tLAiw3MFw
+    secret: YOUTUBE_API_KEY
     availability:
       - RUNTIME
   - variable: PODCAST_INDEX_KEY
-    value: MSNBEJJJ7FYETUKEHFJE
+    secret: PODCAST_INDEX_KEY
     availability:
       - RUNTIME
   - variable: PODCAST_INDEX_SECRET
-    value: "$uus8pgQkQy4Xk8UfAkFhWjhQuX3mbX5D$CjL3KE"
+    secret: PODCAST_INDEX_SECRET
     availability:
       - RUNTIME
