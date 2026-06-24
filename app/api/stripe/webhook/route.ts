@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe-server";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 import type Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +21,13 @@ export async function POST(req: NextRequest) {
   }
 
   const adminDb = getAdminDb();
+
+  // Idempotency: skip events we've already processed
+  const eventRef = adminDb.collection("stripe_events").doc(event.id);
+  const existing = await eventRef.get();
+  if (existing.exists) {
+    return NextResponse.json({ received: true, duplicate: true });
+  }
 
   try {
     switch (event.type) {
@@ -65,6 +73,10 @@ export async function POST(req: NextRequest) {
         break;
       }
     }
+
+    // Mark event as processed only after successful handling
+    await eventRef.set({ processedAt: FieldValue.serverTimestamp(), type: event.type });
+
   } catch (err) {
     console.error("[webhook] handler error", err);
     return NextResponse.json({ error: "Handler error" }, { status: 500 });
