@@ -244,6 +244,32 @@ export default function Dashboard() {
             })}
           </nav>
 
+          {subscriptionStatus !== "active" && (
+            <div className="mt-6 rounded-xl border border-white/10 bg-[#0a0d1a] p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Free Plan</p>
+                <p className="text-xs font-bold text-white">{sessions.length}<span className="text-slate-500 font-normal"> / 5</span></p>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden mb-3">
+                <div
+                  className={`h-full rounded-full transition-all ${sessions.length >= 5 ? "bg-red-500" : sessions.length >= 3 ? "bg-amber-400" : "bg-violet-500"}`}
+                  style={{ width: `${Math.min((sessions.length / 5) * 100, 100)}%` }}
+                />
+              </div>
+              <p className="text-xs text-slate-400 mb-3">
+                {sessions.length >= 5
+                  ? "You've used all 5 free sessions."
+                  : `${5 - sessions.length} free session${5 - sessions.length !== 1 ? "s" : ""} remaining.`}
+              </p>
+              <button
+                onClick={() => setShowUpgrade(true)}
+                className="w-full rounded-lg bg-violet-500 px-3 py-2 text-xs font-bold text-white hover:bg-violet-400 transition"
+              >
+                Upgrade to Lite — £3.99/mo
+              </button>
+            </div>
+          )}
+
           <div className="mt-auto border-t border-white/10 pt-6">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-violet-500/30 font-bold">
