@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,11 @@ const cache = new Map<string, { podcasts: PodcastResult[]; ts: number }>();
 const CACHE_TTL = 1000 * 60 * 60 * 24;
 
 export async function GET(req: NextRequest) {
+  const { allowed } = rateLimit(`podcasts:${getIp(req)}`, 30, 60_000);
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const dimension = req.nextUrl.searchParams.get("dimension");
 
   if (!dimension || !QUERIES[dimension]) {

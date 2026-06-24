@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { useParams } from "next/navigation";
 import { db } from "@/lib/firebase";
 
@@ -68,10 +68,6 @@ function getNarrative(dim: Dimension, score: number): string {
   return bands.find((b) => score <= b.max)?.text ?? bands[bands.length - 1].text;
 }
 
-function randomAnonId() {
-  return Math.random().toString(36).substring(2, 14);
-}
-
 export default function FeedbackPage() {
   const { code } = useParams<{ code: string }>();
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -109,18 +105,16 @@ export default function FeedbackPage() {
     e.preventDefault();
     if (!sessionId) return;
     setSubmitting(true);
-    await addDoc(collection(db, "feedback_responses"), {
-      sessionId,
-      ...scores,
-      submittedAt: serverTimestamp(),
-      anonId: randomAnonId(),
-      ...(comment.trim() && {
-        comment: comment.trim(),
-        anonymous,
-        commenterName: anonymous ? null : commenterName.trim() || null,
+    const res = await fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId,
+        scores,
+        ...(comment.trim() && { comment: comment.trim(), anonymous, commenterName }),
       }),
     });
-    setSubmitted(true);
+    if (res.ok) setSubmitted(true);
     setSubmitting(false);
   }
 

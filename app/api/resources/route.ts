@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { articlesByDimension } from "@/lib/articles";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -90,6 +91,11 @@ async function getHealthyArticles(dimension: string): Promise<ArticleResult[]> {
 }
 
 export async function GET(req: NextRequest) {
+  const { allowed } = rateLimit(`resources:${getIp(req)}`, 30, 60_000);
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const dimension = req.nextUrl.searchParams.get("dimension");
 
   if (!dimension || !VIDEO_QUERIES[dimension]) {
