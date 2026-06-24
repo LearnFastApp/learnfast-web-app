@@ -208,7 +208,7 @@ export default function LandingPage() {
 
             {/* Step 1 — Create session */}
             <div className="flex flex-col items-center text-center">
-              <p className="text-6xl font-black text-white/5 leading-none mb-4">01</p>
+              <p className="text-6xl font-black text-white/20 leading-none mb-4">01</p>
               <div className="w-full rounded-2xl overflow-hidden border border-white/10 bg-[#0f1118] mb-5" style={{ aspectRatio: "9/16", maxHeight: 260 }}>
                 <Image src="/onboard-2.jpg" alt="Create a session" width={400} height={711} className="w-full h-full object-cover object-center" />
               </div>
@@ -218,7 +218,7 @@ export default function LandingPage() {
 
             {/* Step 2 — Share QR */}
             <div className="flex flex-col items-center text-center">
-              <p className="text-6xl font-black text-white/5 leading-none mb-4">02</p>
+              <p className="text-6xl font-black text-white/20 leading-none mb-4">02</p>
               <div className="w-full rounded-2xl overflow-hidden border border-white/10 bg-[#0f1118] mb-5" style={{ aspectRatio: "9/16", maxHeight: 260 }}>
                 <Image src="/onboard-1.jpg" alt="Share with your audience" width={400} height={711} className="w-full h-full object-cover object-top" />
               </div>
@@ -228,7 +228,7 @@ export default function LandingPage() {
 
             {/* Step 3 — Live feedback */}
             <div className="flex flex-col items-center text-center">
-              <p className="text-6xl font-black text-white/5 leading-none mb-4">03</p>
+              <p className="text-6xl font-black text-white/20 leading-none mb-4">03</p>
               <div className="w-full rounded-2xl overflow-hidden border border-violet-500/20 bg-[#0f1118] mb-5" style={{ aspectRatio: "9/16", maxHeight: 260 }}>
                 <Image src="/phone-preview.png" alt="Collect live feedback" width={400} height={600} className="w-full h-full object-cover object-top" />
               </div>
@@ -238,7 +238,7 @@ export default function LandingPage() {
 
             {/* Step 4 — Get Up-Skilled */}
             <div className="flex flex-col items-center text-center">
-              <p className="text-6xl font-black text-white/5 leading-none mb-4">04</p>
+              <p className="text-6xl font-black text-white/20 leading-none mb-4">04</p>
               <div className="w-full rounded-2xl overflow-hidden border border-violet-500/20 bg-[#0f1118] mb-5" style={{ aspectRatio: "9/16", maxHeight: 260 }}>
                 <Image src="/onboard-4.jpg" alt="Get up-skilled" width={400} height={711} className="w-full h-full object-cover object-top" />
               </div>
