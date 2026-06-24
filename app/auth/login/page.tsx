@@ -26,6 +26,7 @@ export default function LoginPage() {
   const [resetSent, setResetSent] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [verifyNeeded, setVerifyNeeded] = useState(false);
 
   function friendlyError(code: string): string {
     switch (code) {
@@ -84,7 +85,12 @@ export default function LoginPage() {
         setVerificationSent(true);
         return;
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        const result = await signInWithEmailAndPassword(auth, email, password);
+        if (!result.user.emailVerified) {
+          await auth.signOut();
+          setVerifyNeeded(true);
+          return;
+        }
       }
       router.replace("/dashboard");
     } catch (err: unknown) {
@@ -125,7 +131,35 @@ export default function LoginPage() {
               </button>
             </div>
           ) : null}
-          {!verificationSent && mode !== "reset" && (
+
+          {verifyNeeded ? (
+            <div className="text-center">
+              <p className="text-4xl mb-4">✉️</p>
+              <h2 className="text-xl font-bold text-white mb-2">Verify your email first</h2>
+              <p className="text-sm text-slate-400 mb-6">
+                Please click the link we sent to <span className="text-white">{email}</span> before signing in.
+              </p>
+              <button
+                onClick={async () => {
+                  try {
+                    const result = await signInWithEmailAndPassword(auth, email, password);
+                    await sendEmailVerification(result.user);
+                    await auth.signOut();
+                  } catch { /* ignore */ }
+                }}
+                className="w-full rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-slate-300 hover:text-white transition mb-3"
+              >
+                Resend verification email
+              </button>
+              <button
+                onClick={() => { setVerifyNeeded(false); setMode("signin"); }}
+                className="w-full text-sm text-slate-500 hover:text-slate-300 transition"
+              >
+                Back to sign in
+              </button>
+            </div>
+          ) : null}
+          {!verificationSent && !verifyNeeded && mode !== "reset" && (
             <div className="mb-8 flex rounded-xl border border-white/10 bg-[#0f1424] p-1">
               <button
                 onClick={() => { setMode("signin"); setError(""); }}
@@ -142,7 +176,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          {!verificationSent && mode === "reset" ? (
+          {!verificationSent && !verifyNeeded && mode === "reset" ? (
             resetSent ? (
               <div className="text-center">
                 <p className="text-2xl mb-3">📬</p>

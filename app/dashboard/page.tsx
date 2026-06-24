@@ -83,7 +83,11 @@ export default function Dashboard() {
   const [responseCounts, setResponseCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    if (!loading && !user) router.replace("/");
+    if (loading) return;
+    if (!user) { router.replace("/"); return; }
+    if (!user.emailVerified) {
+      signOut(auth).then(() => router.replace("/auth/login?unverified=1"));
+    }
   }, [user, loading, router]);
 
   useEffect(() => {
