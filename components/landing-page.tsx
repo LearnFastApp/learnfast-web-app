@@ -110,18 +110,44 @@ export default function LandingPage() {
           </button>
         </div>
 
-        {/* Laptop mockup — decorative, bleeds off bottom like original site phone mockups */}
-        <div className="relative mx-auto w-full max-w-5xl">
-          {/* Glow beneath laptop */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-32 pointer-events-none" style={{ background: "radial-gradient(ellipse 80% 100% at 50% 100%, rgba(109,40,217,0.25) 0%, transparent 70%)" }} />
-          <Image
-            src="/app-preview.png"
-            alt="LearnFast app — live session results"
-            width={1200}
-            height={750}
-            className="relative w-full object-contain drop-shadow-2xl"
-            priority
-          />
+        {/* Assets — phone | laptop | phone, mirroring original site's 3-device layout */}
+        <div className="relative mx-auto w-full max-w-6xl flex items-end justify-center gap-0">
+          {/* Glow beneath */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-48 pointer-events-none" style={{ background: "radial-gradient(ellipse 90% 100% at 50% 100%, rgba(109,40,217,0.28) 0%, transparent 70%)" }} />
+
+          {/* Phone left — performance over time */}
+          <div className="hidden md:block relative w-44 lg:w-56 shrink-0 translate-x-8 lg:translate-x-12 z-10" style={{ marginBottom: "-2px" }}>
+            <Image
+              src="/phone-preview-2.png"
+              alt="LearnFast — performance over time"
+              width={400}
+              height={600}
+              className="w-full object-contain drop-shadow-2xl"
+            />
+          </div>
+
+          {/* Laptop — centre, largest */}
+          <div className="relative w-full max-w-3xl shrink z-20">
+            <Image
+              src="/app-preview.png"
+              alt="LearnFast app — live session results"
+              width={1200}
+              height={750}
+              className="w-full object-contain drop-shadow-2xl"
+              priority
+            />
+          </div>
+
+          {/* Phone right — live radar */}
+          <div className="hidden md:block relative w-44 lg:w-56 shrink-0 -translate-x-8 lg:-translate-x-12 z-10" style={{ marginBottom: "-2px" }}>
+            <Image
+              src="/phone-preview.png"
+              alt="LearnFast — live audience scores"
+              width={400}
+              height={600}
+              className="w-full object-contain drop-shadow-2xl"
+            />
+          </div>
         </div>
       </section>
 
