@@ -236,14 +236,14 @@ export default function LandingPage() {
               <p className="text-sm text-slate-400 leading-relaxed">Watch scores arrive in real time across all 5 dimensions.</p>
             </div>
 
-            {/* Step 4 — Performance over time */}
+            {/* Step 4 — Get Up-Skilled */}
             <div className="flex flex-col items-center text-center">
               <p className="text-6xl font-black text-white/5 leading-none mb-4">04</p>
               <div className="w-full rounded-2xl overflow-hidden border border-violet-500/20 bg-[#0f1118] mb-5" style={{ aspectRatio: "9/16", maxHeight: 260 }}>
-                <Image src="/phone-preview-2.png" alt="Track performance over time" width={400} height={600} className="w-full h-full object-cover object-top" />
+                <Image src="/onboard-4.jpg" alt="Get up-skilled" width={400} height={711} className="w-full h-full object-cover object-top" />
               </div>
-              <p className="text-sm font-bold uppercase tracking-wider mb-2">Reflect & Improve</p>
-              <p className="text-sm text-slate-400 leading-relaxed">Review your radar chart, track trends, and commit to your next focus.</p>
+              <p className="text-sm font-bold uppercase tracking-wider mb-2">Get Up-Skilled</p>
+              <p className="text-sm text-slate-400 leading-relaxed">LearnFast surfaces videos, TED talks and articles matched to your lowest scores.</p>
             </div>
 
           </div>
