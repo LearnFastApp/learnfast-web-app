@@ -245,27 +245,26 @@ export default function Dashboard() {
           </nav>
 
           {subscriptionStatus !== "active" && (
-            <div className="mt-6 rounded-xl border border-white/10 bg-[#0a0d1a] p-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Free Plan</p>
-                <p className="text-xs font-bold text-white">{sessions.length}<span className="text-slate-500 font-normal"> / 2</span></p>
-              </div>
-              <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden mb-3">
-                <div
-                  className={`h-full rounded-full transition-all ${sessions.length >= 2 ? "bg-red-500" : sessions.length >= 1 ? "bg-amber-400" : "bg-violet-500"}`}
-                  style={{ width: `${Math.min((sessions.length / 2) * 100, 100)}%` }}
-                />
+            <div className={`mt-6 rounded-xl border p-4 ${sessions.length >= 2 ? "border-amber-500/30 bg-amber-500/5" : "border-white/10 bg-[#0a0d1a]"}`}>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Free Plan</p>
+              <div className="flex gap-2 mb-3">
+                {[0, 1].map((i) => (
+                  <div key={i} className="flex-1">
+                    <div className={`h-1.5 rounded-full ${i < sessions.length ? (sessions.length >= 2 ? "bg-amber-400" : "bg-violet-500") : "bg-white/10"}`} />
+                    <p className="text-[10px] text-slate-600 mt-1 text-center">Session {i + 1}</p>
+                  </div>
+                ))}
               </div>
               <p className="text-xs text-slate-400 mb-3">
-                {sessions.length >= 2
-                  ? "You've used both free sessions."
-                  : `${2 - sessions.length} free session${2 - sessions.length !== 1 ? "s" : ""} remaining.`}
+                {sessions.length === 0 && "2 free sessions to explore LearnFast."}
+                {sessions.length === 1 && "1 free session remaining — then start your trial."}
+                {sessions.length >= 2 && "You've used both free sessions. Start your 7-day trial to continue."}
               </p>
               <button
                 onClick={() => setShowUpgrade(true)}
-                className="w-full rounded-lg bg-violet-500 px-3 py-2 text-xs font-bold text-white hover:bg-violet-400 transition"
+                className={`w-full rounded-lg px-3 py-2 text-xs font-bold text-white transition ${sessions.length >= 2 ? "bg-amber-500 hover:bg-amber-400" : "bg-violet-500 hover:bg-violet-400"}`}
               >
-                Upgrade to Lite — £3.99/mo
+                {sessions.length >= 2 ? "Start 7-Day Free Trial →" : "Upgrade to Lite — £3.99/mo"}
               </button>
             </div>
           )}
