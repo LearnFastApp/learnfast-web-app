@@ -85,7 +85,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 90% 50% at 50% 0%, rgba(109,40,217,0.22) 0%, transparent 60%)" }} />
 
         {/* Ribbon */}
-        <div className="absolute top-24 left-0 z-10">
+        <div className="absolute top-24 left-0 z-10 hidden sm:block">
           <div
             className="w-28 pt-5 pb-8 text-white text-[10px] font-bold tracking-widest text-center leading-relaxed"
             style={{
@@ -100,7 +100,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <p className="relative text-[10px] sm:text-xs font-semibold tracking-[0.3em] text-slate-400 uppercase mb-5 pl-32 sm:pl-0">
+        <p className="relative text-[10px] sm:text-xs font-semibold tracking-[0.3em] text-slate-400 uppercase mb-5">
           Presentation Feedback Technology
         </p>
         <h1 className="relative text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-light leading-tight tracking-tight text-slate-400 mb-1">
