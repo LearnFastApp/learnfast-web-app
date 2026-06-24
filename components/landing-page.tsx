@@ -3,271 +3,387 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-const DIMENSIONS = [
-  { name: "Clarity", color: "#8b5cf6", desc: "How clearly your message and structure came across." },
-  { name: "Engagement", color: "#22d3ee", desc: "How well you held attention and kept the room invested." },
-  { name: "Energy", color: "#f59e0b", desc: "The presence, vocal delivery and energy you brought." },
-  { name: "Understanding", color: "#34d399", desc: "How well the audience grasped your core ideas." },
-  { name: "Connection", color: "#f472b6", desc: "How personally connected the audience felt to you." },
-];
+const RED = "#d13b1a";
 
 const STEPS = [
-  { number: "01", title: "Create a Session", desc: "Name your session and get a unique code and QR in seconds." },
-  { number: "02", title: "Share With Your Audience", desc: "Display the QR or share the link — no app download needed for your audience." },
-  { number: "03", title: "Collect Real-Time Feedback", desc: "Watch scores come in live across all 5 dimensions as your audience responds." },
-  { number: "04", title: "Reflect and Improve", desc: "Review your radar chart, compare with your own self-scores, and commit to your next focus area." },
+  { n: "01", title: "Create a Session", body: "Name your session and get a unique join code and QR code in seconds." },
+  { n: "02", title: "Share With Your Audience", body: "Display the QR or share the link — no app download needed for your audience." },
+  { n: "03", title: "Collect Live Feedback", body: "Watch scores arrive in real time across all 5 dimensions as your audience responds." },
+  { n: "04", title: "Reflect & Improve", body: "Review your radar chart, compare it with your own self-score, and commit to your next area of focus." },
+];
+
+const DIMENSIONS = [
+  { name: "Clarity", color: "#8b5cf6", desc: "How clearly your message and structure came across to the room." },
+  { name: "Engagement", color: "#22d3ee", desc: "How well you held attention and kept the audience invested throughout." },
+  { name: "Energy", color: "#f59e0b", desc: "The presence, vocal delivery and energy you brought to the room." },
+  { name: "Understanding", color: "#34d399", desc: "How well the audience grasped the core ideas you shared." },
+  { name: "Connection", color: "#f472b6", desc: "How personally connected the audience felt to you and your content." },
+];
+
+const FEATURES = [
+  { icon: "📊", title: "Performance Tracking", body: "Track your delivery, engagement, understanding and more — week to week, session to session — and watch yourself improve over time." },
+  { icon: "🎯", title: "Feedback-Specific Development", body: "Based on YOUR scores, LearnFast surfaces the most relevant articles, TED Talks, videos and podcasts — personalised to your exact development areas." },
+  { icon: "🔁", title: "Reflective Practice Loop", body: "Self-score alongside your audience, set a focus commitment for your next session, and check in on progress. Continuous improvement, built in." },
+  { icon: "📱", title: "Audience Connector", body: "Your audience joins via a QR code or link — no account needed, no app to download. Feedback in seconds from any device." },
+];
+
+const PARTNERS = [
+  { name: "Harvard Business Review", style: "font-serif font-bold text-white text-sm" },
+  { name: "BBC Maestro", style: "font-bold text-white text-sm tracking-wide" },
+  { name: "Big Think", style: "font-bold text-orange-400 text-sm" },
+  { name: "Fortune", style: "font-serif font-black text-white text-sm" },
+  { name: "The New York Times", style: "font-serif text-white text-sm" },
+  { name: "Farnam Street", style: "font-bold text-white text-sm tracking-wider" },
 ];
 
 export default function LandingPage() {
   const router = useRouter();
+  const goToLogin = () => router.push("/auth/login");
 
   return (
-    <div className="min-h-screen bg-[#07080f] text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#08090f] text-white overflow-x-hidden">
 
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 lg:px-12 bg-[#07080f]/90 backdrop-blur-sm border-b border-white/5">
+      {/* ── NAV ── */}
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-3 lg:px-12 bg-[#08090f]/95 backdrop-blur-sm border-b border-white/5">
         <div className="flex items-center gap-3">
-          <Image src="/icon-mark.png" alt="LearnFast" width={36} height={26} />
-          <span className="text-lg font-bold tracking-tight" style={{ color: "#5bb8f5" }}>
+          <Image src="/icon-mark.png" alt="LearnFast" width={32} height={23} />
+          <span className="text-base font-bold tracking-tight" style={{ color: "#5bb8f5" }}>
             LEARN<span className="font-light">FAST</span><sup className="text-[0.5em] font-normal ml-0.5 align-super">™</sup>
           </span>
         </div>
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
+        <div className="hidden md:flex items-center gap-8 text-xs font-semibold tracking-widest text-slate-400">
           <a href="#product" className="hover:text-white transition">PRODUCT</a>
           <a href="#how-it-works" className="hover:text-white transition">HOW IT WORKS</a>
           <a href="#pricing" className="hover:text-white transition">PRICING</a>
+          <a href="#why" className="hover:text-white transition">WHY</a>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => router.push("/auth/login")}
-            className="hidden sm:block text-sm text-slate-400 hover:text-white transition px-4 py-2"
-          >
-            Sign in
-          </button>
-          <button
-            onClick={() => router.push("/auth/login")}
-            className="text-xs sm:text-sm font-bold px-3 sm:px-5 py-2 sm:py-2.5 rounded-sm text-white transition whitespace-nowrap"
-            style={{ backgroundColor: "#d13b1a" }}
-          >
+          <button onClick={goToLogin} className="hidden sm:block text-xs text-slate-400 hover:text-white transition px-3 py-2">Sign in</button>
+          <button onClick={goToLogin} className="text-xs font-bold px-4 py-2.5 text-white rounded-sm transition whitespace-nowrap" style={{ backgroundColor: RED }}>
             START FREE →
           </button>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="relative flex flex-col items-center justify-center text-center pt-40 pb-28 px-6 lg:px-12">
-        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(109,40,217,0.18) 0%, transparent 70%)" }} />
+      {/* ── HERO ── */}
+      <section className="relative flex flex-col items-center justify-center text-center pt-36 pb-24 px-5 lg:px-12 overflow-hidden">
 
-        <p className="text-xs font-semibold tracking-[0.3em] text-slate-400 uppercase mb-6">
+        {/* Background glow */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 90% 60% at 50% 0%, rgba(109,40,217,0.2) 0%, transparent 65%)" }} />
+
+        {/* Ribbon */}
+        <div className="absolute top-24 left-0 flex items-center">
+          <div className="relative">
+            <div className="px-4 py-2 text-white text-xs font-bold tracking-widest leading-tight text-center" style={{ backgroundColor: RED }}>
+              <p>LITE VERSION</p>
+              <p>AVAILABLE NOW</p>
+            </div>
+            <div className="w-full h-3 flex">
+              <div className="flex-1" style={{ backgroundColor: RED }} />
+              <div className="w-0 h-0 border-l-[50px] border-t-[12px]" style={{ borderLeftColor: RED, borderTopColor: "transparent" }} />
+            </div>
+          </div>
+        </div>
+
+        <p className="text-[10px] sm:text-xs font-semibold tracking-[0.3em] text-slate-400 uppercase mb-5">
           Presentation Feedback Technology
         </p>
-        <h1 className="text-4xl md:text-7xl lg:text-8xl font-light leading-tight tracking-tight mb-2 text-slate-300">
-          REAL-TIME FEEDBACK
+        <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-light leading-tight tracking-tight text-slate-400 mb-1">
+          INTRODUCING
         </h1>
-        <h1 className="text-4xl md:text-7xl lg:text-8xl font-bold leading-tight tracking-tight mb-8">
-          FOR EVERY PRESENTER
+        <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-tight tracking-tight mb-6">
+          THE LEARNFAST APP
         </h1>
-        <p className="max-w-xl text-lg text-slate-400 leading-relaxed mb-10">
-          Unlock the power of honest audience feedback. Track your impact across 5 dimensions, reflect on your performance, and improve with every session.
+        <p className="max-w-xl text-base sm:text-lg text-slate-400 leading-relaxed mb-3">
+          Unlock the Power of Real-Time Feedback for Leaders, Managers and Coaches
         </p>
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          <button
-            onClick={() => router.push("/auth/login")}
-            className="px-8 py-4 text-sm font-bold tracking-wider text-white transition rounded-sm"
-            style={{ backgroundColor: "#d13b1a" }}
-          >
+        <p className="text-sm text-slate-500 mb-10">No download required — works on any device, in your browser.</p>
+
+        <div className="flex flex-col sm:flex-row items-center gap-3 mb-16">
+          <button onClick={goToLogin} className="px-8 py-4 text-sm font-bold tracking-wider text-white rounded-sm transition w-full sm:w-auto" style={{ backgroundColor: RED }}>
             START FREE — 2 SESSIONS ON US
           </button>
-          <button
-            onClick={() => router.push("/auth/login")}
-            className="px-8 py-4 text-sm font-semibold text-slate-300 border border-white/20 hover:border-white/40 hover:text-white transition rounded-sm"
-          >
+          <button onClick={goToLogin} className="px-8 py-4 text-sm font-semibold text-slate-300 border border-white/20 hover:border-white/40 hover:text-white transition rounded-sm w-full sm:w-auto">
             SIGN IN →
           </button>
         </div>
 
-        {/* Radar mockup */}
-        <div className="mt-20 w-full max-w-2xl mx-auto rounded-2xl border border-white/10 bg-[#0f1424] p-8">
-          <p className="text-xs text-slate-500 uppercase tracking-widest mb-6 text-center">Live session · 24 responses</p>
-          <div className="grid grid-cols-5 gap-3 mb-8">
-            {DIMENSIONS.map((d) => (
+        {/* Score mockup */}
+        <div className="w-full max-w-2xl mx-auto rounded-2xl border border-white/10 bg-[#0f1118] p-6 sm:p-8">
+          <div className="flex items-center justify-between mb-5">
+            <p className="text-xs text-slate-500 uppercase tracking-widest">Live session · 24 responses</p>
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-green-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
+              LIVE
+            </span>
+          </div>
+          <div className="grid grid-cols-5 gap-2 sm:gap-4 mb-6">
+            {DIMENSIONS.map((d, i) => (
               <div key={d.name} className="text-center">
-                <p className="text-xs text-slate-500 mb-2">{d.name}</p>
-                <p className="text-2xl font-bold" style={{ color: d.color }}>
-                  {[78, 65, 82, 71, 59][DIMENSIONS.indexOf(d)]}
+                <p className="text-[10px] sm:text-xs text-slate-500 mb-1.5 truncate">{d.name}</p>
+                <p className="text-xl sm:text-2xl font-black" style={{ color: d.color }}>
+                  {[78, 65, 82, 71, 59][i]}
                 </p>
-                <p className="text-xs text-slate-600">/100</p>
+                <p className="text-[10px] text-slate-600">/100</p>
               </div>
             ))}
           </div>
-          <div className="h-1 w-full rounded-full bg-white/5 overflow-hidden">
+          <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
             <div className="h-full w-3/4 rounded-full bg-gradient-to-r from-violet-500 via-cyan-400 to-pink-400" />
           </div>
-          <p className="text-xs text-slate-600 mt-3 text-center">Audience response rate · 24 of 32 participants</p>
+          <p className="text-xs text-slate-600 mt-2 text-center">24 of 32 participants responded</p>
         </div>
       </section>
 
-      {/* Tagline banner */}
-      <div className="border-y border-white/5 bg-white/[0.02] py-5 px-6 text-center">
-        <p className="text-xs font-semibold tracking-[0.25em] text-slate-400 uppercase">
+      {/* ── TAGLINE BAR ── */}
+      <div className="border-y border-white/5 bg-white/[0.02] py-4 px-5 text-center">
+        <p className="text-[10px] sm:text-xs font-semibold tracking-[0.3em] text-slate-400 uppercase">
           Your ideas are only as good as how they are presented
         </p>
       </div>
 
-      {/* Product — 5 dimensions */}
-      <section id="product" className="py-24 px-6 lg:px-12 max-w-6xl mx-auto">
-        <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4 text-center">Product Overview</p>
-        <h2 className="text-4xl md:text-6xl font-light text-center text-slate-300 leading-none mb-2">THE</h2>
-        <h2 className="text-4xl md:text-6xl font-bold text-center leading-none mb-6">5 DIMENSIONS</h2>
-        <p className="text-center text-slate-400 max-w-lg mx-auto mb-16">
-          Every session is scored across five areas that together give a complete picture of your performance.
+      {/* ── WHAT WE DO ── */}
+      <section id="product" className="py-20 sm:py-28 px-5 lg:px-12 max-w-4xl mx-auto text-center">
+        <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4">What We Do</p>
+        <h2 className="text-4xl sm:text-6xl font-light text-slate-400 leading-none mb-1">WHAT</h2>
+        <h2 className="text-4xl sm:text-6xl font-black leading-none mb-8">WE DO</h2>
+        <p className="text-base sm:text-lg text-slate-400 leading-relaxed max-w-2xl mx-auto mb-10">
+          LearnFast connects you with your audience and allows them to give you honest, real-time feedback on your presentation. Our platform automatically surfaces the most relevant expert learning resources based on your scores — helping you upskill quickly and efficiently.
         </p>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {DIMENSIONS.map((d) => (
-            <div
-              key={d.name}
-              className="rounded-xl border border-white/10 bg-[#0f1424] p-6 hover:border-white/20 transition"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-                <p className="font-bold tracking-wide text-sm uppercase">{d.name}</p>
-              </div>
-              <p className="text-sm text-slate-400 leading-relaxed">{d.desc}</p>
+        <button onClick={goToLogin} className="px-8 py-4 text-sm font-bold tracking-wider text-white rounded-sm transition" style={{ backgroundColor: RED }}>
+          START FREE NOW
+        </button>
+      </section>
+
+      {/* ── FEATURES ── */}
+      <section className="py-16 px-5 lg:px-12 bg-[#0a0b12] border-y border-white/5">
+        <div className="max-w-6xl mx-auto grid gap-4 md:grid-cols-2">
+          {FEATURES.map((f) => (
+            <div key={f.title} className="rounded-2xl border border-white/10 bg-[#0f1118] p-6 sm:p-8">
+              <p className="text-3xl mb-4">{f.icon}</p>
+              <p className="font-bold text-sm uppercase tracking-wider mb-3">{f.title}</p>
+              <p className="text-sm text-slate-400 leading-relaxed">{f.body}</p>
             </div>
           ))}
-          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-6 flex items-center justify-center">
-            <p className="text-sm text-slate-500 text-center leading-relaxed">
-              Audience scores combined with your own self-reflection for a complete performance picture.
-            </p>
-          </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section id="how-it-works" className="py-24 px-6 lg:px-12 bg-[#0a0b14] border-y border-white/5">
+      {/* ── HOW IT WORKS ── */}
+      <section id="how-it-works" className="py-20 sm:py-28 px-5 lg:px-12">
         <div className="max-w-6xl mx-auto">
           <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4 text-center">Simple by Design</p>
-          <h2 className="text-4xl md:text-6xl font-light text-center text-slate-300 leading-none mb-2">HOW IT</h2>
-          <h2 className="text-4xl md:text-6xl font-bold text-center leading-none mb-16">WORKS</h2>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <h2 className="text-4xl sm:text-6xl font-light text-slate-400 text-center leading-none mb-1">HOW IT</h2>
+          <h2 className="text-4xl sm:text-6xl font-black text-center leading-none mb-16">WORKS</h2>
+          <div className="grid gap-8 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {STEPS.map((s) => (
-              <div key={s.number} className="relative">
-                <p className="text-5xl font-bold text-white/5 mb-4">{s.number}</p>
+              <div key={s.n}>
+                <p className="text-6xl font-black text-white/5 mb-3 leading-none">{s.n}</p>
                 <p className="text-sm font-bold uppercase tracking-wider mb-2">{s.title}</p>
-                <p className="text-sm text-slate-400 leading-relaxed">{s.desc}</p>
+                <p className="text-sm text-slate-400 leading-relaxed">{s.body}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Who it's for */}
-      <section className="py-24 px-6 lg:px-12 max-w-6xl mx-auto text-center">
-        <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4">Built For</p>
-        <h2 className="text-4xl md:text-6xl font-light text-slate-300 leading-none mb-2">LEADERS,</h2>
-        <h2 className="text-4xl md:text-6xl font-bold leading-none mb-16">MANAGERS & COACHES</h2>
-        <div className="grid gap-4 md:grid-cols-3">
-          {[
-            { label: "Corporate Trainers", desc: "Run post-session feedback that's actionable, not just a form." },
-            { label: "Team Leaders", desc: "Understand how your briefings and presentations land with your team." },
-            { label: "University Lecturers", desc: "Understand how your lectures land and improve student engagement each term." },
-          ].map((item) => (
-            <div key={item.label} className="rounded-xl border border-white/10 bg-[#0f1424] p-6">
-              <p className="font-bold text-sm uppercase tracking-wider mb-2">{item.label}</p>
-              <p className="text-sm text-slate-400 leading-relaxed">{item.desc}</p>
+      {/* ── 5 DIMENSIONS ── */}
+      <section className="py-16 sm:py-24 px-5 lg:px-12 bg-[#0a0b12] border-y border-white/5">
+        <div className="max-w-6xl mx-auto">
+          <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4 text-center">Scored Across</p>
+          <h2 className="text-4xl sm:text-6xl font-light text-slate-400 text-center leading-none mb-1">THE</h2>
+          <h2 className="text-4xl sm:text-6xl font-black text-center leading-none mb-6">5 DIMENSIONS</h2>
+          <p className="text-center text-slate-400 max-w-lg mx-auto mb-12 text-sm">
+            Every session gives you a complete picture of your performance across five areas that matter most.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {DIMENSIONS.map((d) => (
+              <div key={d.name} className="rounded-xl border border-white/10 bg-[#0f1118] p-5 flex gap-4 items-start hover:border-white/20 transition">
+                <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: d.color }} />
+                <div>
+                  <p className="font-bold text-sm uppercase tracking-wider mb-1">{d.name}</p>
+                  <p className="text-sm text-slate-400 leading-relaxed">{d.desc}</p>
+                </div>
+              </div>
+            ))}
+            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-5 flex items-center justify-center sm:col-span-2 lg:col-span-1">
+              <p className="text-sm text-slate-500 text-center leading-relaxed">
+                Audience scores + your own self-reflection = a complete, honest performance picture.
+              </p>
             </div>
-          ))}
+          </div>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="py-24 px-6 lg:px-12 bg-[#0a0b14] border-y border-white/5">
+      {/* ── WHY / GET STARTED ── */}
+      <section id="why" className="py-20 sm:py-28 px-5 lg:px-12 text-center">
+        <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4">Made for Leaders</p>
+        <h2 className="text-4xl sm:text-6xl font-light text-slate-400 leading-none mb-1">GET STARTED WITH</h2>
+        <h2 className="text-4xl sm:text-6xl font-black leading-none mb-8">LEARNFAST TODAY</h2>
+        <p className="max-w-xl mx-auto text-slate-400 leading-relaxed mb-10 text-sm sm:text-base">
+          Whether you're a corporate trainer, team leader or university lecturer — every great presenter started somewhere. LearnFast gives you the data, the reflection and the resources to improve with every session.
+        </p>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
+          <button onClick={goToLogin} className="px-10 py-4 text-sm font-bold tracking-wider text-white rounded-sm transition w-full sm:w-auto" style={{ backgroundColor: RED }}>
+            START FREE NOW
+          </button>
+          <button onClick={goToLogin} className="px-10 py-4 text-sm font-semibold border border-white/20 hover:border-white/40 text-slate-300 hover:text-white transition rounded-sm w-full sm:w-auto">
+            SIGN IN →
+          </button>
+        </div>
+        <p className="text-xs text-slate-600">2 free sessions · no credit card required</p>
+      </section>
+
+      {/* ── EDUCATIONAL RESOURCES ── */}
+      <section className="py-16 px-5 lg:px-12 bg-[#0a0b12] border-y border-white/5">
+        <div className="max-w-6xl mx-auto text-center">
+          <div className="flex items-start justify-center gap-6 mb-8">
+            <div>
+              <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-3">Learning Resources From</p>
+              <h2 className="text-3xl sm:text-5xl font-light text-slate-400 leading-none mb-1">EDUCATIONAL</h2>
+              <h2 className="text-3xl sm:text-5xl font-black leading-none">PARTNERS</h2>
+            </div>
+            <div className="hidden sm:block">
+              <div className="relative">
+                <div className="px-3 py-2 text-white text-[10px] font-bold tracking-widest text-center" style={{ backgroundColor: RED }}>
+                  <p>COMING</p><p>SOON</p>
+                </div>
+                <div className="flex justify-center">
+                  <div className="w-0 h-0 border-l-[24px] border-r-[24px] border-t-[10px]" style={{ borderLeftColor: "transparent", borderRightColor: "transparent", borderTopColor: RED }} />
+                </div>
+              </div>
+            </div>
+          </div>
+          <p className="text-sm text-slate-400 mb-10">Learn and upskill with the best in their field.</p>
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10">
+            {PARTNERS.map((p) => (
+              <span key={p.name} className={`${p.style} opacity-70 hover:opacity-100 transition`}>{p.name}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PRICING ── */}
+      <section id="pricing" className="py-20 sm:py-28 px-5 lg:px-12">
         <div className="max-w-4xl mx-auto">
-          <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4 text-center">Simple Pricing</p>
-          <h2 className="text-4xl md:text-6xl font-light text-center text-slate-300 leading-none mb-2">START FREE,</h2>
-          <h2 className="text-4xl md:text-6xl font-bold text-center leading-none mb-16">SCALE WHEN READY</h2>
-          <div className="grid gap-6 md:grid-cols-2">
+          <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4 text-center">Pricing</p>
+          <h2 className="text-4xl sm:text-6xl font-light text-slate-400 text-center leading-none mb-1">START FREE,</h2>
+          <h2 className="text-4xl sm:text-6xl font-black text-center leading-none mb-16">SCALE WHEN READY</h2>
+          <div className="grid gap-5 md:grid-cols-2">
+
             {/* Free */}
-            <div className="rounded-xl border border-white/10 bg-[#0f1424] p-8">
-              <p className="text-xs font-semibold tracking-widest text-slate-500 uppercase mb-4">Free</p>
-              <p className="text-5xl font-bold mb-1">£0</p>
-              <p className="text-sm text-slate-500 mb-8">No card required</p>
+            <div className="rounded-2xl border border-white/10 bg-[#0f1118] p-7 sm:p-8">
+              <p className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-5">Free</p>
+              <p className="text-5xl font-black mb-1">£0</p>
+              <p className="text-sm text-slate-500 mb-8">No credit card required</p>
               <ul className="space-y-3 text-sm text-slate-300 mb-8">
-                {["2 feedback sessions", "All 5 scoring dimensions", "Real-time radar chart", "Session notes", "Reflective practice log"].map((f) => (
-                  <li key={f} className="flex items-center gap-2">
-                    <span className="text-green-400">✓</span> {f}
+                {[
+                  "2 feedback sessions",
+                  "All 5 scoring dimensions",
+                  "Real-time audience radar chart",
+                  "Presenter self-reflection scores",
+                  "Session notes & tags",
+                  "Reflective practice log",
+                ].map((f) => (
+                  <li key={f} className="flex items-center gap-2.5">
+                    <span className="text-green-400 shrink-0">✓</span> {f}
                   </li>
                 ))}
               </ul>
-              <button
-                onClick={() => router.push("/auth/login")}
-                className="w-full py-3 text-sm font-bold border border-white/20 hover:border-white/40 text-white transition rounded-sm"
-              >
+              <button onClick={goToLogin} className="w-full py-3.5 text-sm font-bold border border-white/20 hover:border-white/40 text-white transition rounded-sm">
                 GET STARTED FREE →
               </button>
             </div>
+
             {/* Lite */}
-            <div className="rounded-xl border p-8 relative" style={{ borderColor: "#d13b1a33", background: "linear-gradient(135deg, #1a0d0a 0%, #0f1424 100%)" }}>
-              <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-sm text-white" style={{ backgroundColor: "#d13b1a" }}>
+            <div className="rounded-2xl border p-7 sm:p-8 relative" style={{ borderColor: `${RED}44`, background: "linear-gradient(135deg, #1a0d0a 0%, #0f1118 100%)" }}>
+              <div className="absolute top-5 right-5 text-[10px] font-bold px-2.5 py-1 rounded-sm text-white tracking-wider" style={{ backgroundColor: RED }}>
                 LITE VERSION
               </div>
-              <p className="text-xs font-semibold tracking-widest text-slate-500 uppercase mb-4">Lite</p>
-              <p className="text-5xl font-bold mb-1">£3.99<span className="text-xl font-normal text-slate-400">/mo</span></p>
+              <p className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-5">Lite</p>
+              <p className="text-5xl font-black mb-1">£3.99<span className="text-lg font-normal text-slate-400">/mo</span></p>
               <p className="text-sm text-slate-500 mb-8">7-day free trial · cancel anytime</p>
               <ul className="space-y-3 text-sm text-slate-300 mb-8">
                 {[
                   "Unlimited sessions",
                   "Everything in Free",
-                  "Curated improvement resources",
-                  "Video, TED Talk & podcast library",
+                  "Curated improvement articles",
+                  "TED Talks, videos & podcasts",
                   "Advanced analytics & trends",
                   "Commitment & check-in tracking",
-                  "Session summary emails",
+                  "Feedback-matched learning resources",
                 ].map((f) => (
-                  <li key={f} className="flex items-center gap-2">
-                    <span style={{ color: "#d13b1a" }}>✓</span> {f}
+                  <li key={f} className="flex items-center gap-2.5">
+                    <span className="shrink-0" style={{ color: RED }}>✓</span> {f}
                   </li>
                 ))}
               </ul>
-              <button
-                onClick={() => router.push("/auth/login")}
-                className="w-full py-3 text-sm font-bold text-white transition rounded-sm"
-                style={{ backgroundColor: "#d13b1a" }}
-              >
+              <button onClick={goToLogin} className="w-full py-3.5 text-sm font-bold text-white transition rounded-sm" style={{ backgroundColor: RED }}>
                 START 7-DAY FREE TRIAL →
               </button>
+              <p className="text-center text-xs text-slate-600 mt-3">No charge until your trial ends</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-32 px-6 lg:px-12 text-center">
-        <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-6">Get Started Today</p>
-        <h2 className="text-4xl md:text-7xl font-light text-slate-300 leading-tight mb-2">EVERY GREAT PRESENTER</h2>
-        <h2 className="text-4xl md:text-7xl font-bold leading-tight mb-10">STARTED SOMEWHERE</h2>
-        <button
-          onClick={() => router.push("/auth/login")}
-          className="px-10 py-5 text-sm font-bold tracking-wider text-white transition rounded-sm"
-          style={{ backgroundColor: "#d13b1a" }}
-        >
+      {/* ── FINAL CTA ── */}
+      <section className="py-24 sm:py-32 px-5 lg:px-12 text-center bg-[#0a0b12] border-t border-white/5">
+        <div className="absolute pointer-events-none inset-0" style={{ background: "radial-gradient(ellipse 60% 40% at 50% 100%, rgba(209,59,26,0.08) 0%, transparent 70%)" }} />
+        <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-5">Get Started Today</p>
+        <h2 className="text-4xl sm:text-6xl font-light text-slate-400 leading-tight mb-1">EVERY GREAT PRESENTER</h2>
+        <h2 className="text-4xl sm:text-6xl font-black leading-tight mb-10">STARTED SOMEWHERE</h2>
+        <button onClick={goToLogin} className="px-10 py-5 text-sm font-bold tracking-wider text-white transition rounded-sm" style={{ backgroundColor: RED }}>
           CREATE YOUR FREE ACCOUNT →
         </button>
+        <p className="mt-4 text-xs text-slate-600">2 free sessions · No credit card · Cancel anytime</p>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-white/5 py-8 px-6 lg:px-12">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Image src="/icon-mark.png" alt="LearnFast" width={28} height={20} />
-            <span className="text-sm font-bold" style={{ color: "#5bb8f5" }}>
-              LEARN<span className="font-light">FAST</span><sup className="text-[0.5em] font-normal ml-0.5 align-super">™</sup>
-            </span>
+      {/* ── FOOTER ── */}
+      <footer className="border-t border-white/5 bg-[#08090f] py-10 px-5 lg:px-12">
+        <div className="max-w-6xl mx-auto grid gap-8 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <Image src="/icon-mark.png" alt="LearnFast" width={28} height={20} />
+              <span className="text-sm font-bold" style={{ color: "#5bb8f5" }}>
+                LEARN<span className="font-light">FAST</span><sup className="text-[0.5em] font-normal ml-0.5 align-super">™</sup>
+              </span>
+            </div>
+            <button onClick={goToLogin} className="px-5 py-3 text-xs font-bold text-white rounded-sm transition" style={{ backgroundColor: RED }}>
+              START FREE NOW
+            </button>
           </div>
-          <p className="text-xs text-slate-600">© {new Date().getFullYear()} LearnFast. Feedback Intelligence.</p>
-          <div className="flex gap-6 text-xs text-slate-600">
-            <a href="/auth/login" className="hover:text-slate-400 transition">Sign in</a>
-            <a href="/pricing" className="hover:text-slate-400 transition">Pricing</a>
+          <div>
+            <p className="text-xs font-bold tracking-widest uppercase text-slate-400 mb-4">Contact</p>
+            <a href="mailto:info@learnfastapp.com" className="text-sm text-slate-500 hover:text-white transition">info@learnfastapp.com</a>
+          </div>
+          <div>
+            <p className="text-xs font-bold tracking-widest uppercase text-slate-400 mb-4">Navigation</p>
+            <ul className="space-y-2 text-sm text-slate-500">
+              {[["#product", "Product"], ["#how-it-works", "How It Works"], ["#pricing", "Pricing"], ["#why", "Why LearnFast"]].map(([href, label]) => (
+                <li key={label}><a href={href} className="hover:text-white transition">{label}</a></li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p className="text-xs font-bold tracking-widest uppercase text-slate-400 mb-4">Follow Us</p>
+            <div className="flex gap-3">
+              {[
+                { label: "Instagram", icon: "IG" },
+                { label: "X", icon: "𝕏" },
+                { label: "LinkedIn", icon: "in" },
+              ].map((s) => (
+                <div key={s.label} className="h-9 w-9 rounded-full border border-white/20 flex items-center justify-center text-xs font-bold text-slate-400 hover:border-white/60 hover:text-white transition cursor-pointer">
+                  {s.icon}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
+          <p>© {new Date().getFullYear()} LearnFast™. Feedback Intelligence.</p>
+          <div className="flex gap-6">
+            <a href="#" className="hover:text-slate-400 transition">Privacy Policy</a>
+            <a href="#" className="hover:text-slate-400 transition">Terms & Conditions</a>
           </div>
         </div>
       </footer>
