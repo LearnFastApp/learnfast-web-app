@@ -129,7 +129,7 @@ export default function SettingsPage() {
     setPortalLoading(true);
     setPortalError("");
     try {
-      const token = await user.getIdToken();
+      const token = await user!.getIdToken();
       const res = await fetch("/api/stripe/portal", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },

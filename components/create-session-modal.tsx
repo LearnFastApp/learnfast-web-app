@@ -1,15 +1,11 @@
 "use client";
 
 import { useState, useEffect, KeyboardEvent } from "react";
-import { collection, addDoc, getDocs, updateDoc, doc, query, where, orderBy, limit, serverTimestamp } from "firebase/firestore";
+import { collection, getDocs, updateDoc, doc, query, where, orderBy, limit, serverTimestamp } from "firebase/firestore";
 import { QRCodeCanvas } from "qrcode.react";
 import { X, Copy, Check, Tag } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
-
-function generateCode(): string {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
-}
 
 interface PendingCommitment {
   sessionId: string;
@@ -99,21 +95,24 @@ export default function CreateSessionModal({ onClose, onCreated }: Props) {
     if (!user) return;
     setLoading(true);
 
-    const code = generateCode();
-    const ref = await addDoc(collection(db, "sessions"), {
-      presenterId: user.uid,
-      title: title.trim() || "Untitled session",
-      code,
-      tags,
-      status: "active",
-      createdAt: serverTimestamp(),
-      expiresAt: null,
-      summarySent: false,
+    const token = await user.getIdToken();
+    const res = await fetch("/api/sessions/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ title: title.trim(), tags }),
     });
 
-    setCreated({ id: ref.id, code });
+    const data = await res.json();
     setLoading(false);
-    onCreated(ref.id, code);
+
+    if (!res.ok) {
+      // free_tier_limit is handled by the dashboard gating, but handle gracefully here too
+      console.error("[create-session]", data.error);
+      return;
+    }
+
+    setCreated({ id: data.sessionId, code: data.code });
+    onCreated(data.sessionId, data.code);
   }
 
   function copyUrl() {
