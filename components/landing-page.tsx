@@ -230,7 +230,7 @@ export default function LandingPage() {
             <div className="flex flex-col items-center text-center">
               <p className="text-6xl font-black text-white/20 leading-none mb-4">03</p>
               <div className="w-full rounded-2xl overflow-hidden border border-violet-500/20 bg-[#0f1118] mb-5" style={{ aspectRatio: "9/16", maxHeight: 260 }}>
-                <Image src="/onboard-3.jpg" alt="Collect live feedback" width={400} height={711} className="w-full h-full object-cover object-top" />
+                <Image src="/onboard-3.jpg" alt="Collect live feedback" width={400} height={711} className="w-full h-full object-cover object-bottom sm:object-top" />
               </div>
               <p className="text-sm font-bold uppercase tracking-wider mb-2">Collect Live Feedback</p>
               <p className="text-sm text-slate-400 leading-relaxed">Watch scores arrive in real time across all 5 dimensions.</p>
