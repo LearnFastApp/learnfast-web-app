@@ -91,6 +91,7 @@ export async function POST(req: NextRequest) {
         overallAvg,
         gapInsight,
         sessionUrl: `${process.env.APP_URL}/sessions/${sessionId}`,
+        locale: (presenter.locale as string | undefined) ?? "en",
       });
 
       await db.collection("sessions").doc(sessionId).update({ summarySent: true });

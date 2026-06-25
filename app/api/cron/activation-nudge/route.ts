@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
         to: data.email as string,
         presenterName: name,
         dashboardUrl: `${appUrl}/dashboard`,
+        locale: (data.locale as string | undefined) ?? "en",
       });
 
       await presenterDoc.ref.update({ activationEmailSent: true });

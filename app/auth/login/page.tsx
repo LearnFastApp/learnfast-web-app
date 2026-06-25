@@ -71,12 +71,14 @@ export default function LoginPage() {
         if (name.trim()) {
           await updateProfile(result.user, { displayName: name.trim() });
         }
+        const detectedLocale = navigator.language?.toLowerCase().startsWith("fr") ? "fr" : "en";
         await setDoc(
           doc(db, "presenters", result.user.uid),
           {
             email: result.user.email,
             displayName: name.trim() || email.split("@")[0],
             subscriptionStatus: "free",
+            locale: detectedLocale,
             createdAt: serverTimestamp(),
           },
           { merge: true }

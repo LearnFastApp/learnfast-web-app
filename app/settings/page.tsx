@@ -10,7 +10,7 @@ import {
   signOut,
 } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { User, Lock, CreditCard, Check, Zap, LogOut, Tag } from "lucide-react";
+import { User, Lock, CreditCard, Check, Zap, LogOut, Tag, Globe } from "lucide-react";
 import MobileNav from "@/components/mobile-nav";
 import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
@@ -21,6 +21,7 @@ interface PresenterData {
   stripeCustomerId?: string;
   pilotOrgName?: string;
   pilotExpiresAt?: { toDate: () => Date };
+  locale?: string;
 }
 
 export default function SettingsPage() {
@@ -54,6 +55,11 @@ export default function SettingsPage() {
   const [pilotError, setPilotError] = useState("");
   const [pilotSuccess, setPilotSuccess] = useState("");
 
+  // Language
+  const [locale, setLocale] = useState<"en" | "fr">("en");
+  const [localeSaving, setLocaleSaving] = useState(false);
+  const [localeSaved, setLocaleSaved] = useState(false);
+
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth/login");
   }, [user, authLoading, router]);
@@ -63,7 +69,11 @@ export default function SettingsPage() {
     setDisplayName(user.displayName ?? user.email?.split("@")[0] ?? "");
 
     getDoc(doc(db, "presenters", user.uid)).then((snap) => {
-      if (snap.exists()) setPresenter(snap.data() as PresenterData);
+      if (snap.exists()) {
+        const data = snap.data() as PresenterData;
+        setPresenter(data);
+        if (data.locale === "fr") setLocale("fr");
+      }
     });
 
     // Count sessions for free tier display
@@ -190,6 +200,16 @@ export default function SettingsPage() {
     setPilotLoading(false);
     setPilotCode("");
     setTimeout(() => window.location.reload(), 2000);
+  }
+
+  async function handleSaveLocale(newLocale: "en" | "fr") {
+    if (!user) return;
+    setLocale(newLocale);
+    setLocaleSaving(true);
+    await updateDoc(doc(db, "presenters", user.uid), { locale: newLocale });
+    setLocaleSaving(false);
+    setLocaleSaved(true);
+    setTimeout(() => setLocaleSaved(false), 2000);
   }
 
   return (
@@ -419,6 +439,38 @@ export default function SettingsPage() {
             </div>
           </section>
         )}
+
+        {/* Language */}
+        <section className="rounded-2xl border border-white/10 bg-[#111827] p-6 space-y-4">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="rounded-xl bg-sky-500/10 p-2">
+              <Globe className="h-4 w-4 text-sky-400" />
+            </div>
+            <div>
+              <h2 className="font-bold text-white text-sm">Language / Langue</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Resources and emails will be served in your chosen language.</p>
+            </div>
+          </div>
+          <div className="flex rounded-xl border border-white/10 bg-[#0f1424] p-1">
+            <button
+              onClick={() => handleSaveLocale("en")}
+              className={`flex-1 rounded-lg py-2 text-sm font-semibold transition ${locale === "en" ? "bg-sky-600 text-white" : "text-slate-400 hover:text-white"}`}
+            >
+              English
+            </button>
+            <button
+              onClick={() => handleSaveLocale("fr")}
+              className={`flex-1 rounded-lg py-2 text-sm font-semibold transition ${locale === "fr" ? "bg-sky-600 text-white" : "text-slate-400 hover:text-white"}`}
+            >
+              Français
+            </button>
+          </div>
+          {(localeSaving || localeSaved) && (
+            <p className="text-xs text-sky-400 flex items-center gap-1">
+              {localeSaved ? <><Check className="h-3 w-3" /> Saved</> : "Saving…"}
+            </p>
+          )}
+        </section>
 
         {/* Sign out */}
         <button

@@ -248,6 +248,7 @@ export default function ResourcesPage() {
   const [primaryLoading, setPrimaryLoading] = useState(true);
   const [secondaryLoading, setSecondaryLoading] = useState(true);
   const [pageLoading, setPageLoading] = useState(true);
+  const [locale, setLocale] = useState<"en" | "fr">("en");
 
   // Load session + responses
   useEffect(() => {
@@ -255,12 +256,16 @@ export default function ResourcesPage() {
     if (!user) { router.replace("/auth/login"); return; }
 
     async function load() {
-      const sessionSnap = await getDoc(doc(db, "sessions", id));
+      const [sessionSnap, presenterSnap] = await Promise.all([
+        getDoc(doc(db, "sessions", id)),
+        getDoc(doc(db, "presenters", user!.uid)),
+      ]);
       if (!sessionSnap.exists() || sessionSnap.data().presenterId !== user!.uid) {
         router.replace("/dashboard");
         return;
       }
       setSessionTitle(sessionSnap.data().title ?? "Untitled session");
+      if (presenterSnap.exists() && presenterSnap.data().locale === "fr") setLocale("fr");
 
       const respSnap = await getDocs(
         query(collection(db, "feedback_responses"), where("sessionId", "==", id))
@@ -285,12 +290,14 @@ export default function ResourcesPage() {
     const secondary = getSecondLowest(audienceAverages);
     if (!primary) return;
 
+    const localeParam = locale === "fr" ? "&locale=fr" : "";
+
     user.getIdToken().then((token) => {
       const headers = { Authorization: `Bearer ${token}` };
 
       // Primary dimension: videos + articles + podcasts
       Promise.all([
-        fetch(`/api/resources?dimension=${primary}`, { headers }).then((r) => r.json()),
+        fetch(`/api/resources?dimension=${primary}${localeParam}`, { headers }).then((r) => r.json()),
         fetch(`/api/resources/podcasts?dimension=${primary}`, { headers }).then((r) => r.json()),
       ]).then(([res, pod]) => {
         setPrimaryResources({ videos: res.videos ?? [], tedTalks: res.tedTalks ?? [], articles: res.articles ?? [], podcasts: pod.podcasts ?? [] });
@@ -300,14 +307,14 @@ export default function ResourcesPage() {
       // Secondary dimension
       if (!secondary) { setSecondaryLoading(false); return; }
       Promise.all([
-        fetch(`/api/resources?dimension=${secondary}`, { headers }).then((r) => r.json()),
+        fetch(`/api/resources?dimension=${secondary}${localeParam}`, { headers }).then((r) => r.json()),
         fetch(`/api/resources/podcasts?dimension=${secondary}`, { headers }).then((r) => r.json()),
       ]).then(([res, pod]) => {
         setSecondaryResources({ videos: res.videos ?? [], tedTalks: res.tedTalks ?? [], articles: res.articles ?? [], podcasts: pod.podcasts ?? [] });
         setSecondaryLoading(false);
       }).catch(() => setSecondaryLoading(false));
     });
-  }, [audienceAverages, user]);
+  }, [audienceAverages, user, locale]);
 
   if (pageLoading || authLoading) {
     return (

@@ -117,6 +117,7 @@ export default function LiveSessionPage() {
   const [podcasts, setPodcasts] = useState<{ title: string; author: string; description: string; image: string; link: string }[]>([]);
   const [podcastsLoading, setPodcastsLoading] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<"free" | "active">("free");
+  const [locale, setLocale] = useState<"en" | "fr">("en");
   const [savedCommitment, setSavedCommitment] = useState<{ dimension: Dimension; text: string } | null>(null);
   const [draftDimension, setDraftDimension] = useState<Dimension>("clarity");
   const [draftText, setDraftText] = useState("");
@@ -142,8 +143,10 @@ export default function LiveSessionPage() {
     });
 
     getDoc(doc(db, "presenters", user.uid)).then((snap) => {
-      if (snap.exists() && snap.data().subscriptionStatus === "active") {
-        setSubscriptionStatus("active");
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.subscriptionStatus === "active") setSubscriptionStatus("active");
+        if (data.locale === "fr") setLocale("fr");
       }
     });
 
@@ -202,7 +205,8 @@ export default function LiveSessionPage() {
     setResourcesLoading(true);
     user.getIdToken().then((token) => {
       const headers = { Authorization: `Bearer ${token}` };
-      fetch(`/api/resources?dimension=${lowestDimension}`, { headers })
+      const localeParam = locale === "fr" ? "&locale=fr" : "";
+      fetch(`/api/resources?dimension=${lowestDimension}${localeParam}`, { headers })
         .then((r) => r.json())
         .then((data) => { setResources(data); setResourcesLoading(false); })
         .catch(() => setResourcesLoading(false));
@@ -213,12 +217,13 @@ export default function LiveSessionPage() {
         .then((data) => { setPodcasts(data.podcasts ?? []); setPodcastsLoading(false); })
         .catch(() => setPodcastsLoading(false));
     });
-  }, [lowestDimension, user]);
+  }, [lowestDimension, user, locale]);
 
   useEffect(() => {
     if (!secondLowestDimension || !user) return;
     user.getIdToken().then((token) => {
-      fetch(`/api/resources?dimension=${secondLowestDimension}`, {
+      const localeParam = locale === "fr" ? "&locale=fr" : "";
+      fetch(`/api/resources?dimension=${secondLowestDimension}${localeParam}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((r) => r.json())
@@ -228,7 +233,7 @@ export default function LiveSessionPage() {
         })
         .catch(() => {});
     });
-  }, [secondLowestDimension, user]);
+  }, [secondLowestDimension, user, locale]);
 
   const radarData = DIMENSIONS.map((dim) => ({
     dimension: dim.charAt(0).toUpperCase() + dim.slice(1),

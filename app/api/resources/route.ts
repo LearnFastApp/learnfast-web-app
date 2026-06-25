@@ -22,6 +22,22 @@ const TED_QUERIES: Record<string, string> = {
   connection: "TEDx connection audience rapport storytelling speaking",
 };
 
+const VIDEO_QUERIES_FR: Record<string, string> = {
+  clarity: "améliorer clarté présentation communication orale formation",
+  engagement: "engager audience techniques présentation prise de parole",
+  energy: "énergie présence scénique voix confiance prise de parole",
+  understanding: "expliquer idées complexes simplement pédagogie communication",
+  connection: "connexion audience authenticité storytelling prise de parole",
+};
+
+const TED_QUERIES_FR: Record<string, string> = {
+  clarity: "TEDx communication claire présentation française",
+  engagement: "TEDx engagement public parler en public français",
+  energy: "TEDx confiance énergie présence scénique",
+  understanding: "TEDx expliquer enseigner comprendre français",
+  connection: "TEDx connexion authenticité storytelling français",
+};
+
 interface VideoResult {
   videoId: string;
   title: string;
@@ -84,16 +100,16 @@ function parseVideos(json: { items?: unknown[] }): VideoResult[] {
   );
 }
 
-function buildYouTubeUrl(query: string, maxResults: number, apiKey: string) {
+function buildYouTubeUrl(query: string, maxResults: number, apiKey: string, lang = "en") {
   return (
     `https://www.googleapis.com/youtube/v3/search` +
     `?part=snippet&q=${encodeURIComponent(query)}&type=video&videoDuration=medium` +
-    `&maxResults=${maxResults}&relevanceLanguage=en&key=${apiKey}`
+    `&maxResults=${maxResults}&relevanceLanguage=${lang}&key=${apiKey}`
   );
 }
 
-async function getHealthyArticles(dimension: string): Promise<ArticleResult[]> {
-  const all = articlesByDimension(dimension);
+async function getHealthyArticles(dimension: string, locale: string): Promise<ArticleResult[]> {
+  const all = articlesByDimension(dimension, locale);
   try {
     const db = getAdminDb();
     const snap = await db
@@ -119,27 +135,32 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid dimension" }, { status: 400 });
   }
 
+  const locale = req.nextUrl.searchParams.get("locale") === "fr" ? "fr" : "en";
+  const cacheKey = locale === "fr" ? `${dimension}-fr` : dimension;
+  const videoQueries = locale === "fr" ? VIDEO_QUERIES_FR : VIDEO_QUERIES;
+  const tedQueries = locale === "fr" ? TED_QUERIES_FR : TED_QUERIES;
+
   // Optional auth — personalise if authenticated, serve full pool if not
   const uid = await verifyAuthToken(req);
 
   // Fetch full pool (from Firestore cache or YouTube API)
-  let pool = await getCachedResources(dimension);
+  let pool = await getCachedResources(cacheKey);
   if (!pool) {
     const apiKey = process.env.YOUTUBE_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: "YouTube API not configured" }, { status: 500 });
     }
     const [videoRes, tedRes, articles] = await Promise.all([
-      fetch(buildYouTubeUrl(VIDEO_QUERIES[dimension], 6, apiKey)),
-      fetch(buildYouTubeUrl(TED_QUERIES[dimension], 6, apiKey)),
-      getHealthyArticles(dimension),
+      fetch(buildYouTubeUrl(videoQueries[dimension], 6, apiKey, locale)),
+      fetch(buildYouTubeUrl(tedQueries[dimension], 6, apiKey, locale)),
+      getHealthyArticles(dimension, locale),
     ]);
     if (!videoRes.ok || !tedRes.ok) {
       return NextResponse.json({ error: "YouTube API error" }, { status: 502 });
     }
     const [videoJson, tedJson] = await Promise.all([videoRes.json(), tedRes.json()]);
     pool = { videos: parseVideos(videoJson), tedTalks: parseVideos(tedJson), articles };
-    await setCachedResources(dimension, pool);
+    await setCachedResources(cacheKey, pool);
   }
 
   if (!uid) {
