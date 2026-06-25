@@ -136,12 +136,26 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ count: emails.length, emails });
 }
 
-// POST — send the broadcast
+// POST — send the broadcast (or test=true to send only to admin)
 export async function POST(req: NextRequest) {
   const uid = await verifyAuthToken(req);
   if (!uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const userRecord = await getAuth().getUser(uid);
   if (userRecord.email !== ADMIN_EMAIL) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const isTest = req.nextUrl.searchParams.get("test") === "true";
+
+  if (isTest) {
+    const transporter = getTransporter();
+    const from = `LearnFast <${process.env.GMAIL_USER}>`;
+    await transporter.sendMail({
+      from,
+      to: ADMIN_EMAIL,
+      subject: "[TEST] Your presentations deserve honest feedback — LearnFast is back",
+      html: buildReengagementHtml(),
+    });
+    return NextResponse.json({ sent: 1, failed: 0, skipped: 0 });
+  }
 
   const db = getAdminDb();
   const transporter = getTransporter();

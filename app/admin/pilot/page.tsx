@@ -53,7 +53,7 @@ export default function AdminPilotPage() {
     if (user) fetchCodes();
   }, [user]);
 
-  async function handleCreate(e: React.FormEvent) {
+  async function handleCreate(e: React.SyntheticEvent) {
     e.preventDefault();
     if (!user || !orgName.trim()) return;
     setCreating(true);
@@ -251,14 +251,28 @@ export default function AdminPilotPage() {
               </div>
             </div>
           ) : (
-            <button
-              onClick={loadBroadcastPreview}
-              disabled={broadcastLoading}
-              className="flex items-center gap-2 rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 disabled:opacity-50 transition"
-            >
-              <Mail className="h-4 w-4" />
-              {broadcastLoading ? "Loading…" : "Preview recipients"}
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={loadBroadcastPreview}
+                disabled={broadcastLoading}
+                className="flex items-center gap-2 rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 disabled:opacity-50 transition"
+              >
+                <Mail className="h-4 w-4" />
+                {broadcastLoading ? "Loading…" : "Preview recipients"}
+              </button>
+              <button
+                onClick={async () => {
+                  if (!user) return;
+                  const token = await user.getIdToken();
+                  await fetch("/api/admin/broadcast?test=true", { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+                  alert("Test email sent to " + user.email);
+                }}
+                className="flex items-center gap-2 rounded-xl border border-violet-500/30 px-5 py-3 text-sm font-semibold text-violet-400 hover:bg-violet-500/10 transition"
+              >
+                <Mail className="h-4 w-4" />
+                Send test to me
+              </button>
+            </div>
           )}
         </div>
 
