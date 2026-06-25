@@ -393,12 +393,14 @@ export default function AnalyticsPage() {
                 </div>
               </div>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                <LineChart data={chartData} margin={{ top: 5, right: 40, bottom: 5, left: 0 }}>
                   <CartesianGrid stroke="#ffffff08" />
                   <XAxis
                     dataKey="xKey"
+                    ticks={chartData.map((d) => d.xKey)}
                     tickFormatter={(val: string) => chartData[Number(val)]?.date ?? val}
                     tick={{ fill: "#64748b", fontSize: 12 }}
+                    interval={0}
                   />
                   <YAxis domain={[0, 100]} tick={{ fill: "#64748b", fontSize: 12 }} />
                   <Tooltip content={ChartTooltip} />
