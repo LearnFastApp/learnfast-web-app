@@ -53,15 +53,12 @@ function trend(data: SessionData[], dim: Dimension): number {
   return Math.round((data[data.length - 1].averages[dim] - data[0].averages[dim]) * 10) / 10;
 }
 
-function ChartTooltip({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  payload?: { name: string; value: number; color: string }[];
-  label?: string;
-}) {
+function ChartTooltip(props: Record<string, unknown>) {
+  const { active, payload, label } = props as {
+    active: boolean;
+    payload: { name: string; value: number; color: string }[];
+    label: string;
+  };
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-xl border border-white/15 bg-[#1a2135] px-4 py-3 shadow-xl">
@@ -396,7 +393,7 @@ export default function AnalyticsPage() {
                   <CartesianGrid stroke="#ffffff08" />
                   <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 12 }} />
                   <YAxis domain={[0, 100]} tick={{ fill: "#64748b", fontSize: 12 }} />
-                  <Tooltip content={<ChartTooltip />} />
+                  <Tooltip content={ChartTooltip} />
                   {DIMENSIONS.filter((dim) => activeDims.has(dim)).map((dim) => (
                     <Line
                       key={dim}
