@@ -10,7 +10,7 @@ import {
   signOut,
 } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { User, Lock, CreditCard, Check, Zap, LogOut } from "lucide-react";
+import { User, Lock, CreditCard, Check, Zap, LogOut, Tag } from "lucide-react";
 import MobileNav from "@/components/mobile-nav";
 import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
@@ -19,6 +19,8 @@ interface PresenterData {
   displayName?: string;
   subscriptionStatus?: string;
   stripeCustomerId?: string;
+  pilotOrgName?: string;
+  pilotExpiresAt?: { toDate: () => Date };
 }
 
 export default function SettingsPage() {
@@ -45,6 +47,12 @@ export default function SettingsPage() {
   // Billing
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState("");
+
+  // Pilot code
+  const [pilotCode, setPilotCode] = useState("");
+  const [pilotLoading, setPilotLoading] = useState(false);
+  const [pilotError, setPilotError] = useState("");
+  const [pilotSuccess, setPilotSuccess] = useState("");
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth/login");
@@ -157,6 +165,32 @@ export default function SettingsPage() {
   }
 
   const isActive = presenter.subscriptionStatus === "active";
+  const isPilot = presenter.subscriptionStatus === "pilot" &&
+    !!presenter.pilotExpiresAt?.toDate && presenter.pilotExpiresAt.toDate() > new Date();
+
+  async function handlePilotRedeem(e: React.FormEvent) {
+    e.preventDefault();
+    if (!user || !pilotCode.trim()) return;
+    setPilotLoading(true);
+    setPilotError("");
+    setPilotSuccess("");
+    const token = await user.getIdToken();
+    const res = await fetch("/api/pilot/redeem", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ code: pilotCode }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setPilotError(data.error ?? "Invalid code. Please try again.");
+      setPilotLoading(false);
+      return;
+    }
+    setPilotSuccess(`Pilot access activated for ${data.orgName} — valid until ${new Date(data.expiresAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}.`);
+    setPilotLoading(false);
+    setPilotCode("");
+    setTimeout(() => window.location.reload(), 2000);
+  }
 
   return (
     <main className="min-h-screen bg-[#05070d] text-white pb-20 lg:pb-0">
@@ -331,6 +365,60 @@ export default function SettingsPage() {
             </a>
           )}
         </section>
+
+        {/* Pilot code */}
+        {!isActive && !isPilot && (
+          <section className="rounded-2xl border border-white/10 bg-[#111827] p-6">
+            <div className="mb-5 flex items-center gap-3">
+              <div className="rounded-xl bg-violet-500/20 p-2">
+                <Tag className="h-4 w-4 text-violet-400" />
+              </div>
+              <div>
+                <h2 className="font-bold text-lg">Redeem a pilot code</h2>
+                <p className="text-xs text-slate-500 mt-0.5">Have a code from your organisation? Enter it here for 1 month of free access.</p>
+              </div>
+            </div>
+            <form onSubmit={handlePilotRedeem} className="flex gap-3">
+              <input
+                value={pilotCode}
+                onChange={(e) => setPilotCode(e.target.value.toUpperCase())}
+                placeholder="e.g. TOASTMASTERS2026"
+                className="flex-1 rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-sm text-white placeholder-slate-600 outline-none focus:border-violet-500 font-mono"
+              />
+              <button
+                type="submit"
+                disabled={pilotLoading || !pilotCode.trim()}
+                className="rounded-xl bg-violet-500 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-400 disabled:opacity-50 transition"
+              >
+                {pilotLoading ? "…" : "Apply"}
+              </button>
+            </form>
+            {pilotError && <p className="mt-3 text-sm text-red-400">{pilotError}</p>}
+            {pilotSuccess && (
+              <div className="mt-3 flex items-center gap-2 text-sm text-green-400">
+                <Check className="h-4 w-4 shrink-0" />
+                {pilotSuccess}
+              </div>
+            )}
+          </section>
+        )}
+
+        {isPilot && (
+          <section className="rounded-2xl border border-green-500/30 bg-green-500/5 p-6">
+            <div className="flex items-center gap-3">
+              <div className="rounded-xl bg-green-500/20 p-2">
+                <Tag className="h-4 w-4 text-green-400" />
+              </div>
+              <div>
+                <p className="font-bold text-green-300">Pilot access active</p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {presenter.pilotOrgName && `${presenter.pilotOrgName} · `}
+                  Expires {presenter.pilotExpiresAt?.toDate().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Sign out */}
         <button
