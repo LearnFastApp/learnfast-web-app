@@ -1,25 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import { X, Zap, Check } from "lucide-react";
+import { X, Zap, Check, Tag } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 
 interface Props {
   onClose: () => void;
+  onPilotActivated?: () => void;
 }
 
-export default function UpgradeModal({ onClose }: Props) {
+export default function UpgradeModal({ onClose, onPilotActivated }: Props) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPilotEntry, setShowPilotEntry] = useState(false);
+  const [pilotCode, setPilotCode] = useState("");
+  const [pilotLoading, setPilotLoading] = useState(false);
+  const [pilotSuccess, setPilotSuccess] = useState<{ orgName: string; expiresAt: string } | null>(null);
 
   async function handleUpgrade() {
     if (!user) return;
     setLoading(true);
     setError("");
+    const token = await user.getIdToken();
     const res = await fetch("/api/stripe/checkout", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ uid: user.uid, email: user.email }),
     });
     const data = await res.json();
@@ -29,6 +35,53 @@ export default function UpgradeModal({ onClose }: Props) {
       return;
     }
     window.location.href = data.url;
+  }
+
+  async function handlePilotRedeem() {
+    if (!user || !pilotCode.trim()) return;
+    setPilotLoading(true);
+    setError("");
+    const token = await user.getIdToken();
+    const res = await fetch("/api/pilot/redeem", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ code: pilotCode }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error ?? "Invalid code. Please try again.");
+      setPilotLoading(false);
+      return;
+    }
+    setPilotSuccess({ orgName: data.orgName, expiresAt: data.expiresAt });
+    setPilotLoading(false);
+    setTimeout(() => {
+      onPilotActivated?.();
+      onClose();
+      window.location.reload();
+    }, 2500);
+  }
+
+  if (pilotSuccess) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+        <div className="w-full max-w-md rounded-2xl border border-green-500/30 bg-[#111827] p-8 shadow-2xl text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-500/20">
+            <Check className="h-7 w-7 text-green-400" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Pilot access activated!</h2>
+          <p className="text-sm text-slate-300 mb-1">
+            Welcome to the <strong className="text-white">{pilotSuccess.orgName}</strong> pilot.
+          </p>
+          <p className="text-sm text-slate-400">
+            You have full access until{" "}
+            {new Date(pilotSuccess.expiresAt).toLocaleDateString("en-GB", {
+              day: "numeric", month: "long", year: "numeric",
+            })}.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -85,12 +138,45 @@ export default function UpgradeModal({ onClose }: Props) {
         >
           {loading ? "Redirecting to checkout…" : "Start 7-day free trial"}
         </button>
-        <button
-          onClick={onClose}
-          className="w-full text-sm text-slate-500 hover:text-slate-300 transition"
-        >
-          Maybe later
-        </button>
+
+        {!showPilotEntry ? (
+          <button
+            onClick={() => setShowPilotEntry(true)}
+            className="w-full flex items-center justify-center gap-2 text-sm text-slate-500 hover:text-slate-300 transition py-1"
+          >
+            <Tag className="h-3.5 w-3.5" />
+            Have a pilot code?
+          </button>
+        ) : (
+          <div className="mt-1 rounded-xl border border-white/10 bg-[#0d1120] p-4">
+            <p className="text-xs text-slate-400 mb-3">Enter your organisation&apos;s pilot code for 1 month of free access.</p>
+            <div className="flex gap-2">
+              <input
+                value={pilotCode}
+                onChange={(e) => setPilotCode(e.target.value.toUpperCase())}
+                onKeyDown={(e) => e.key === "Enter" && handlePilotRedeem()}
+                placeholder="e.g. TOASTMASTERS2026"
+                className="flex-1 rounded-lg border border-white/10 bg-[#111827] px-3 py-2 text-sm text-white placeholder-slate-600 focus:border-violet-500/50 focus:outline-none"
+              />
+              <button
+                onClick={handlePilotRedeem}
+                disabled={pilotLoading || !pilotCode.trim()}
+                className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-500 disabled:opacity-50 transition"
+              >
+                {pilotLoading ? "…" : "Apply"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!showPilotEntry && (
+          <button
+            onClick={onClose}
+            className="w-full text-sm text-slate-600 hover:text-slate-400 transition mt-1"
+          >
+            Maybe later
+          </button>
+        )}
       </div>
     </div>
   );

@@ -73,7 +73,9 @@ export default function Dashboard() {
   const [showModal, setShowModal] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<"free" | "active">("free");
+  const [subscriptionStatus, setSubscriptionStatus] = useState<"free" | "active" | "pilot">("free");
+  const [pilotExpiresAt, setPilotExpiresAt] = useState<Date | null>(null);
+  const [pilotOrgName, setPilotOrgName] = useState<string | null>(null);
   const PAGE_SIZE = 10;
   const [sessions, setSessions] = useState<Session[]>([]);
   const [extraSessions, setExtraSessions] = useState<Session[]>([]);
@@ -102,6 +104,14 @@ export default function Dashboard() {
       if (snap.exists()) {
         const data = snap.data();
         if (data.subscriptionStatus === "active") setSubscriptionStatus("active");
+        if (data.subscriptionStatus === "pilot") {
+          const expiry = data.pilotExpiresAt?.toDate?.() as Date | undefined;
+          if (expiry && expiry > new Date()) {
+            setSubscriptionStatus("pilot");
+            setPilotExpiresAt(expiry);
+            setPilotOrgName(data.pilotOrgName ?? null);
+          }
+        }
         if (!data.onboardingSeen) setShowOnboarding(true);
       }
     });
@@ -225,6 +235,10 @@ export default function Dashboard() {
   }
 
   const displayName = user.displayName ?? user.email?.split("@")[0] ?? "Presenter";
+  const isPaidOrPilot = subscriptionStatus === "active" || subscriptionStatus === "pilot";
+  const pilotDaysLeft = pilotExpiresAt
+    ? Math.max(0, Math.ceil((pilotExpiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0;
 
   return (
     <main className="min-h-screen bg-[#05070d] text-white">
@@ -242,7 +256,7 @@ export default function Dashboard() {
         />
       )}
       <MobileNav onCreateSession={() => {
-        if (subscriptionStatus !== "active" && sessions.length >= 2) {
+        if (!isPaidOrPilot && sessions.length >= 2) {
           setShowUpgrade(true);
         } else {
           setShowModal(true);
@@ -284,7 +298,17 @@ export default function Dashboard() {
             })}
           </nav>
 
-          {subscriptionStatus !== "active" && (
+          {subscriptionStatus === "pilot" && (
+            <div className="mt-6 rounded-xl border border-green-500/30 bg-green-500/5 p-4">
+              <p className="text-xs font-semibold text-green-400 uppercase tracking-wider mb-1">Pilot Access</p>
+              {pilotOrgName && <p className="text-xs text-slate-400 mb-2">{pilotOrgName}</p>}
+              <p className="text-xs text-slate-300">
+                {pilotDaysLeft} day{pilotDaysLeft !== 1 ? "s" : ""} remaining — full access to all features.
+              </p>
+            </div>
+          )}
+
+          {!isPaidOrPilot && (
             <div className={`mt-6 rounded-xl border p-4 ${sessions.length >= 2 ? "border-amber-500/30 bg-amber-500/5" : "border-white/10 bg-[#0a0d1a]"}`}>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Free Plan</p>
               <div className="flex gap-2 mb-3">
@@ -343,7 +367,7 @@ export default function Dashboard() {
 
             <button
               onClick={() => {
-                if (subscriptionStatus !== "active" && sessions.length >= 2) {
+                if (!isPaidOrPilot && sessions.length >= 2) {
                   setShowUpgrade(true);
                 } else {
                   setShowModal(true);
@@ -356,7 +380,7 @@ export default function Dashboard() {
             </button>
           </header>
 
-          {subscriptionStatus !== "active" && sessions.length >= 2 && (
+          {!isPaidOrPilot && sessions.length >= 2 && (
             <div className="flex items-center justify-between border-b border-amber-500/20 bg-amber-500/5 px-6 py-3 lg:px-8">
               <p className="text-sm text-amber-300">
                 You&apos;ve used both free sessions.

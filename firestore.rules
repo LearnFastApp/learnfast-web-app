@@ -32,6 +32,10 @@ service cloud.firestore {
       allow read, write: if isSessionPresenter(sessionId);
     }
 
+    match /pilot_codes/{code} {
+      allow read, write: if false;
+    }
+
     match /stripe_events/{eventId} {
       allow read, write: if false;
     }

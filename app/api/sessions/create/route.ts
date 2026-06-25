@@ -33,8 +33,11 @@ export async function POST(req: NextRequest) {
     const presenterDoc = await db.collection("presenters").doc(verifiedUid).get();
     const presenter = presenterDoc.data();
     const subscriptionStatus = presenter?.subscriptionStatus ?? "free";
+    const pilotExpiry = presenter?.pilotExpiresAt?.toDate?.() as Date | undefined;
+    const isPilotActive =
+      subscriptionStatus === "pilot" && pilotExpiry != null && pilotExpiry > new Date();
 
-    if (subscriptionStatus !== "active") {
+    if (subscriptionStatus !== "active" && !isPilotActive) {
       const sessionSnap = await db
         .collection("sessions")
         .where("presenterId", "==", verifiedUid)
