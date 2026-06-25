@@ -54,19 +54,18 @@ function trend(data: SessionData[], dim: Dimension): number {
 }
 
 function ChartTooltip(props: Record<string, unknown>) {
-  const { active, payload, label } = props as {
+  const { active, payload } = props as {
     active: boolean;
-    payload: { name: string; value: number; color: string; payload: { name: string } }[];
-    label: string;
+    payload: { name: string; value: number; color: string; payload: { idx: number; name: string; date: string } }[];
   };
   if (!active || !payload?.length) return null;
-  const sessionTitle = payload[0]?.payload?.name;
+  const { name: sessionTitle, date } = payload[0].payload;
   return (
     <div className="rounded-xl border border-white/15 bg-[#1a2135] px-4 py-3 shadow-xl min-w-[180px]">
       {sessionTitle && (
         <p className="text-xs font-semibold text-white mb-0.5 truncate max-w-[200px]">{sessionTitle}</p>
       )}
-      <p className="text-[11px] text-slate-500 mb-2">{label}</p>
+      <p className="text-[11px] text-slate-500 mb-2">{date}</p>
       {payload.map((entry) => (
         <div key={entry.name} className="flex items-center gap-2 text-xs py-0.5">
           <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
@@ -192,7 +191,8 @@ export default function AnalyticsPage() {
     ? sessions
     : sessions.filter((s) => s.tags.includes(selectedTag));
 
-  const chartData = filtered.map((s) => ({
+  const chartData = filtered.map((s, i) => ({
+    idx: i,
     name: s.title.length > 18 ? s.title.slice(0, 18) + "…" : s.title,
     date: s.createdAt.toLocaleDateString("en-GB", { day: "numeric", month: "short" }),
     ...s.averages,
@@ -395,7 +395,16 @@ export default function AnalyticsPage() {
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                   <CartesianGrid stroke="#ffffff08" />
-                  <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 12 }} />
+                  <XAxis
+                    dataKey="idx"
+                    type="number"
+                    scale="linear"
+                    domain={[0, Math.max(chartData.length - 1, 1)]}
+                    tickCount={chartData.length}
+                    allowDecimals={false}
+                    tickFormatter={(i: number) => chartData[i]?.date ?? ""}
+                    tick={{ fill: "#64748b", fontSize: 12 }}
+                  />
                   <YAxis domain={[0, 100]} tick={{ fill: "#64748b", fontSize: 12 }} />
                   <Tooltip content={ChartTooltip} />
                   {DIMENSIONS.filter((dim) => activeDims.has(dim)).map((dim) => (
