@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { Check, Copy, Plus, ToggleLeft, ToggleRight } from "lucide-react";
+import { Check, Copy, Mail, Plus, ToggleLeft, ToggleRight } from "lucide-react";
 
 interface PilotCode {
   code: string;
@@ -26,6 +26,12 @@ export default function AdminPilotPage() {
   const [newCode, setNewCode] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
+
+  // Broadcast email
+  const [broadcastPreview, setBroadcastPreview] = useState<{ count: number; emails: { email: string; source: string }[] } | null>(null);
+  const [broadcastLoading, setBroadcastLoading] = useState(false);
+  const [broadcastSending, setBroadcastSending] = useState(false);
+  const [broadcastResult, setBroadcastResult] = useState<{ sent: number; failed: number; skipped: number } | null>(null);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/");
@@ -82,6 +88,27 @@ export default function AdminPilotPage() {
       body: JSON.stringify({ code, active: !current }),
     });
     fetchCodes();
+  }
+
+  async function loadBroadcastPreview() {
+    if (!user) return;
+    setBroadcastLoading(true);
+    const token = await user.getIdToken();
+    const res = await fetch("/api/admin/broadcast", { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    setBroadcastPreview(data);
+    setBroadcastLoading(false);
+  }
+
+  async function sendBroadcast() {
+    if (!user) return;
+    setBroadcastSending(true);
+    const token = await user.getIdToken();
+    const res = await fetch("/api/admin/broadcast", { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    setBroadcastResult(data);
+    setBroadcastSending(false);
+    setBroadcastPreview(null);
   }
 
   function copyCode(code: string) {
@@ -165,6 +192,74 @@ export default function AdminPilotPage() {
               {creating ? "Creating…" : "Generate pilot code"}
             </button>
           </form>
+        </div>
+
+        {/* Re-engagement broadcast */}
+        <div className="rounded-2xl border border-white/10 bg-[#0f1424] p-6">
+          <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-2">Re-engagement Email</h2>
+          <p className="text-xs text-slate-500 mb-5">Send a one-time email to all previous iOS + web users inviting them to the new platform. Each user is only ever sent this once.</p>
+
+          {broadcastResult ? (
+            <div className="rounded-xl border border-green-500/30 bg-green-500/5 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Check className="h-4 w-4 text-green-400" />
+                <span className="text-sm font-semibold text-green-300">Broadcast complete</span>
+              </div>
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="rounded-lg bg-[#0a0d1a] p-3">
+                  <p className="text-xl font-bold text-green-400">{broadcastResult.sent}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Sent</p>
+                </div>
+                <div className="rounded-lg bg-[#0a0d1a] p-3">
+                  <p className="text-xl font-bold text-red-400">{broadcastResult.failed}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Failed</p>
+                </div>
+                <div className="rounded-lg bg-[#0a0d1a] p-3">
+                  <p className="text-xl font-bold text-slate-400">{broadcastResult.skipped}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Skipped</p>
+                </div>
+              </div>
+            </div>
+          ) : broadcastPreview ? (
+            <div>
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 mb-4">
+                <p className="text-sm text-amber-300 font-semibold mb-1">{broadcastPreview.count} recipients</p>
+                <div className="max-h-48 overflow-y-auto space-y-1 mt-3">
+                  {broadcastPreview.emails.map((e) => (
+                    <div key={e.email} className="flex items-center gap-2 text-xs">
+                      <span className={`rounded px-1.5 py-0.5 font-mono ${e.source === "ios" ? "bg-blue-500/20 text-blue-400" : "bg-violet-500/20 text-violet-400"}`}>{e.source}</span>
+                      <span className="text-slate-400">{e.email}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={sendBroadcast}
+                  disabled={broadcastSending}
+                  className="flex items-center gap-2 rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white hover:bg-green-500 disabled:opacity-50 transition"
+                >
+                  <Mail className="h-4 w-4" />
+                  {broadcastSending ? "Sending…" : `Confirm — send to ${broadcastPreview.count} users`}
+                </button>
+                <button
+                  onClick={() => setBroadcastPreview(null)}
+                  className="rounded-xl border border-white/10 px-5 py-3 text-sm text-slate-400 hover:text-white transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={loadBroadcastPreview}
+              disabled={broadcastLoading}
+              className="flex items-center gap-2 rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 disabled:opacity-50 transition"
+            >
+              <Mail className="h-4 w-4" />
+              {broadcastLoading ? "Loading…" : "Preview recipients"}
+            </button>
+          )}
         </div>
 
         {/* Existing codes */}
