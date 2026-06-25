@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
       await transporter.sendMail({
         from,
         to: email,
-        subject: "LearnFast is back — and better than ever",
+        subject: "Your presentations deserve honest feedback — LearnFast is back",
         html: buildReengagementHtml(),
       });
       await d.ref.update({ reengagementEmailSent: true });
@@ -187,7 +187,7 @@ export async function POST(req: NextRequest) {
       await transporter.sendMail({
         from,
         to: email,
-        subject: "LearnFast is back — and better than ever",
+        subject: "Your presentations deserve honest feedback — LearnFast is back",
         html: buildReengagementHtml(),
       });
       await d.ref.update({ reengagementEmailSent: true });
