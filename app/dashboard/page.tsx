@@ -14,6 +14,7 @@ import {
   PenLine,
   Plus,
   Settings,
+  ShieldCheck,
   Tag,
   Trash2,
   Users,
@@ -296,6 +297,15 @@ export default function Dashboard() {
                 </a>
               );
             })}
+            {user?.email === "physicalperformance@icloud.com" && (
+              <a
+                href="/admin/pilot"
+                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 hover:bg-white/5 hover:text-white transition"
+              >
+                <ShieldCheck className="h-5 w-5" />
+                <span className="flex-1">Pilot Admin</span>
+              </a>
+            )}
           </nav>
 
           {subscriptionStatus === "pilot" && (
