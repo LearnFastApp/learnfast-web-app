@@ -56,7 +56,7 @@ function trend(data: SessionData[], dim: Dimension): number {
 function ChartTooltip(props: Record<string, unknown>) {
   const { active, payload } = props as {
     active: boolean;
-    payload: { name: string; value: number; color: string; payload: { idx: number; name: string; date: string } }[];
+    payload: { name: string; value: number; color: string; payload: { xKey: string; name: string; date: string } }[];
   };
   if (!active || !payload?.length) return null;
   const { name: sessionTitle, date } = payload[0].payload;
@@ -192,7 +192,7 @@ export default function AnalyticsPage() {
     : sessions.filter((s) => s.tags.includes(selectedTag));
 
   const chartData = filtered.map((s, i) => ({
-    idx: i,
+    xKey: String(i),
     name: s.title.length > 18 ? s.title.slice(0, 18) + "…" : s.title,
     date: s.createdAt.toLocaleDateString("en-GB", { day: "numeric", month: "short" }),
     ...s.averages,
@@ -396,13 +396,8 @@ export default function AnalyticsPage() {
                 <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                   <CartesianGrid stroke="#ffffff08" />
                   <XAxis
-                    dataKey="idx"
-                    type="number"
-                    scale="linear"
-                    domain={[0, Math.max(chartData.length - 1, 1)]}
-                    tickCount={chartData.length}
-                    allowDecimals={false}
-                    tickFormatter={(i: number) => chartData[i]?.date ?? ""}
+                    dataKey="xKey"
+                    tickFormatter={(val: string) => chartData[Number(val)]?.date ?? val}
                     tick={{ fill: "#64748b", fontSize: 12 }}
                   />
                   <YAxis domain={[0, 100]} tick={{ fill: "#64748b", fontSize: 12 }} />
