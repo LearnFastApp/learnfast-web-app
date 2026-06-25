@@ -16,6 +16,11 @@ async function checkUrl(url: string): Promise<{ ok: boolean; status: number; rea
       signal: AbortSignal.timeout(12000),
     });
 
+    // 429 = rate-limited by the site (Farnam Street etc.) — content is fine for users
+    if (res.status === 429) {
+      return { ok: true, status: 429, reason: "", finalUrl: res.url };
+    }
+
     if (!res.ok) {
       return { ok: false, status: res.status, reason: `HTTP ${res.status}`, finalUrl: res.url };
     }
