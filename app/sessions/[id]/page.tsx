@@ -9,7 +9,6 @@ import {
   PolarGrid,
   PolarAngleAxis,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 import { QRCodeCanvas } from "qrcode.react";
 import { ArrowLeft, Copy, Check, Users, PenLine, PlayCircle, TrendingUp, Lock, StopCircle } from "lucide-react";
@@ -414,12 +413,12 @@ export default function LiveSessionPage() {
                   Unlock improvement resources →
                 </a>
               ) : (
-                <button
-                  onClick={() => document.getElementById("recommended")?.scrollIntoView({ behavior: "smooth", block: "start" })}
-                  className="rounded-xl bg-violet-500 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition"
+                <a
+                  href={`/sessions/${id}/resources`}
+                  className="rounded-xl bg-violet-500 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition inline-block text-center"
                 >
                   View your resources →
-                </button>
+                </a>
               )}
             </div>
           </div>
