@@ -251,12 +251,12 @@ export default function Dashboard() {
 
       <div className="flex min-h-screen">
         <aside className="hidden w-72 border-r border-white/10 bg-[#0f1424] p-6 lg:flex lg:flex-col">
-          <div className="mb-12 flex flex-col gap-1">
-            <div className="flex items-start gap-0.5">
-              <Image src="/logo.png" alt="LearnFast" width={160} height={32} className="h-8 w-auto" priority />
-              <sup className="text-[0.6rem] font-normal mt-0.5" style={{ color: '#5bb8f5' }}>™</sup>
-            </div>
-            <p className="text-sm text-slate-400 leading-tight">Feedback Intelligence</p>
+          <div className="mb-12 grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5">
+            <Image src="/icon-mark.png" alt="" width={80} height={58} className="row-span-2 self-center" priority />
+            <p className="self-end leading-none text-[1.35rem] font-bold tracking-tight" style={{ color: '#5bb8f5' }}>
+              LEARN<span className="font-light">FAST</span><sup className="text-[0.5em] font-normal ml-0.5 align-super">™</sup>
+            </p>
+            <p className="self-start text-sm text-slate-400 leading-tight">Feedback Intelligence</p>
           </div>
 
           <nav className="space-y-2">
