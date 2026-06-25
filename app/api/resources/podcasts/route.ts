@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { rateLimit, getIp } from "@/lib/rate-limit";
+import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
+import { getSeenResources, recordSeenResources, filterUnseen } from "@/lib/resource-history";
 
 export const dynamic = "force-dynamic";
 
 const QUERIES: Record<string, string> = {
-  clarity: "presentation skills",
-  engagement: "public speaking",
-  energy: "public speaking tips",
-  understanding: "communication skills",
-  connection: "storytelling",
+  clarity: "presentation skills communication",
+  engagement: "public speaking audience engagement",
+  energy: "speaker confidence stage presence delivery",
+  understanding: "communication skills teaching explanation",
+  connection: "storytelling empathy rapport leadership",
 };
 
 interface PodcastResult {
@@ -20,57 +23,52 @@ interface PodcastResult {
   link: string;
 }
 
-const cache = new Map<string, { podcasts: PodcastResult[]; ts: number }>();
-const CACHE_TTL = 1000 * 60 * 60 * 24;
+const CACHE_TTL_MS = 1000 * 60 * 60 * 24;
 
-export async function GET(req: NextRequest) {
-  const { allowed } = rateLimit(`podcasts:${getIp(req)}`, 30, 60_000);
-  if (!allowed) {
-    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
-  }
+async function getCachedPodcasts(dimension: string): Promise<PodcastResult[] | null> {
+  const db = getAdminDb();
+  const doc = await db.collection("resource_cache").doc(`podcasts_${dimension}`).get();
+  if (!doc.exists) return null;
+  const data = doc.data()!;
+  const updatedAt: number = data.updatedAt?.toMillis?.() ?? 0;
+  if (Date.now() - updatedAt > CACHE_TTL_MS) return null;
+  return data.podcasts as PodcastResult[];
+}
 
-  const dimension = req.nextUrl.searchParams.get("dimension");
+async function setCachedPodcasts(dimension: string, podcasts: PodcastResult[]) {
+  const db = getAdminDb();
+  await db.collection("resource_cache").doc(`podcasts_${dimension}`).set({
+    podcasts,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+}
 
-  if (!dimension || !QUERIES[dimension]) {
-    return NextResponse.json({ error: "Invalid dimension" }, { status: 400 });
-  }
-
-  const cached = cache.get(dimension);
-  if (cached && Date.now() - cached.ts < CACHE_TTL) {
-    return NextResponse.json({ podcasts: cached.podcasts });
-  }
-
+async function fetchFromPodcastIndex(dimension: string): Promise<PodcastResult[]> {
   const apiKey = process.env.PODCAST_INDEX_KEY;
   const apiSecret = process.env.PODCAST_INDEX_SECRET;
-
-  if (!apiKey || !apiSecret) {
-    return NextResponse.json({ error: "Podcast Index not configured" }, { status: 500 });
-  }
+  if (!apiKey || !apiSecret) return [];
 
   const timestamp = Math.floor(Date.now() / 1000).toString();
   const hash = createHash("sha1")
     .update(apiKey + apiSecret + timestamp)
     .digest("hex");
 
-  const url = `https://api.podcastindex.org/api/1.0/search/byterm?q=${encodeURIComponent(QUERIES[dimension])}&max=4&clean`;
+  const url = `https://api.podcastindex.org/api/1.0/search/byterm?q=${encodeURIComponent(QUERIES[dimension])}&max=8&clean`;
 
   const res = await fetch(url, {
     headers: {
       "X-Auth-Key": apiKey,
       "X-Auth-Date": timestamp,
-      "Authorization": hash,
+      Authorization: hash,
       "User-Agent": "LearnFastApp/1.0",
     },
   });
 
-  if (!res.ok) {
-    return NextResponse.json({ error: "Podcast Index API error" }, { status: 502 });
-  }
+  if (!res.ok) return [];
 
   const json = await res.json();
-
-  const podcasts: PodcastResult[] = (json.feeds ?? [])
-    .slice(0, 4)
+  return (json.feeds ?? [])
+    .slice(0, 8)
     .map((feed: {
       title: string;
       author: string;
@@ -89,7 +87,47 @@ export async function GET(req: NextRequest) {
         ? `https://podcasts.apple.com/podcast/id${feed.itunesId}`
         : feed.link,
     }));
+}
 
-  cache.set(dimension, { podcasts, ts: Date.now() });
-  return NextResponse.json({ podcasts });
+export async function GET(req: NextRequest) {
+  const { allowed } = rateLimit(`podcasts:${getIp(req)}`, 30, 60_000);
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
+  const dimension = req.nextUrl.searchParams.get("dimension");
+  if (!dimension || !QUERIES[dimension]) {
+    return NextResponse.json({ error: "Invalid dimension" }, { status: 400 });
+  }
+
+  const uid = await verifyAuthToken(req);
+
+  // Fetch full pool from Firestore cache or Podcast Index API
+  let pool = await getCachedPodcasts(dimension);
+  if (!pool) {
+    pool = await fetchFromPodcastIndex(dimension);
+    if (pool.length > 0) {
+      await setCachedPodcasts(dimension, pool);
+    }
+  }
+
+  if (!uid || pool.length === 0) {
+    return NextResponse.json({ podcasts: pool.slice(0, 4) });
+  }
+
+  // Filter seen podcasts for this user
+  const seen = await getSeenResources(uid, dimension);
+  const { items: podcasts, didReset } = filterUnseen(pool, (p) => p.link, seen.podcasts);
+
+  // Show up to 4
+  const toServe = podcasts.slice(0, 4);
+
+  recordSeenResources(
+    uid,
+    dimension,
+    { articles: [], videos: [], ted: [], podcasts: toServe.map((p) => p.link) },
+    { articles: false, videos: false, ted: false, podcasts: didReset }
+  ).catch((err) => console.error("[resource-history/podcasts]", err));
+
+  return NextResponse.json({ podcasts: toServe });
 }

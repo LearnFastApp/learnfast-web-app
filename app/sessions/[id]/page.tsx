@@ -199,30 +199,37 @@ export default function LiveSessionPage() {
   }, [lowestDimension, savedCommitment]);
 
   useEffect(() => {
-    if (!lowestDimension) return;
+    if (!lowestDimension || !user) return;
     setResourcesLoading(true);
-    fetch(`/api/resources?dimension=${lowestDimension}`)
-      .then((r) => r.json())
-      .then((data) => { setResources(data); setResourcesLoading(false); })
-      .catch(() => setResourcesLoading(false));
+    user.getIdToken().then((token) => {
+      const headers = { Authorization: `Bearer ${token}` };
+      fetch(`/api/resources?dimension=${lowestDimension}`, { headers })
+        .then((r) => r.json())
+        .then((data) => { setResources(data); setResourcesLoading(false); })
+        .catch(() => setResourcesLoading(false));
 
-    setPodcastsLoading(true);
-    fetch(`/api/resources/podcasts?dimension=${lowestDimension}`)
-      .then((r) => r.json())
-      .then((data) => { setPodcasts(data.podcasts ?? []); setPodcastsLoading(false); })
-      .catch(() => setPodcastsLoading(false));
-  }, [lowestDimension]);
+      setPodcastsLoading(true);
+      fetch(`/api/resources/podcasts?dimension=${lowestDimension}`, { headers })
+        .then((r) => r.json())
+        .then((data) => { setPodcasts(data.podcasts ?? []); setPodcastsLoading(false); })
+        .catch(() => setPodcastsLoading(false));
+    });
+  }, [lowestDimension, user]);
 
   useEffect(() => {
-    if (!secondLowestDimension) return;
-    fetch(`/api/resources?dimension=${secondLowestDimension}`)
-      .then((r) => r.json())
-      .then((data) => {
-        const articles = data.articles as { title: string; url: string; source: string }[];
-        if (articles?.length) setSecondaryArticle(articles[0]);
+    if (!secondLowestDimension || !user) return;
+    user.getIdToken().then((token) => {
+      fetch(`/api/resources?dimension=${secondLowestDimension}`, {
+        headers: { Authorization: `Bearer ${token}` },
       })
-      .catch(() => {});
-  }, [secondLowestDimension]);
+        .then((r) => r.json())
+        .then((data) => {
+          const articles = data.articles as { title: string; url: string; source: string }[];
+          if (articles?.length) setSecondaryArticle(articles[0]);
+        })
+        .catch(() => {});
+    });
+  }, [secondLowestDimension, user]);
 
   const radarData = DIMENSIONS.map((dim) => ({
     dimension: dim.charAt(0).toUpperCase() + dim.slice(1),

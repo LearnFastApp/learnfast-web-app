@@ -15,7 +15,6 @@ import {
   Radar,
   PolarGrid,
   PolarAngleAxis,
-  Legend,
 } from "recharts";
 import { TrendingUp, TrendingDown, Minus, Tag, BarChart3, Lightbulb, AlertTriangle, Sparkles, ArrowUpRight } from "lucide-react";
 import MobileNav from "@/components/mobile-nav";
@@ -52,6 +51,30 @@ function avg(values: number[]): number {
 function trend(data: SessionData[], dim: Dimension): number {
   if (data.length < 2) return 0;
   return Math.round((data[data.length - 1].averages[dim] - data[0].averages[dim]) * 10) / 10;
+}
+
+function ChartTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: { name: string; value: number; color: string }[];
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-xl border border-white/15 bg-[#1a2135] px-4 py-3 shadow-xl">
+      <p className="text-xs text-slate-400 mb-2">{label}</p>
+      {payload.map((entry) => (
+        <div key={entry.name} className="flex items-center gap-2 text-xs">
+          <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+          <span className="text-slate-300 capitalize">{entry.name}:</span>
+          <span className="text-white font-bold">{entry.value}</span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function InsightCard({ insight }: { insight: Insight }) {
@@ -373,10 +396,7 @@ export default function AnalyticsPage() {
                   <CartesianGrid stroke="#ffffff08" />
                   <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 12 }} />
                   <YAxis domain={[0, 100]} tick={{ fill: "#64748b", fontSize: 12 }} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: "#1a2135", border: "1px solid #ffffff15", borderRadius: "12px" }}
-                    labelStyle={{ color: "#ffffff" }}
-                  />
+                  <Tooltip content={<ChartTooltip />} />
                   {DIMENSIONS.filter((dim) => activeDims.has(dim)).map((dim) => (
                     <Line
                       key={dim}

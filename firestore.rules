@@ -40,5 +40,9 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /presenter_resource_history/{uid} {
+      allow read, write: if false;
+    }
+
   }
 }

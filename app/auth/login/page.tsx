@@ -81,7 +81,9 @@ export default function LoginPage() {
           },
           { merge: true }
         );
-        await sendEmailVerification(result.user);
+        await sendEmailVerification(result.user, {
+          url: `${window.location.origin}/auth/login`,
+        });
         setVerificationSent(true);
         return;
       } else {
@@ -143,7 +145,9 @@ export default function LoginPage() {
                 onClick={async () => {
                   try {
                     const result = await signInWithEmailAndPassword(auth, email, password);
-                    await sendEmailVerification(result.user);
+                    await sendEmailVerification(result.user, {
+                      url: `${window.location.origin}/auth/login`,
+                    });
                     await auth.signOut();
                   } catch { /* ignore */ }
                 }}

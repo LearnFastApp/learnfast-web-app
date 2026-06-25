@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminDb } from "@/lib/firebase-admin";
+import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
 import { articlesByDimension } from "@/lib/articles";
 import { rateLimit, getIp } from "@/lib/rate-limit";
+import { getSeenResources, recordSeenResources, filterUnseen } from "@/lib/resource-history";
 
 export const dynamic = "force-dynamic";
 
@@ -43,7 +44,11 @@ async function getCachedResources(dimension: string) {
   const data = doc.data()!;
   const updatedAt: number = data.updatedAt?.toMillis?.() ?? 0;
   if (Date.now() - updatedAt > CACHE_TTL_MS) return null;
-  return { videos: data.videos, tedTalks: data.tedTalks, articles: data.articles };
+  return {
+    videos: data.videos as VideoResult[],
+    tedTalks: data.tedTalks as VideoResult[],
+    articles: data.articles as ArticleResult[],
+  };
 }
 
 async function setCachedResources(
@@ -99,7 +104,6 @@ async function getHealthyArticles(dimension: string): Promise<ArticleResult[]> {
     const brokenUrls = new Set(snap.docs.map((d) => d.data().url as string));
     return all.filter((a) => !brokenUrls.has(a.url));
   } catch {
-    // If health check unavailable, serve all articles rather than none
     return all;
   }
 }
@@ -111,35 +115,65 @@ export async function GET(req: NextRequest) {
   }
 
   const dimension = req.nextUrl.searchParams.get("dimension");
-
   if (!dimension || !VIDEO_QUERIES[dimension]) {
     return NextResponse.json({ error: "Invalid dimension" }, { status: 400 });
   }
 
-  const cached = await getCachedResources(dimension);
-  if (cached) return NextResponse.json(cached);
+  // Optional auth — personalise if authenticated, serve full pool if not
+  const uid = await verifyAuthToken(req);
 
-  const apiKey = process.env.YOUTUBE_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: "YouTube API not configured" }, { status: 500 });
+  // Fetch full pool (from Firestore cache or YouTube API)
+  let pool = await getCachedResources(dimension);
+  if (!pool) {
+    const apiKey = process.env.YOUTUBE_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json({ error: "YouTube API not configured" }, { status: 500 });
+    }
+    const [videoRes, tedRes, articles] = await Promise.all([
+      fetch(buildYouTubeUrl(VIDEO_QUERIES[dimension], 6, apiKey)),
+      fetch(buildYouTubeUrl(TED_QUERIES[dimension], 6, apiKey)),
+      getHealthyArticles(dimension),
+    ]);
+    if (!videoRes.ok || !tedRes.ok) {
+      return NextResponse.json({ error: "YouTube API error" }, { status: 502 });
+    }
+    const [videoJson, tedJson] = await Promise.all([videoRes.json(), tedRes.json()]);
+    pool = { videos: parseVideos(videoJson), tedTalks: parseVideos(tedJson), articles };
+    await setCachedResources(dimension, pool);
   }
 
-  const [videoRes, tedRes, articles] = await Promise.all([
-    fetch(buildYouTubeUrl(VIDEO_QUERIES[dimension], 3, apiKey)),
-    fetch(buildYouTubeUrl(TED_QUERIES[dimension], 3, apiKey)),
-    getHealthyArticles(dimension),
-  ]);
-
-  if (!videoRes.ok || !tedRes.ok) {
-    return NextResponse.json({ error: "YouTube API error" }, { status: 502 });
+  if (!uid) {
+    // Unauthenticated — serve full pool, no history tracking
+    return NextResponse.json(pool);
   }
 
-  const [videoJson, tedJson] = await Promise.all([videoRes.json(), tedRes.json()]);
+  // Filter seen resources for this user
+  const seen = await getSeenResources(uid, dimension);
 
-  const videos = parseVideos(videoJson);
-  const tedTalks = parseVideos(tedJson);
+  const { items: videos, didReset: videosReset } = filterUnseen(
+    pool.videos, (v) => v.videoId, seen.videos
+  );
+  const { items: tedTalks, didReset: tedReset } = filterUnseen(
+    pool.tedTalks, (v) => v.videoId, seen.ted
+  );
+  const { items: articles, didReset: articlesReset } = filterUnseen(
+    pool.articles, (a) => a.url, seen.articles
+  );
 
-  await setCachedResources(dimension, { videos, tedTalks, articles });
+  const response = { videos, tedTalks, articles };
 
-  return NextResponse.json({ videos, tedTalks, articles });
+  // Record served resources in the background — don't block the response
+  recordSeenResources(
+    uid,
+    dimension,
+    {
+      articles: articles.map((a) => a.url),
+      videos: videos.map((v) => v.videoId),
+      ted: tedTalks.map((v) => v.videoId),
+      podcasts: [],
+    },
+    { articles: articlesReset, videos: videosReset, ted: tedReset, podcasts: false }
+  ).catch((err) => console.error("[resource-history]", err));
+
+  return NextResponse.json(response);
 }
