@@ -35,9 +35,18 @@ function buildReengagementHtml(): string {
       <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
 
         <!-- Logo -->
-        <tr><td style="padding-bottom:28px;">
-          <p style="color:#ffffff;font-size:18px;font-weight:700;margin:0;letter-spacing:-0.02em;">LearnFast</p>
-          <p style="color:#334155;font-size:11px;margin:3px 0 0;text-transform:uppercase;letter-spacing:0.08em;">Feedback Intelligence</p>
+        <tr><td style="padding-bottom:32px;">
+          <table cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="vertical-align:middle;padding-right:14px;">
+                <img src="https://learnfastapp.com/icon-mark.png" alt="LearnFast" width="52" height="38" style="display:block;border:0;" />
+              </td>
+              <td style="vertical-align:middle;">
+                <p style="margin:0;font-size:20px;font-weight:700;letter-spacing:0.04em;color:#5bb8f5;">LEARN<span style="font-weight:300;">FAST</span><sup style="font-size:10px;font-weight:400;vertical-align:super;">™</sup></p>
+                <p style="margin:2px 0 0;font-size:11px;color:#475569;letter-spacing:0.04em;">Feedback Intelligence</p>
+              </td>
+            </tr>
+          </table>
         </td></tr>
 
         <!-- Card -->
