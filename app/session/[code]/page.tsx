@@ -8,7 +8,9 @@ import { db } from "@/lib/firebase";
 const DIMENSIONS = ["clarity", "engagement", "energy", "understanding", "connection"] as const;
 type Dimension = (typeof DIMENSIONS)[number];
 
-const LABELS: Record<Dimension, string> = {
+// ── English strings ──────────────────────────────────────────────────────────
+
+const LABELS_EN: Record<Dimension, string> = {
   clarity: "Presenter's Clarity",
   engagement: "Presenter's Audience Engagement",
   energy: "Presenter's Energy",
@@ -16,7 +18,7 @@ const LABELS: Record<Dimension, string> = {
   connection: "Presenter's Audience Connection",
 };
 
-const NARRATIVES: Record<Dimension, { max: number; text: string }[]> = {
+const NARRATIVES_EN: Record<Dimension, { max: number; text: string }[]> = {
   clarity: [
     { max: 40, text: "The message was pretty unclear, difficult to follow, or confusing." },
     { max: 60, text: "Some points were clear, but there were inconsistencies or gaps in understanding." },
@@ -49,10 +51,60 @@ const NARRATIVES: Record<Dimension, { max: number; text: string }[]> = {
   ],
 };
 
-const BAND_LABELS: Record<string, { label: string; color: string }> = {
+const BAND_LABELS_EN: Record<string, { label: string; color: string }> = {
   poor:      { label: "Poor",      color: "text-red-400" },
   okay:      { label: "Okay",      color: "text-amber-400" },
   good:      { label: "Good",      color: "text-blue-400" },
+  excellent: { label: "Excellent", color: "text-green-400" },
+};
+
+// ── French strings ───────────────────────────────────────────────────────────
+
+const LABELS_FR: Record<Dimension, string> = {
+  clarity: "Clarté du présentateur",
+  engagement: "Engagement de l'audience",
+  energy: "Énergie du présentateur",
+  understanding: "Compréhension du présentateur",
+  connection: "Connexion avec l'audience",
+};
+
+const NARRATIVES_FR: Record<Dimension, { max: number; text: string }[]> = {
+  clarity: [
+    { max: 40, text: "Le message était assez peu clair, difficile à suivre ou confus." },
+    { max: 60, text: "Certains points étaient clairs, mais il y avait des incohérences ou des lacunes." },
+    { max: 80, text: "Le message était clair et bien structuré, avec seulement quelques améliorations possibles." },
+    { max: 100, text: "L'information a été communiquée de façon exceptionnelle, avec une clarté totale." },
+  ],
+  understanding: [
+    { max: 40, text: "Compréhension limitée, avec des explications confuses." },
+    { max: 60, text: "Compréhension basique, mais certains points restent flous." },
+    { max: 80, text: "Bonne compréhension, avec des explications claires et précises tout au long." },
+    { max: 100, text: "Compréhension approfondie et complète, avec des explications perspicaces." },
+  ],
+  energy: [
+    { max: 40, text: "Franchement, manquait d'énergie, semblait désengagé et n'a pas réussi à capter l'attention." },
+    { max: 60, text: "Correct, mais j'aurais eu besoin de plus pour me convaincre." },
+    { max: 80, text: "Engageant et énergique, maintenant l'intérêt la plupart du temps." },
+    { max: 100, text: "Excellent ! J'étais totalement captivé et enthousiaste !" },
+  ],
+  connection: [
+    { max: 40, text: "Je ne me suis pas du tout senti connecté à ce qui était dit, sans que rien ne soit fait pour y remédier." },
+    { max: 60, text: "Quelques tentatives de connexion, mais limitées ou irrégulières." },
+    { max: 80, text: "Bonne connexion établie, avec un engagement efficace du public la plupart du temps." },
+    { max: 100, text: "Connexion exceptionnelle, j'étais totalement avec le présentateur." },
+  ],
+  engagement: [
+    { max: 40, text: "Honnêtement, je me suis senti assez désengagé, il y avait peu d'interaction ou de stimulation." },
+    { max: 60, text: "Un peu d'engagement, mais sporadique ou sans grande profondeur." },
+    { max: 80, text: "Le public était régulièrement engagé, avec une interaction et un intérêt efficaces." },
+    { max: 100, text: "Très engageant, je me suis vraiment senti impliqué ! Super interaction." },
+  ],
+};
+
+const BAND_LABELS_FR: Record<string, { label: string; color: string }> = {
+  poor:      { label: "Faible",    color: "text-red-400" },
+  okay:      { label: "Moyen",     color: "text-amber-400" },
+  good:      { label: "Bien",      color: "text-blue-400" },
   excellent: { label: "Excellent", color: "text-green-400" },
 };
 
@@ -63,13 +115,26 @@ function getBand(score: number) {
   return "excellent";
 }
 
-function getNarrative(dim: Dimension, score: number): string {
-  const bands = NARRATIVES[dim];
-  return bands.find((b) => score <= b.max)?.text ?? bands[bands.length - 1].text;
+function getNarrative(dim: Dimension, score: number, narratives: typeof NARRATIVES_EN): string {
+  const bands = narratives[dim];
+  return bands.find((b: { max: number; text: string }) => score <= b.max)?.text ?? bands[bands.length - 1].text;
+}
+
+function useFrench() {
+  const [isFr, setIsFr] = useState(false);
+  useEffect(() => {
+    setIsFr(navigator.language?.toLowerCase().startsWith("fr"));
+  }, []);
+  return isFr;
 }
 
 export default function FeedbackPage() {
   const { code } = useParams<{ code: string }>();
+  const isFr = useFrench();
+  const LABELS = isFr ? LABELS_FR : LABELS_EN;
+  const NARRATIVES = isFr ? NARRATIVES_FR : NARRATIVES_EN;
+  const BAND_LABELS = isFr ? BAND_LABELS_FR : BAND_LABELS_EN;
+
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionTitle, setSessionTitle] = useState("");
   const [notFound, setNotFound] = useState(false);
@@ -123,9 +188,9 @@ export default function FeedbackPage() {
       <main className="min-h-screen bg-[#05070d] flex items-center justify-center p-6">
         <div className="text-center">
           <p className="text-4xl mb-4">🔍</p>
-          <h1 className="text-xl font-bold text-white mb-2">Session not found</h1>
-          <p className="text-slate-400">Check the code and try again.</p>
-          <a href="/join" className="mt-6 inline-block text-violet-400 underline">Enter a different code</a>
+          <h1 className="text-xl font-bold text-white mb-2">{isFr ? "Session introuvable" : "Session not found"}</h1>
+          <p className="text-slate-400">{isFr ? "Vérifiez le code et réessayez." : "Check the code and try again."}</p>
+          <a href="/join" className="mt-6 inline-block text-violet-400 underline">{isFr ? "Saisir un autre code" : "Enter a different code"}</a>
         </div>
       </main>
     );
@@ -136,13 +201,13 @@ export default function FeedbackPage() {
       <main className="min-h-screen bg-[#05070d] flex items-center justify-center p-6">
         <div className="text-center max-w-sm">
           <p className="text-4xl mb-4">🎤</p>
-          <h1 className="text-xl font-bold text-white mb-2">This session has ended</h1>
-          <p className="text-slate-400 mb-6">The presenter has closed feedback for this session. Thanks for attending!</p>
+          <h1 className="text-xl font-bold text-white mb-2">{isFr ? "Cette session est terminée" : "This session has ended"}</h1>
+          <p className="text-slate-400 mb-6">{isFr ? "Le présentateur a clôturé les retours pour cette session. Merci d'avoir participé !" : "The presenter has closed feedback for this session. Thanks for attending!"}</p>
           <a
             href="https://app.learnfastapp.com"
             className="inline-block rounded-xl bg-violet-500 px-6 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition"
           >
-            Try LearnFast yourself →
+            {isFr ? "Essayer LearnFast vous-même →" : "Try LearnFast yourself →"}
           </a>
         </div>
       </main>
@@ -162,19 +227,25 @@ export default function FeedbackPage() {
       <main className="min-h-screen bg-[#05070d] flex items-center justify-center p-6">
         <div className="text-center max-w-sm">
           <div className="mb-4 text-5xl">✅</div>
-          <h1 className="mb-2 text-2xl font-bold text-white">Thanks for your feedback!</h1>
-          <p className="text-slate-400 mb-8">Your scores have been recorded and will help the presenter understand exactly where to improve.</p>
+          <h1 className="mb-2 text-2xl font-bold text-white">{isFr ? "Merci pour vos retours !" : "Thanks for your feedback!"}</h1>
+          <p className="text-slate-400 mb-8">
+            {isFr
+              ? "Vos scores ont été enregistrés et aideront le présentateur à comprendre exactement où progresser."
+              : "Your scores have been recorded and will help the presenter understand exactly where to improve."}
+          </p>
 
           <div className="rounded-2xl border border-violet-500/30 bg-violet-500/5 p-6">
-            <p className="text-sm font-semibold text-white mb-1">Do you present too?</p>
+            <p className="text-sm font-semibold text-white mb-1">{isFr ? "Vous présentez aussi ?" : "Do you present too?"}</p>
             <p className="text-sm text-slate-400 mb-4 leading-relaxed">
-              LearnFast helps presenters collect real-time audience feedback and get matched learning resources — so every session makes you better.
+              {isFr
+                ? "LearnFast aide les présentateurs à recueillir des retours d'audience en temps réel et à accéder à des ressources pédagogiques ciblées — pour progresser à chaque session."
+                : "LearnFast helps presenters collect real-time audience feedback and get matched learning resources — so every session makes you better."}
             </p>
             <a
               href="https://app.learnfastapp.com"
               className="inline-block rounded-xl bg-violet-500 px-6 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition"
             >
-              Try it for free →
+              {isFr ? "Essayer gratuitement →" : "Try it for free →"}
             </a>
           </div>
         </div>
@@ -189,8 +260,8 @@ export default function FeedbackPage() {
           <div className="mb-3 flex justify-center">
             <img src="/logo.png" alt="LearnFast" className="h-8 w-auto" />
           </div>
-          <h1 className="text-xl font-bold text-white">{sessionTitle || "Live Session"}</h1>
-          <p className="text-sm text-slate-400">Rate this session — takes 30 seconds.</p>
+          <h1 className="text-xl font-bold text-white">{sessionTitle || (isFr ? "Session en direct" : "Live Session")}</h1>
+          <p className="text-sm text-slate-400">{isFr ? "Évaluez cette session — 30 secondes suffisent." : "Rate this session — takes 30 seconds."}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -199,7 +270,7 @@ export default function FeedbackPage() {
               const score = scores[dim];
               const band = getBand(score);
               const { label, color } = BAND_LABELS[band];
-              const narrative = getNarrative(dim, score);
+              const narrative = getNarrative(dim, score, NARRATIVES);
 
               return (
                 <div key={dim}>
@@ -233,14 +304,14 @@ export default function FeedbackPage() {
           <div className="rounded-2xl border border-white/10 bg-[#111827] p-6 space-y-4">
             <div>
               <label className="block text-sm font-semibold text-white mb-1">
-                Leave a comment <span className="text-slate-500 font-normal">(optional)</span>
+                {isFr ? "Laisser un commentaire" : "Leave a comment"} <span className="text-slate-500 font-normal">{isFr ? "(facultatif)" : "(optional)"}</span>
               </label>
-              <p className="text-xs text-slate-500 mb-3">Share anything specific that stood out — positive or constructive.</p>
+              <p className="text-xs text-slate-500 mb-3">{isFr ? "Partagez ce qui vous a marqué — positif ou constructif." : "Share anything specific that stood out — positive or constructive."}</p>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 rows={3}
-                placeholder="e.g. The opening story really set the tone well…"
+                placeholder={isFr ? "Ex. : L'histoire d'ouverture a vraiment donné le ton…" : "e.g. The opening story really set the tone well…"}
                 className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-sm text-white placeholder-slate-600 outline-none focus:border-violet-500 resize-none"
               />
             </div>
@@ -259,13 +330,15 @@ export default function FeedbackPage() {
                   <span className={`flex h-5 w-5 items-center justify-center rounded-full border-2 shrink-0 transition ${anonymous ? "border-violet-400 bg-violet-400" : "border-slate-600"}`}>
                     {anonymous && <span className="block h-2 w-2 rounded-full bg-white" />}
                   </span>
-                  {anonymous ? "Commenting anonymously" : "Show my name with this comment"}
+                  {isFr
+                    ? (anonymous ? "Commentaire anonyme" : "Afficher mon nom avec ce commentaire")
+                    : (anonymous ? "Commenting anonymously" : "Show my name with this comment")}
                 </button>
 
                 {!anonymous && (
                   <input
                     type="text"
-                    placeholder="Your name (optional)"
+                    placeholder={isFr ? "Votre prénom (facultatif)" : "Your name (optional)"}
                     value={commenterName}
                     onChange={(e) => setCommenterName(e.target.value)}
                     className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-sm text-white placeholder-slate-600 outline-none focus:border-violet-500"
@@ -280,7 +353,7 @@ export default function FeedbackPage() {
             disabled={submitting}
             className="w-full rounded-xl bg-violet-500 px-4 py-4 font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-400 disabled:opacity-50"
           >
-            {submitting ? "Submitting…" : "Submit feedback"}
+            {submitting ? (isFr ? "Envoi en cours…" : "Submitting…") : (isFr ? "Envoyer mes retours" : "Submit feedback")}
           </button>
         </form>
       </div>

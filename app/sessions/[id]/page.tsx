@@ -39,7 +39,7 @@ interface PresenterReflection {
   connection: number;
 }
 
-const DIMENSION_LABELS: Record<Dimension, string> = {
+const DIMENSION_LABELS_EN: Record<Dimension, string> = {
   clarity: "Clarity",
   engagement: "Engagement",
   energy: "Energy",
@@ -47,7 +47,15 @@ const DIMENSION_LABELS: Record<Dimension, string> = {
   connection: "Connection",
 };
 
-const RECOMMENDATIONS: Record<Dimension, { title: string; description: string }> = {
+const DIMENSION_LABELS_FR: Record<Dimension, string> = {
+  clarity: "Clarté",
+  engagement: "Engagement",
+  energy: "Énergie",
+  understanding: "Compréhension",
+  connection: "Connexion",
+};
+
+const RECOMMENDATIONS_EN: Record<Dimension, { title: string; description: string }> = {
   clarity: {
     title: "Improving Clarity",
     description: "Your audience found it harder to follow your message. These resources will help you structure ideas and communicate with precision.",
@@ -67,6 +75,29 @@ const RECOMMENDATIONS: Record<Dimension, { title: string; description: string }>
   connection: {
     title: "Improving Connection",
     description: "Building rapport with your audience is key. These resources will help you create stronger human connection when presenting.",
+  },
+};
+
+const RECOMMENDATIONS_FR: Record<Dimension, { title: string; description: string }> = {
+  clarity: {
+    title: "Améliorer votre clarté",
+    description: "Votre audience a eu du mal à suivre votre message. Ces ressources vous aideront à structurer vos idées et à communiquer avec précision.",
+  },
+  engagement: {
+    title: "Améliorer l'engagement",
+    description: "Votre audience s'est sentie moins captivée lors de cette session. Explorez ces ressources sur les techniques d'engagement du public.",
+  },
+  energy: {
+    title: "Améliorer votre énergie",
+    description: "Votre niveau d'énergie aurait pu être plus élevé. Ces ressources couvrent la présence, la variété vocale et les techniques de délivrance.",
+  },
+  understanding: {
+    title: "Améliorer la compréhension",
+    description: "Une partie de votre message n'a pas été aussi claire que prévu. Ces ressources se concentrent sur l'explication et le transfert de connaissances.",
+  },
+  connection: {
+    title: "Améliorer la connexion",
+    description: "Créer un lien avec votre audience est essentiel. Ces ressources vous aideront à établir une connexion humaine plus forte lors de vos présentations.",
   },
 };
 
@@ -124,6 +155,9 @@ export default function LiveSessionPage() {
   const [commitmentSaving, setCommitmentSaving] = useState(false);
   const [commitmentSaved, setCommitmentSaved] = useState(false);
   const [prevAverages, setPrevAverages] = useState<Record<Dimension, number> | null>(null);
+
+  const DIMENSION_LABELS = locale === "fr" ? DIMENSION_LABELS_FR : DIMENSION_LABELS_EN;
+  const RECOMMENDATIONS = locale === "fr" ? RECOMMENDATIONS_FR : RECOMMENDATIONS_EN;
 
   useEffect(() => {
     if (authLoading) return;

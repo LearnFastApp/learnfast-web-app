@@ -11,12 +11,20 @@ import { db } from "@/lib/firebase";
 const DIMENSIONS = ["clarity", "engagement", "energy", "understanding", "connection"] as const;
 type Dimension = (typeof DIMENSIONS)[number];
 
-const DIMENSION_LABELS: Record<Dimension, string> = {
+const DIMENSION_LABELS_EN: Record<Dimension, string> = {
   clarity: "Clarity",
   engagement: "Engagement",
   energy: "Energy",
   understanding: "Understanding",
   connection: "Connection",
+};
+
+const DIMENSION_LABELS_FR: Record<Dimension, string> = {
+  clarity: "Clarté",
+  engagement: "Engagement",
+  energy: "Énergie",
+  understanding: "Compréhension",
+  connection: "Connexion",
 };
 
 const DIM_COLORS: Record<Dimension, string> = {
@@ -27,12 +35,20 @@ const DIM_COLORS: Record<Dimension, string> = {
   connection: "#f472b6",
 };
 
-const DESCRIPTIONS: Record<Dimension, string> = {
+const DESCRIPTIONS_EN: Record<Dimension, string> = {
   clarity: "Your audience found it harder to follow your message. These resources will help you structure ideas and communicate with precision.",
   engagement: "Your audience felt less captivated during this session. Explore these resources on audience engagement techniques.",
   energy: "Your energy levels could have been higher. These resources cover presence, vocal variety, and delivery techniques.",
   understanding: "Some of your message didn't land as clearly as intended. These resources focus on explanation and knowledge transfer.",
   connection: "Building rapport with your audience is key. These resources will help you create stronger human connection when presenting.",
+};
+
+const DESCRIPTIONS_FR: Record<Dimension, string> = {
+  clarity: "Votre audience a eu du mal à suivre votre message. Ces ressources vous aideront à structurer vos idées et à communiquer avec précision.",
+  engagement: "Votre audience s'est sentie moins captivée lors de cette session. Explorez ces ressources sur les techniques d'engagement du public.",
+  energy: "Votre niveau d'énergie aurait pu être plus élevé. Ces ressources couvrent la présence, la variété vocale et les techniques de délivrance.",
+  understanding: "Une partie de votre message n'a pas atterri aussi clairement que prévu. Ces ressources se concentrent sur l'explication et le transfert de connaissances.",
+  connection: "Créer un lien avec votre audience est essentiel. Ces ressources vous aideront à établir une connexion humaine plus forte lors de vos présentations.",
 };
 
 interface Video { videoId: string; title: string; channelTitle: string; thumbnail: string; }
@@ -134,12 +150,16 @@ function ResourceSection({
   resources,
   loading,
   label,
+  dimLabels,
+  descriptions,
 }: {
   dimension: Dimension;
   score: number;
   resources: DimResources | null;
   loading: boolean;
-  label: "Recommended focus" | "Also worth working on";
+  label: string;
+  dimLabels: Record<Dimension, string>;
+  descriptions: Record<Dimension, string>;
 }) {
   const color = DIM_COLORS[dimension];
 
@@ -151,12 +171,12 @@ function ResourceSection({
           {label}
         </p>
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-bold text-white">{DIMENSION_LABELS[dimension]}</h2>
+          <h2 className="text-xl font-bold text-white">{dimLabels[dimension]}</h2>
           <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ backgroundColor: `${color}22`, color }}>
             {score}/100
           </span>
         </div>
-        <p className="mt-1.5 text-sm text-slate-400">{DESCRIPTIONS[dimension]}</p>
+        <p className="mt-1.5 text-sm text-slate-400">{descriptions[dimension]}</p>
       </div>
 
       <div className="p-6">
@@ -249,6 +269,9 @@ export default function ResourcesPage() {
   const [secondaryLoading, setSecondaryLoading] = useState(true);
   const [pageLoading, setPageLoading] = useState(true);
   const [locale, setLocale] = useState<"en" | "fr">("en");
+
+  const DIMENSION_LABELS = locale === "fr" ? DIMENSION_LABELS_FR : DIMENSION_LABELS_EN;
+  const DESCRIPTIONS = locale === "fr" ? DESCRIPTIONS_FR : DESCRIPTIONS_EN;
 
   // Load session + responses
   useEffect(() => {
@@ -364,7 +387,9 @@ export default function ResourcesPage() {
           score={audienceAverages[primary]}
           resources={primaryResources}
           loading={primaryLoading}
-          label="Recommended focus"
+          label={locale === "fr" ? "Axe prioritaire" : "Recommended focus"}
+          dimLabels={DIMENSION_LABELS}
+          descriptions={DESCRIPTIONS}
         />
 
         {secondary && (
@@ -373,7 +398,9 @@ export default function ResourcesPage() {
             score={audienceAverages[secondary]}
             resources={secondaryResources}
             loading={secondaryLoading}
-            label="Also worth working on"
+            label={locale === "fr" ? "À améliorer aussi" : "Also worth working on"}
+            dimLabels={DIMENSION_LABELS}
+            descriptions={DESCRIPTIONS}
           />
         )}
       </div>
