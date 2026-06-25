@@ -56,18 +56,22 @@ function trend(data: SessionData[], dim: Dimension): number {
 function ChartTooltip(props: Record<string, unknown>) {
   const { active, payload, label } = props as {
     active: boolean;
-    payload: { name: string; value: number; color: string }[];
+    payload: { name: string; value: number; color: string; payload: { name: string } }[];
     label: string;
   };
   if (!active || !payload?.length) return null;
+  const sessionTitle = payload[0]?.payload?.name;
   return (
-    <div className="rounded-xl border border-white/15 bg-[#1a2135] px-4 py-3 shadow-xl">
-      <p className="text-xs text-slate-400 mb-2">{label}</p>
+    <div className="rounded-xl border border-white/15 bg-[#1a2135] px-4 py-3 shadow-xl min-w-[180px]">
+      {sessionTitle && (
+        <p className="text-xs font-semibold text-white mb-0.5 truncate max-w-[200px]">{sessionTitle}</p>
+      )}
+      <p className="text-[11px] text-slate-500 mb-2">{label}</p>
       {payload.map((entry) => (
-        <div key={entry.name} className="flex items-center gap-2 text-xs">
+        <div key={entry.name} className="flex items-center gap-2 text-xs py-0.5">
           <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
           <span className="text-slate-300 capitalize">{entry.name}:</span>
-          <span className="text-white font-bold">{entry.value}</span>
+          <span className="text-white font-bold ml-auto pl-3">{entry.value}</span>
         </div>
       ))}
     </div>
@@ -397,11 +401,12 @@ export default function AnalyticsPage() {
                   {DIMENSIONS.filter((dim) => activeDims.has(dim)).map((dim) => (
                     <Line
                       key={dim}
-                      type="monotone"
+                      type="linear"
                       dataKey={dim}
                       stroke={DIM_COLORS[dim]}
                       strokeWidth={2}
-                      dot={{ fill: DIM_COLORS[dim], r: 4 }}
+                      dot={{ fill: DIM_COLORS[dim], r: 4, strokeWidth: 0 }}
+                      activeDot={{ r: 7, fill: DIM_COLORS[dim], stroke: "#111827", strokeWidth: 2 }}
                       name={dim.charAt(0).toUpperCase() + dim.slice(1)}
                     />
                   ))}
