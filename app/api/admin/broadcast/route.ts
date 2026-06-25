@@ -21,7 +21,7 @@ function getTransporter() {
   });
 }
 
-function buildReengagementHtml(email: string): string {
+function buildReengagementHtml(): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -43,13 +43,15 @@ function buildReengagementHtml(email: string): string {
         <!-- Card -->
         <tr><td style="background:#111827;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:32px;">
 
-          <p style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 12px;">We're back</p>
           <h1 style="color:#ffffff;font-size:22px;font-weight:700;margin:0 0 20px;line-height:1.3;">
-            LearnFast has been completely rebuilt — and it's better than ever.
+            Your presentations deserve honest feedback.
           </h1>
 
-          <p style="color:#94a3b8;font-size:14px;line-height:1.75;margin:0 0 20px;">
-            You used LearnFast before. We've rebuilt it from the ground up as a fully web-based platform — no app download needed, for you or your audience.
+          <p style="color:#94a3b8;font-size:14px;line-height:1.75;margin:0 0 16px;">
+            You used LearnFast before — back when it was an iOS app.
+          </p>
+          <p style="color:#94a3b8;font-size:14px;line-height:1.75;margin:0 0 24px;">
+            We've rebuilt it completely. It's now a web platform, which means no app download for you or your audience. Just a QR code, a browser, and honest feedback waiting for you on the other side.
           </p>
 
           <!-- What's new -->
@@ -57,10 +59,10 @@ function buildReengagementHtml(email: string): string {
             <p style="color:#a78bfa;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 14px;">What's new</p>
             <table cellpadding="0" cellspacing="0" width="100%">
               ${[
-                ["Analytics dashboard", "Track your scores across every session and watch yourself improve over time."],
-                ["Personalised resources", "After every session, get articles, videos and podcasts matched to your weakest area."],
-                ["Reflective practice", "Compare your own self-assessment to what your audience actually thought."],
-                ["QR code feedback", "Audience scans a QR code — no app, no account, no friction."],
+                ["Anonymous audience feedback in real time.", "Your audience scans a QR code and rates you on clarity, energy, engagement, understanding and connection. Anonymously — which means they tell you the truth."],
+                ["A personalised development plan after every session.", "Based on your weakest score, LearnFast recommends specific articles, videos and podcasts matched to your gap, not generic presentation advice."],
+                ["Progress tracking over time.", "Watch your scores improve session by session. The analytics dashboard shows you exactly where you've grown — and where there's still work to do."],
+                ["Your audience does nothing.", "No app. No account. No friction. They scan, they rate, they're done in 60 seconds."],
               ].map(([title, desc]) => `
               <tr>
                 <td style="padding:8px 0;vertical-align:top;width:16px;">
@@ -75,7 +77,7 @@ function buildReengagementHtml(email: string): string {
           </div>
 
           <p style="color:#94a3b8;font-size:14px;line-height:1.75;margin:0 0 28px;">
-            Your first 2 sessions are completely free. No credit card required.
+            Your first 2 sessions are completely free — no credit card needed.
           </p>
 
           <!-- CTA -->
@@ -163,7 +165,7 @@ export async function POST(req: NextRequest) {
         from,
         to: email,
         subject: "LearnFast is back — and better than ever",
-        html: buildReengagementHtml(email),
+        html: buildReengagementHtml(),
       });
       await d.ref.update({ reengagementEmailSent: true });
       results.sent++;
@@ -186,7 +188,7 @@ export async function POST(req: NextRequest) {
         from,
         to: email,
         subject: "LearnFast is back — and better than ever",
-        html: buildReengagementHtml(email),
+        html: buildReengagementHtml(),
       });
       await d.ref.update({ reengagementEmailSent: true });
       results.sent++;
