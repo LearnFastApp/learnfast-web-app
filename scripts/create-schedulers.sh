@@ -42,6 +42,21 @@ gcloud scheduler jobs create http check-resources \
   2>&1 || echo "  (already exists — skipping)"
 
 echo ""
+echo "Creating: activation-nudge (daily at 10:00 UTC)"
+gcloud scheduler jobs create http activation-nudge \
+  --project="$PROJECT" \
+  --location="$REGION" \
+  --schedule="0 10 * * *" \
+  --uri="$APP_URL/api/cron/activation-nudge" \
+  --http-method=POST \
+  --headers="Authorization=Bearer $CRON_SECRET,Content-Type=application/json" \
+  --message-body='{}' \
+  --time-zone="UTC" \
+  --attempt-deadline="5m" \
+  --description="Send activation nudge email to users who signed up 48h ago with no sessions" \
+  2>&1 || echo "  (already exists — skipping)"
+
+echo ""
 echo "Done. Current jobs:"
 gcloud scheduler jobs list --project="$PROJECT" --location="$REGION" \
   --format="table(name.basename(),schedule,state,lastAttemptTime)"
