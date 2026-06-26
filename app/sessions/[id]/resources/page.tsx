@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { doc, getDoc, getDocs, collection, query, where } from "firebase/firestore";
 import Image from "next/image";
-import { ExternalLink, Play, Mic, BookOpen } from "lucide-react";
+import { ExternalLink, Play, Mic, BookOpen, CalendarDays } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 
@@ -54,7 +54,8 @@ const DESCRIPTIONS_FR: Record<Dimension, string> = {
 interface Video { videoId: string; title: string; channelTitle: string; thumbnail: string; }
 interface Article { title: string; url: string; source: string; }
 interface Podcast { title: string; author: string; description: string; image: string; link: string; }
-interface DimResources { videos: Video[]; tedTalks: Video[]; articles: Article[]; podcasts: Podcast[]; }
+interface Webinar { id: string; title: string; url: string; source: string; date: string; isCurated: boolean; }
+interface DimResources { videos: Video[]; tedTalks: Video[]; articles: Article[]; podcasts: Podcast[]; webinars: Webinar[]; }
 
 function average(values: number[]): number {
   if (!values.length) return 0;
@@ -140,6 +141,29 @@ function PodcastCard({ podcast }: { podcast: Podcast }) {
           <p className="text-[11px] text-slate-600 mt-0.5 line-clamp-2">{podcast.description}</p>
         )}
       </div>
+    </a>
+  );
+}
+
+function WebinarCard({ webinar }: { webinar: Webinar }) {
+  const date = new Date(webinar.date);
+  const dateLabel = date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  return (
+    <a
+      href={webinar.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-3 hover:bg-white/10 transition group"
+    >
+      <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-slate-500 group-hover:text-white transition" />
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-semibold text-white leading-snug line-clamp-2">{webinar.title}</p>
+        <p className="mt-1 text-[11px] text-slate-500">
+          {webinar.isCurated ? <span className="text-violet-400">{webinar.source}</span> : webinar.source}
+          {" · "}{dateLabel}
+        </p>
+      </div>
+      <ExternalLink className="mt-0.5 h-3 w-3 shrink-0 text-slate-600 group-hover:text-slate-400 transition" />
     </a>
   );
 }
@@ -249,6 +273,23 @@ function ResourceSection({
                 </div>
               </div>
             )}
+
+            {/* Live Events */}
+            {resources.webinars.length > 0 && (
+              <div className="sm:col-span-2">
+                <div className="flex items-center gap-2 mb-3">
+                  <CalendarDays className="h-4 w-4 text-violet-400" />
+                  <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+                    {isFr ? "Événements en direct" : "Live Events"}
+                  </h3>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {resources.webinars.map((w) => (
+                    <WebinarCard key={w.id} webinar={w} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <p className="text-sm text-slate-500">{isFr ? "Ressources indisponibles pour l'instant." : "Resources unavailable right now."}</p>
@@ -320,12 +361,13 @@ export default function ResourcesPage() {
     user.getIdToken().then((token) => {
       const headers = { Authorization: `Bearer ${token}` };
 
-      // Primary dimension: videos + articles + podcasts
+      // Primary dimension: videos + articles + podcasts + webinars
       Promise.all([
         fetch(`/api/resources?dimension=${primary}${localeParam}`, { headers }).then((r) => r.json()),
         fetch(`/api/resources/podcasts?dimension=${primary}`, { headers }).then((r) => r.json()),
-      ]).then(([res, pod]) => {
-        setPrimaryResources({ videos: res.videos ?? [], tedTalks: res.tedTalks ?? [], articles: res.articles ?? [], podcasts: pod.podcasts ?? [] });
+        fetch(`/api/webinars?dimension=${primary}`, { headers }).then((r) => r.json()),
+      ]).then(([res, pod, web]) => {
+        setPrimaryResources({ videos: res.videos ?? [], tedTalks: res.tedTalks ?? [], articles: res.articles ?? [], podcasts: pod.podcasts ?? [], webinars: web.webinars ?? [] });
         setPrimaryLoading(false);
       }).catch(() => setPrimaryLoading(false));
 
@@ -334,8 +376,9 @@ export default function ResourcesPage() {
       Promise.all([
         fetch(`/api/resources?dimension=${secondary}${localeParam}`, { headers }).then((r) => r.json()),
         fetch(`/api/resources/podcasts?dimension=${secondary}`, { headers }).then((r) => r.json()),
-      ]).then(([res, pod]) => {
-        setSecondaryResources({ videos: res.videos ?? [], tedTalks: res.tedTalks ?? [], articles: res.articles ?? [], podcasts: pod.podcasts ?? [] });
+        fetch(`/api/webinars?dimension=${secondary}`, { headers }).then((r) => r.json()),
+      ]).then(([res, pod, web]) => {
+        setSecondaryResources({ videos: res.videos ?? [], tedTalks: res.tedTalks ?? [], articles: res.articles ?? [], podcasts: pod.podcasts ?? [], webinars: web.webinars ?? [] });
         setSecondaryLoading(false);
       }).catch(() => setSecondaryLoading(false));
     });
