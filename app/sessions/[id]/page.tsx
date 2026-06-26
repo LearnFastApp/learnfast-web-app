@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { QRCodeCanvas } from "qrcode.react";
-import { ArrowLeft, Copy, Check, Users, PenLine, PlayCircle, TrendingUp, Lock, StopCircle } from "lucide-react";
+import { ArrowLeft, Copy, Check, Users, PenLine, PlayCircle, TrendingUp, Lock, StopCircle, CalendarDays } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import PresenterReflectionModal from "@/components/presenter-reflection-modal";
@@ -144,7 +144,9 @@ export default function LiveSessionPage() {
   } | null>(null);
   const [resourcesLoading, setResourcesLoading] = useState(false);
   const [secondaryArticle, setSecondaryArticle] = useState<{ title: string; url: string; source: string } | null>(null);
-  const [resourceTab, setResourceTab] = useState<"videos" | "ted" | "podcasts" | "articles">("videos");
+  const [resourceTab, setResourceTab] = useState<"videos" | "ted" | "podcasts" | "articles" | "events">("videos");
+  const [webinars, setWebinars] = useState<{ id: string; title: string; url: string; source: string; date: string; description: string; isCurated: boolean }[]>([]);
+  const [webinarsLoading, setWebinarsLoading] = useState(false);
   const [podcasts, setPodcasts] = useState<{ title: string; author: string; description: string; image: string; link: string }[]>([]);
   const [podcastsLoading, setPodcastsLoading] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<"free" | "active" | "pilot">("free");
@@ -208,7 +210,10 @@ export default function LiveSessionPage() {
     tabTed: "TED",
     tabPodcasts: "Podcasts",
     tabRead: "Lire",
+    tabEvents: "Live",
     findingPodcasts: "Recherche de podcasts…",
+    findingEvents: "Recherche d'événements…",
+    noEvents: "Aucun événement gratuit à venir pour cette dimension.",
     basedOnScore: (dim: string, score: number) => `Score audience le plus faible · ${dim} : ${score}/100`,
     unlockLearning: "Débloquer les ressources",
     unlockLearningDesc: "Vidéos, TED talks, podcasts & articles adaptés à vos résultats",
@@ -263,7 +268,10 @@ export default function LiveSessionPage() {
     tabTed: "TED",
     tabPodcasts: "Podcasts",
     tabRead: "Read",
+    tabEvents: "Live",
     findingPodcasts: "Finding podcasts…",
+    findingEvents: "Finding upcoming events…",
+    noEvents: "No upcoming free events found for this dimension.",
     basedOnScore: (dim: string, score: number) => `Based on lowest audience score · ${dim}: ${score}/100`,
     unlockLearning: "Unlock learning resources",
     unlockLearningDesc: "Videos, TED talks, podcasts & articles matched to your session results",
@@ -368,6 +376,12 @@ export default function LiveSessionPage() {
         .then((r) => r.json())
         .then((data) => { setPodcasts(data.podcasts ?? []); setPodcastsLoading(false); })
         .catch(() => setPodcastsLoading(false));
+
+      setWebinarsLoading(true);
+      fetch(`/api/webinars?dimension=${lowestDimension}`, { headers })
+        .then((r) => r.json())
+        .then((data) => { setWebinars(data.webinars ?? []); setWebinarsLoading(false); })
+        .catch(() => setWebinarsLoading(false));
     });
   }, [lowestDimension, user, locale]);
 
@@ -822,18 +836,18 @@ export default function LiveSessionPage() {
                 {!resourcesLoading && resources && (
                   <div className="relative">
                     <div className={!isPaid ? "blur-[2px] pointer-events-none select-none" : ""}>
-                      <div className="grid grid-cols-4 rounded-lg border border-white/10 bg-[#0f1424] p-0.5 mb-3">
-                        {(["videos", "ted", "podcasts", "articles"] as const).map((tab) => (
+                      <div className="grid grid-cols-5 rounded-lg border border-white/10 bg-[#0f1424] p-0.5 mb-3">
+                        {(["videos", "ted", "podcasts", "articles", "events"] as const).map((tab) => (
                           <button
                             key={tab}
                             onClick={() => setResourceTab(tab)}
-                            className={`rounded-md py-1.5 text-xs font-semibold transition ${
+                            className={`rounded-md py-1.5 text-[10px] font-semibold transition ${
                               resourceTab === tab
                                 ? "bg-violet-500 text-white"
                                 : "text-slate-400 hover:text-white"
                             }`}
                           >
-                            {tab === "videos" ? t.tabVideos : tab === "ted" ? t.tabTed : tab === "podcasts" ? t.tabPodcasts : t.tabRead}
+                            {tab === "videos" ? t.tabVideos : tab === "ted" ? t.tabTed : tab === "podcasts" ? t.tabPodcasts : tab === "articles" ? t.tabRead : t.tabEvents}
                           </button>
                         ))}
                       </div>
@@ -901,6 +915,36 @@ export default function LiveSessionPage() {
                             >
                               <p className="text-xs text-slate-200 leading-snug line-clamp-2">{article.title}</p>
                               <p className="text-xs text-slate-500">{article.source}</p>
+                            </a>
+                          ))}
+                        </div>
+                      )}
+
+                      {resourceTab === "events" && (
+                        <div className="space-y-2">
+                          {webinarsLoading && (
+                            <p className="text-xs text-slate-500 animate-pulse">{t.findingEvents}</p>
+                          )}
+                          {!webinarsLoading && webinars.length === 0 && (
+                            <p className="text-xs text-slate-500 text-center py-4">{t.noEvents}</p>
+                          )}
+                          {!webinarsLoading && webinars.map((w) => (
+                            <a
+                              key={w.id}
+                              href={w.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-start gap-3 rounded-xl border border-white/10 bg-[#1a2135] p-3 hover:border-violet-500/40 transition"
+                            >
+                              <CalendarDays className="h-4 w-4 text-violet-400 shrink-0 mt-0.5" />
+                              <div className="min-w-0">
+                                <p className="text-xs text-slate-200 leading-snug line-clamp-2 mb-1">{w.title}</p>
+                                <p className="text-xs text-slate-500 flex items-center gap-1.5">
+                                  <span className={w.isCurated ? "text-violet-400" : "text-slate-500"}>{w.source}</span>
+                                  <span>·</span>
+                                  <span>{new Date(w.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
+                                </p>
+                              </div>
                             </a>
                           ))}
                         </div>

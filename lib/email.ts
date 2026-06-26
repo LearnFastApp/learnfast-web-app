@@ -389,3 +389,104 @@ export async function sendResourceAlertEmail(brokenLinks: BrokenLink[]) {
     html,
   });
 }
+
+// ── Webinar Digest ────────────────────────────────────────────────────────────
+
+export interface WebinarDigestOptions {
+  to: string;
+  presenterName: string;
+  dimensionLabel: string;
+  webinars: Array<{ title: string; url: string; source: string; dateLabel: string }>;
+  dashboardUrl: string;
+  locale?: string;
+}
+
+function buildWebinarDigestHtml(opts: WebinarDigestOptions): string {
+  const isFr = opts.locale === "fr";
+  const { presenterName, dimensionLabel, webinars, dashboardUrl } = opts;
+
+  const rows = webinars.map((w) => `
+    <tr>
+      <td style="padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+        <p style="color:#a78bfa;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 4px;">${w.source} &middot; ${w.dateLabel}</p>
+        <p style="color:#e2e8f0;font-size:14px;font-weight:600;margin:0 0 6px;">${w.title}</p>
+        <a href="${w.url}"
+           style="color:#a78bfa;font-size:12px;text-decoration:none;">
+          ${isFr ? "S'inscrire gratuitement &rarr;" : "Register free &rarr;"}
+        </a>
+      </td>
+    </tr>`).join("");
+
+  return `<!DOCTYPE html>
+<html lang="${isFr ? "fr" : "en"}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>${isFr ? "Webinaires à venir pour vous" : "Upcoming webinars matched to you"}</title>
+</head>
+<body style="background:#05070d;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center" style="padding:40px 16px;">
+      <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+
+        <tr><td style="padding-bottom:28px;">
+          <p style="color:#ffffff;font-size:18px;font-weight:700;margin:0;letter-spacing:-0.02em;">LearnFast</p>
+          <p style="color:#334155;font-size:11px;margin:3px 0 0;text-transform:uppercase;letter-spacing:0.08em;">
+            ${isFr ? "Événements de la semaine" : "This week's events"}
+          </p>
+        </td></tr>
+
+        <tr><td style="background:#111827;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:32px;">
+
+          <p style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;">
+            ${isFr ? "Recommandé pour vous" : "Matched to your scores"}
+          </p>
+          <h1 style="color:#ffffff;font-size:20px;font-weight:700;margin:0 0 12px;line-height:1.3;">
+            ${isFr
+              ? `Bonjour ${presenterName} — des webinaires gratuits correspondent à votre dimension <strong style="color:#a78bfa;">${dimensionLabel}</strong>.`
+              : `Hi ${presenterName} — free webinars matched to your <strong style="color:#a78bfa;">${dimensionLabel}</strong> score.`}
+          </h1>
+          <p style="color:#64748b;font-size:13px;margin:0 0 24px;">
+            ${isFr
+              ? `Basé sur vos sessions récentes, voici des événements en ligne gratuits qui correspondent à votre axe de développement prioritaire.`
+              : `Based on your recent sessions, here are free online events that match your current development focus.`}
+          </p>
+
+          <table cellpadding="0" cellspacing="0" width="100%">${rows}</table>
+
+          <div style="margin-top:28px;">
+            <a href="${dashboardUrl}"
+               style="background:#7c3aed;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:13px 22px;border-radius:12px;display:inline-block;">
+              ${isFr ? "Voir mes ressources &rarr;" : "View my resources &rarr;"}
+            </a>
+          </div>
+
+        </td></tr>
+
+        <tr><td style="padding:24px 0 0;text-align:center;">
+          <p style="color:#1e293b;font-size:11px;margin:0;">
+            ${isFr
+              ? "Vous recevez cet e-mail parce que vous avez un compte LearnFast actif."
+              : "You received this because you have an active LearnFast account."}
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+export async function sendWebinarDigestEmail(opts: WebinarDigestOptions) {
+  const isFr = opts.locale === "fr";
+  const from = `LearnFast <${process.env.GMAIL_USER}>`;
+  await getTransporter().sendMail({
+    from,
+    to: opts.to,
+    subject: isFr
+      ? `${opts.presenterName} — des webinaires gratuits vous attendent cette semaine`
+      : `${opts.presenterName} — free webinars matched to your scores this week`,
+    html: buildWebinarDigestHtml(opts),
+  });
+}

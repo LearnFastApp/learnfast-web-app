@@ -73,3 +73,7 @@ env:
     secret: STRIPE_WEBHOOK_SECRET
     availability:
       - RUNTIME
+  - variable: EVENTBRITE_API_KEY
+    secret: EVENTBRITE_API_KEY
+    availability:
+      - RUNTIME
