@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Syne } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
+import { AnalyticsProvider } from "@/components/analytics-provider";
 import "./globals.css";
 
 const syne = Syne({
@@ -79,6 +80,7 @@ export default function RootLayout({
     <html lang="en" className={`${syne.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <AuthProvider>{children}</AuthProvider>
+        <AnalyticsProvider />
       </body>
     </html>
   );
