@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     // Send the nudge email
     try {
       const name = (data.displayName as string | undefined)?.split(" ")[0] || "there";
-      const appUrl = process.env.APP_URL || "https://learnfast-app-cc98c.web.app";
+      const appUrl = process.env.APP_URL || "https://learnfastapp.com";
 
       await sendActivationEmail({
         to: data.email as string,

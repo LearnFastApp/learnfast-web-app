@@ -1,7 +1,5 @@
+import { redirect } from "next/navigation";
+
 export default function SessionsPage() {
-  return (
-    <div>
-      Sessions Page
-    </div>
-  );
+  redirect("/dashboard");
 }

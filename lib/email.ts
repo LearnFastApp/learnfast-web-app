@@ -43,13 +43,29 @@ export interface SummaryEmailOptions {
   locale?: string;
 }
 
+const DIM_LABELS_FR_EMAIL: Record<string, string> = {
+  clarity: "Clarté",
+  engagement: "Engagement",
+  energy: "Énergie",
+  understanding: "Compréhension",
+  connection: "Connexion",
+};
+
+function scoreBandFr(score: number) {
+  if (score >= 75) return "Fort";
+  if (score >= 55) return "Modéré";
+  return "À améliorer";
+}
+
 function buildHtml(opts: SummaryEmailOptions): string {
   const { presenterName, sessionTitle, sessionDate, responseCount, averages, overallAvg, gapInsight, sessionUrl } = opts;
+  const isFr = opts.locale === "fr";
 
   const scoreRows = DIMS.map((dim) => {
     const score = averages[dim] ?? 0;
     const color = scoreColor(score);
-    const label = dim.charAt(0).toUpperCase() + dim.slice(1);
+    const label = isFr ? (DIM_LABELS_FR_EMAIL[dim] ?? dim) : dim.charAt(0).toUpperCase() + dim.slice(1);
+    const band = isFr ? scoreBandFr(score) : scoreBand(score);
     const barPx = Math.round((score / 100) * 130);
     return `
       <tr>
@@ -60,32 +76,32 @@ function buildHtml(opts: SummaryEmailOptions): string {
           </div>
         </td>
         <td style="padding:7px 0;color:${color};font-size:14px;font-weight:700;width:34px;">${score}</td>
-        <td style="padding:7px 0 7px 8px;color:#475569;font-size:11px;">${scoreBand(score)}</td>
+        <td style="padding:7px 0 7px 8px;color:#475569;font-size:11px;">${band}</td>
       </tr>`;
   }).join("");
 
   const scoresBlock = responseCount > 0 ? `
     <div style="background:#0f1424;border-radius:12px;padding:20px 20px 16px;margin-bottom:0;">
-      <p style="color:#64748b;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 14px;">Audience scores</p>
+      <p style="color:#64748b;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 14px;">${isFr ? "Scores de l'audience" : "Audience scores"}</p>
       <table cellpadding="0" cellspacing="0" width="100%">${scoreRows}</table>
       <div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:14px;padding-top:14px;">
         <p style="color:#64748b;font-size:12px;margin:0;">
-          Overall average: <strong style="color:${scoreColor(overallAvg)};font-size:20px;">${overallAvg}</strong>
+          ${isFr ? "Moyenne globale" : "Overall average"}: <strong style="color:${scoreColor(overallAvg)};font-size:20px;">${overallAvg}</strong>
           <span style="color:#475569;">/100</span>
         </p>
       </div>
-    </div>` : `<p style="color:#ef4444;font-size:13px;margin:0 0 20px;">No audience responses were recorded for this session.</p>`;
+    </div>` : `<p style="color:#ef4444;font-size:13px;margin:0 0 20px;">${isFr ? "Aucune réponse d'audience enregistrée pour cette session." : "No audience responses were recorded for this session."}</p>`;
 
   const gapBlock = gapInsight
     ? `<div style="border-top:1px solid rgba(255,255,255,0.08);margin-top:24px;padding-top:24px;">
-        <p style="color:#a78bfa;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px;">Gap analysis</p>
+        <p style="color:#a78bfa;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px;">${isFr ? "Analyse des écarts" : "Gap analysis"}</p>
         <p style="color:#cbd5e1;font-size:13px;line-height:1.75;margin:0;">${gapInsight}</p>
        </div>`
     : `<div style="border-top:1px solid rgba(255,255,255,0.08);margin-top:24px;padding-top:24px;">
         <p style="color:#475569;font-size:13px;margin:0;">
-          Gap analysis not yet available —
-          <a href="${sessionUrl}" style="color:#a78bfa;text-decoration:none;">submit your self-reflection</a>
-          to compare your scores against the audience.
+          ${isFr
+            ? `Analyse des écarts non disponible — <a href="${sessionUrl}" style="color:#a78bfa;text-decoration:none;">soumettez votre auto-évaluation</a> pour comparer vos scores à ceux de l'audience.`
+            : `Gap analysis not yet available — <a href="${sessionUrl}" style="color:#a78bfa;text-decoration:none;">submit your self-reflection</a> to compare your scores against the audience.`}
         </p>
        </div>`;
 
@@ -111,11 +127,12 @@ function buildHtml(opts: SummaryEmailOptions): string {
         <tr><td style="background:#111827;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:32px;">
 
           <!-- Session meta -->
-          <p style="color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;">Session summary &middot; ${sessionDate}</p>
+          <p style="color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;">${isFr ? "Résumé de session" : "Session summary"} &middot; ${sessionDate}</p>
           <h1 style="color:#ffffff;font-size:22px;font-weight:700;margin:0 0 8px;line-height:1.3;">${sessionTitle}</h1>
           <p style="color:#64748b;font-size:14px;margin:0 0 28px;">
-            Hi ${presenterName} — your session received
-            <strong style="color:#a78bfa;">${responseCount} audience response${responseCount !== 1 ? "s" : ""}</strong>.
+            ${isFr
+              ? `Bonjour ${presenterName} — votre session a reçu <strong style="color:#a78bfa;">${responseCount} réponse${responseCount !== 1 ? "s" : ""} d'audience</strong>.`
+              : `Hi ${presenterName} — your session received <strong style="color:#a78bfa;">${responseCount} audience response${responseCount !== 1 ? "s" : ""}</strong>.`}
           </p>
 
           ${scoresBlock}
@@ -125,7 +142,7 @@ function buildHtml(opts: SummaryEmailOptions): string {
           <div style="margin-top:28px;">
             <a href="${sessionUrl}"
                style="background:#7c3aed;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:13px 22px;border-radius:12px;display:inline-block;">
-              View full session results &rarr;
+              ${isFr ? "Voir les résultats complets &rarr;" : "View full session results &rarr;"}
             </a>
           </div>
 
@@ -134,7 +151,7 @@ function buildHtml(opts: SummaryEmailOptions): string {
         <!-- Footer -->
         <tr><td style="padding:24px 0 0;text-align:center;">
           <p style="color:#1e293b;font-size:11px;margin:0;">
-            You received this because you created a session on LearnFast.
+            ${isFr ? "Vous recevez cet e-mail parce que vous avez créé une session sur LearnFast." : "You received this because you created a session on LearnFast."}
           </p>
         </td></tr>
 
