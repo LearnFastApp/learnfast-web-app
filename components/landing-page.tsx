@@ -318,10 +318,10 @@ export default function LandingPage() {
           <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4 text-center">Pricing</p>
           <h2 className="text-4xl sm:text-6xl font-light text-slate-400 text-center leading-none mb-1">START FREE,</h2>
           <h2 className="text-4xl sm:text-6xl font-black text-center leading-none mb-16">SCALE WHEN READY</h2>
-          <div className="flex justify-center">
+          <div className="grid gap-5 md:grid-cols-2">
 
             {/* Free */}
-            <div className="rounded-2xl border border-white/10 bg-[#0f1118] p-7 sm:p-8 w-full max-w-sm">
+            <div className="rounded-2xl border border-white/10 bg-[#0f1118] p-7 sm:p-8">
               <p className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-5">Free</p>
               <p className="text-5xl font-black mb-1">£0</p>
               <p className="text-sm text-slate-500 mb-8">No credit card required</p>
@@ -342,6 +342,35 @@ export default function LandingPage() {
               <button onClick={goToLogin} className="w-full py-3.5 text-sm font-bold border border-white/20 hover:border-white/40 text-white transition rounded-sm">
                 GET STARTED FREE →
               </button>
+            </div>
+
+            {/* Lite */}
+            <div className="rounded-2xl border p-7 sm:p-8 relative" style={{ borderColor: `${RED}44`, background: "linear-gradient(135deg, #1a0d0a 0%, #0f1118 100%)" }}>
+              <div className="absolute top-5 right-5 text-[10px] font-bold px-2.5 py-1 rounded-sm text-white tracking-wider" style={{ backgroundColor: RED }}>
+                LITE VERSION
+              </div>
+              <p className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-5">Lite</p>
+              <p className="text-5xl font-black mb-1">£3.99<span className="text-lg font-normal text-slate-400">/mo</span></p>
+              <p className="text-sm text-slate-500 mb-8">7-day free trial · cancel anytime</p>
+              <ul className="space-y-3 text-sm text-slate-300 mb-8">
+                {[
+                  "Unlimited sessions",
+                  "Everything in Free",
+                  "Curated improvement articles",
+                  "TED Talks, videos & podcasts",
+                  "Advanced analytics & trends",
+                  "Commitment & check-in tracking",
+                  "Feedback-matched learning resources",
+                ].map((f) => (
+                  <li key={f} className="flex items-center gap-2.5">
+                    <span className="shrink-0" style={{ color: RED }}>✓</span> {f}
+                  </li>
+                ))}
+              </ul>
+              <button onClick={goToLogin} className="w-full py-3.5 text-sm font-bold text-white transition rounded-sm" style={{ backgroundColor: RED }}>
+                START 7-DAY FREE TRIAL →
+              </button>
+              <p className="text-center text-xs text-slate-600 mt-3">No charge until your trial ends</p>
             </div>
           </div>
         </div>
