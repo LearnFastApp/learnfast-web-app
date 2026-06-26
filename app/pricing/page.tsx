@@ -64,6 +64,27 @@ export default function PricingPage() {
   const [cancelled, setCancelled] = useState(false);
   const [notifyEmail, setNotifyEmail] = useState("");
   const [notifySubmitted, setNotifySubmitted] = useState(false);
+  const [notifyLoading, setNotifyLoading] = useState(false);
+
+  async function handleNotify(e: React.FormEvent) {
+    e.preventDefault();
+    if (!notifyEmail.trim()) return;
+    setNotifyLoading(true);
+    try {
+      const token = user ? await user.getIdToken() : null;
+      await fetch("/api/pro-waitlist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ email: notifyEmail }),
+      });
+    } finally {
+      setNotifyLoading(false);
+      setNotifySubmitted(true);
+    }
+  }
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -180,11 +201,7 @@ export default function PricingPage() {
                       ✓ We&apos;ll notify you when Pro launches
                     </div>
                   ) : (
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        if (notifyEmail.trim()) setNotifySubmitted(true);
-                      }}
+                    <form onSubmit={handleNotify}
                       className="flex flex-col gap-2"
                     >
                       <input
@@ -197,10 +214,11 @@ export default function PricingPage() {
                       />
                       <button
                         type="submit"
-                        className="flex items-center justify-center gap-2 w-full rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:text-white hover:border-white/40 transition"
+                        disabled={notifyLoading}
+                        className="flex items-center justify-center gap-2 w-full rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:text-white hover:border-white/40 transition disabled:opacity-50"
                       >
                         <Bell className="h-4 w-4" />
-                        Notify me when Pro launches
+                        {notifyLoading ? "Saving…" : "Notify me when Pro launches"}
                       </button>
                     </form>
                   )}

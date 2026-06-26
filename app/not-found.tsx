@@ -9,12 +9,20 @@ export default function NotFound() {
         <p className="text-sm text-slate-400 mb-8">
           The page you&apos;re looking for doesn&apos;t exist or has been moved.
         </p>
-        <Link
-          href="/dashboard"
-          className="inline-block rounded-xl bg-violet-500 px-6 py-3 font-semibold text-white hover:bg-violet-400 transition"
-        >
-          Back to dashboard
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link
+            href="/"
+            className="inline-block rounded-xl border border-white/10 px-6 py-3 font-semibold text-slate-300 hover:text-white hover:border-white/30 transition"
+          >
+            Go home
+          </Link>
+          <Link
+            href="/dashboard"
+            className="inline-block rounded-xl bg-violet-500 px-6 py-3 font-semibold text-white hover:bg-violet-400 transition"
+          >
+            Go to dashboard
+          </Link>
+        </div>
       </div>
     </main>
   );

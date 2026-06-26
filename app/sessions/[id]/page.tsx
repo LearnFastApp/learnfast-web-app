@@ -147,7 +147,7 @@ export default function LiveSessionPage() {
   const [resourceTab, setResourceTab] = useState<"videos" | "ted" | "podcasts" | "articles">("videos");
   const [podcasts, setPodcasts] = useState<{ title: string; author: string; description: string; image: string; link: string }[]>([]);
   const [podcastsLoading, setPodcastsLoading] = useState(false);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<"free" | "active">("free");
+  const [subscriptionStatus, setSubscriptionStatus] = useState<"free" | "active" | "pilot">("free");
   const [locale, setLocale] = useState<"en" | "fr">("en");
   const [savedCommitment, setSavedCommitment] = useState<{ dimension: Dimension; text: string } | null>(null);
   const [draftDimension, setDraftDimension] = useState<Dimension>("clarity");
@@ -291,7 +291,12 @@ export default function LiveSessionPage() {
     getDoc(doc(db, "presenters", user.uid)).then((snap) => {
       if (snap.exists()) {
         const data = snap.data();
-        if (data.subscriptionStatus === "active") setSubscriptionStatus("active");
+        if (data.subscriptionStatus === "active") {
+          setSubscriptionStatus("active");
+        } else if (data.subscriptionStatus === "pilot") {
+          const expiry = data.pilotExpiresAt?.toDate?.() as Date | undefined;
+          if (expiry && expiry > new Date()) setSubscriptionStatus("pilot");
+        }
         if (data.locale === "fr") setLocale("fr");
       }
     });
@@ -341,6 +346,7 @@ export default function LiveSessionPage() {
 
   const lowestDimension = getLowestDimension(audienceAverages);
   const secondLowestDimension = getSecondLowestDimension(audienceAverages);
+  const isPaid = subscriptionStatus !== "free";
 
   useEffect(() => {
     if (lowestDimension && !savedCommitment) setDraftDimension(lowestDimension);
@@ -557,7 +563,7 @@ export default function LiveSessionPage() {
               </p>
             </div>
             <div className="flex flex-col gap-2 shrink-0">
-              {subscriptionStatus !== "active" ? (
+              {!isPaid ? (
                 <a
                   href="/pricing"
                   className="inline-block rounded-xl bg-violet-500 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition text-center"
@@ -815,7 +821,7 @@ export default function LiveSessionPage() {
 
                 {!resourcesLoading && resources && (
                   <div className="relative">
-                    <div className={subscriptionStatus !== "active" ? "blur-[2px] pointer-events-none select-none" : ""}>
+                    <div className={!isPaid ? "blur-[2px] pointer-events-none select-none" : ""}>
                       <div className="grid grid-cols-4 rounded-lg border border-white/10 bg-[#0f1424] p-0.5 mb-3">
                         {(["videos", "ted", "podcasts", "articles"] as const).map((tab) => (
                           <button
@@ -905,7 +911,7 @@ export default function LiveSessionPage() {
                       </p>
                     </div>
 
-                    {subscriptionStatus !== "active" && (
+                    {!isPaid && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-[#0f1424]/60">
                         <Lock className="h-5 w-5 text-violet-400 mb-2" />
                         <p className="text-sm font-semibold text-white mb-1">{t.unlockLearning}</p>
@@ -926,7 +932,7 @@ export default function LiveSessionPage() {
             );
           })()}
 
-          {secondLowestDimension && secondaryArticle && responses.length > 0 && subscriptionStatus === "active" && (
+          {secondLowestDimension && secondaryArticle && responses.length > 0 && isPaid && (
             <div className="rounded-2xl border border-white/10 bg-[#111827] p-5">
               <div className="flex items-center gap-2 mb-3">
                 <TrendingUp className="h-3.5 w-3.5 text-slate-500" />
