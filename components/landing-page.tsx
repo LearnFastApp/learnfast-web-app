@@ -107,10 +107,10 @@ export default function LandingPage() {
         <p className="relative text-[10px] sm:text-xs font-semibold tracking-[0.3em] text-slate-400 uppercase mb-5">
           Presentation Feedback Technology
         </p>
-        <h1 className="relative text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-light leading-tight tracking-tight text-slate-400 mb-1">
+        <h1 className="relative text-3xl sm:text-6xl md:text-7xl lg:text-8xl font-light leading-tight tracking-tight text-slate-400 mb-1">
           INTRODUCING
         </h1>
-        <h1 className="relative text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-tight tracking-tight mb-6">
+        <h1 className="relative text-3xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-tight tracking-tight mb-6">
           THE LEARNFAST APP
         </h1>
         <p className="relative max-w-xl mx-auto text-base sm:text-lg text-slate-400 leading-relaxed mb-3">
@@ -178,8 +178,8 @@ export default function LandingPage() {
       {/* ── WHAT WE DO ── */}
       <section id="product" className="py-20 sm:py-28 px-5 lg:px-12 max-w-4xl mx-auto text-center">
         <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4">Performance Insights</p>
-        <h2 className="text-4xl sm:text-6xl font-light text-slate-400 leading-none mb-1">WHAT</h2>
-        <h2 className="text-4xl sm:text-6xl font-black leading-none mb-8">WE DO</h2>
+        <h2 className="text-3xl sm:text-6xl font-light text-slate-400 leading-none mb-1">WHAT</h2>
+        <h2 className="text-3xl sm:text-6xl font-black leading-none mb-8">WE DO</h2>
         <p className="text-base sm:text-lg text-slate-400 leading-relaxed max-w-2xl mx-auto mb-10">
           LearnFast connects you with your audience and allows them to give you honest, real-time feedback on your presentation. Our platform automatically surfaces the most relevant expert learning resources based on your scores — helping you upskill quickly and efficiently.
         </p>
@@ -205,8 +205,8 @@ export default function LandingPage() {
       <section id="how-it-works" className="py-20 sm:py-28 px-5 lg:px-12">
         <div className="max-w-6xl mx-auto">
           <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4 text-center">Simple by Design</p>
-          <h2 className="text-4xl sm:text-6xl font-light text-slate-400 text-center leading-none mb-1">HOW IT</h2>
-          <h2 className="text-4xl sm:text-6xl font-black text-center leading-none mb-16">WORKS</h2>
+          <h2 className="text-3xl sm:text-6xl font-light text-slate-400 text-center leading-none mb-1">HOW IT</h2>
+          <h2 className="text-3xl sm:text-6xl font-black text-center leading-none mb-16">WORKS</h2>
 
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
 
@@ -285,8 +285,8 @@ export default function LandingPage() {
       {/* ── WHY / GET STARTED ── */}
       <section id="why" className="py-20 sm:py-28 px-5 lg:px-12 text-center">
         <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4">Made for Leaders</p>
-        <h2 className="text-4xl sm:text-6xl font-light text-slate-400 leading-none mb-1">GET STARTED WITH</h2>
-        <h2 className="text-4xl sm:text-6xl font-black leading-none mb-8">LEARNFAST TODAY</h2>
+        <h2 className="text-3xl sm:text-6xl font-light text-slate-400 leading-none mb-1">GET STARTED WITH</h2>
+        <h2 className="text-3xl sm:text-6xl font-black leading-none mb-8">LEARNFAST TODAY</h2>
         <p className="max-w-xl mx-auto text-slate-400 leading-relaxed mb-10 text-sm sm:text-base">
           Whether you're a corporate trainer, team leader or university lecturer — every great presenter started somewhere. LearnFast gives you the data, the reflection and the resources to improve with every session.
         </p>
@@ -336,8 +336,8 @@ export default function LandingPage() {
       <section id="pricing" className="py-20 sm:py-28 px-5 lg:px-12">
         <div className="max-w-6xl mx-auto">
           <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4 text-center">Pricing</p>
-          <h2 className="text-4xl sm:text-6xl font-light text-slate-400 text-center leading-none mb-1">START FREE,</h2>
-          <h2 className="text-4xl sm:text-6xl font-black text-center leading-none mb-16">SCALE WHEN READY</h2>
+          <h2 className="text-3xl sm:text-6xl font-light text-slate-400 text-center leading-none mb-1">START FREE,</h2>
+          <h2 className="text-3xl sm:text-6xl font-black text-center leading-none mb-16">SCALE WHEN READY</h2>
           <div className="grid gap-5 md:grid-cols-3">
 
             {/* Free */}
@@ -457,8 +457,8 @@ export default function LandingPage() {
       <section className="py-24 sm:py-32 px-5 lg:px-12 text-center bg-[#0a0b12] border-t border-white/5">
         <div className="absolute pointer-events-none inset-0" style={{ background: "radial-gradient(ellipse 60% 40% at 50% 100%, rgba(209,59,26,0.08) 0%, transparent 70%)" }} />
         <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-5">Get Started Today</p>
-        <h2 className="text-4xl sm:text-6xl font-light text-slate-400 leading-tight mb-1">EVERY GREAT PRESENTER</h2>
-        <h2 className="text-4xl sm:text-6xl font-black leading-tight mb-10">STARTED SOMEWHERE</h2>
+        <h2 className="text-3xl sm:text-6xl font-light text-slate-400 leading-tight mb-1">EVERY GREAT PRESENTER</h2>
+        <h2 className="text-3xl sm:text-6xl font-black leading-tight mb-10">STARTED SOMEWHERE</h2>
         <button onClick={goToLogin} className="px-10 py-5 text-sm font-bold tracking-wider text-white transition rounded-sm" style={{ backgroundColor: RED }}>
           CREATE YOUR FREE ACCOUNT →
         </button>
