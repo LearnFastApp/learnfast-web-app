@@ -60,6 +60,8 @@ export default function SettingsPage() {
   const [localeSaving, setLocaleSaving] = useState(false);
   const [localeSaved, setLocaleSaved] = useState(false);
 
+  const isFr = locale === "fr";
+
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth/login");
   }, [user, authLoading, router]);
@@ -76,7 +78,6 @@ export default function SettingsPage() {
       }
     });
 
-    // Count sessions for free tier display
     import("firebase/firestore").then(({ collection, query, where, getDocs }) => {
       getDocs(query(collection(db, "sessions"), where("presenterId", "==", user.uid))).then(
         (snap) => setSessionCount(snap.size)
@@ -97,7 +98,7 @@ export default function SettingsPage() {
       setProfileSaved(true);
       setTimeout(() => setProfileSaved(false), 3000);
     } catch {
-      setProfileError("Failed to save. Please try again.");
+      setProfileError(isFr ? "Échec de l'enregistrement. Veuillez réessayer." : "Failed to save. Please try again.");
     } finally {
       setProfileSaving(false);
     }
@@ -109,11 +110,11 @@ export default function SettingsPage() {
     setPasswordError("");
 
     if (newPassword !== confirmPassword) {
-      setPasswordError("New passwords don't match.");
+      setPasswordError(isFr ? "Les nouveaux mots de passe ne correspondent pas." : "New passwords don't match.");
       return;
     }
     if (newPassword.length < 6) {
-      setPasswordError("Password must be at least 6 characters.");
+      setPasswordError(isFr ? "Le mot de passe doit contenir au moins 6 caractères." : "Password must be at least 6 characters.");
       return;
     }
 
@@ -130,9 +131,9 @@ export default function SettingsPage() {
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";
       if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
-        setPasswordError("Current password is incorrect.");
+        setPasswordError(isFr ? "Le mot de passe actuel est incorrect." : "Current password is incorrect.");
       } else {
-        setPasswordError("Failed to update password. Please try again.");
+        setPasswordError(isFr ? "Échec de la mise à jour du mot de passe." : "Failed to update password. Please try again.");
       }
     } finally {
       setPasswordSaving(false);
@@ -141,7 +142,7 @@ export default function SettingsPage() {
 
   async function handleManageBilling() {
     if (!presenter.stripeCustomerId) {
-      setPortalError("No billing account found. Please contact support.");
+      setPortalError(isFr ? "Aucun compte de facturation trouvé. Contactez le support." : "No billing account found. Please contact support.");
       return;
     }
     setPortalLoading(true);
@@ -157,11 +158,11 @@ export default function SettingsPage() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        setPortalError(data.error ?? "Failed to open billing portal. Please try again.");
+        setPortalError(data.error ?? (isFr ? "Impossible d'ouvrir le portail de facturation." : "Failed to open billing portal. Please try again."));
         setPortalLoading(false);
       }
     } catch {
-      setPortalError("Network error. Please try again.");
+      setPortalError(isFr ? "Erreur réseau. Veuillez réessayer." : "Network error. Please try again.");
       setPortalLoading(false);
     }
   }
@@ -169,7 +170,7 @@ export default function SettingsPage() {
   if (authLoading || !user) {
     return (
       <main className="min-h-screen bg-[#05070d] flex items-center justify-center">
-        <p className="text-slate-400 animate-pulse">Loading…</p>
+        <p className="text-slate-400 animate-pulse">{isFr ? "Chargement…" : "Loading…"}</p>
       </main>
     );
   }
@@ -192,11 +193,15 @@ export default function SettingsPage() {
     });
     const data = await res.json();
     if (!res.ok) {
-      setPilotError(data.error ?? "Invalid code. Please try again.");
+      setPilotError(data.error ?? (isFr ? "Code invalide. Veuillez réessayer." : "Invalid code. Please try again."));
       setPilotLoading(false);
       return;
     }
-    setPilotSuccess(`Pilot access activated for ${data.orgName} — valid until ${new Date(data.expiresAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}.`);
+    const dateStr = new Date(data.expiresAt).toLocaleDateString(isFr ? "fr-FR" : "en-GB", { day: "numeric", month: "long", year: "numeric" });
+    setPilotSuccess(isFr
+      ? `Accès pilote activé pour ${data.orgName} — valable jusqu'au ${dateStr}.`
+      : `Pilot access activated for ${data.orgName} — valid until ${dateStr}.`
+    );
     setPilotLoading(false);
     setPilotCode("");
     setTimeout(() => window.location.reload(), 2000);
@@ -218,11 +223,11 @@ export default function SettingsPage() {
       <header className="border-b border-white/10 bg-[#101523] px-6 py-6 lg:px-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Settings</h1>
-            <p className="text-sm text-slate-400">Manage your account and subscription.</p>
+            <h1 className="text-2xl font-bold">{isFr ? "Paramètres" : "Settings"}</h1>
+            <p className="text-sm text-slate-400">{isFr ? "Gérez votre compte et votre abonnement." : "Manage your account and subscription."}</p>
           </div>
           <a href="/dashboard" className="text-sm text-slate-400 hover:text-white transition">
-            ← Dashboard
+            {isFr ? "← Tableau de bord" : "← Dashboard"}
           </a>
         </div>
       </header>
@@ -235,22 +240,22 @@ export default function SettingsPage() {
             <div className="rounded-xl bg-violet-500/20 p-2">
               <User className="h-4 w-4 text-violet-400" />
             </div>
-            <h2 className="font-bold text-lg">Profile</h2>
+            <h2 className="font-bold text-lg">{isFr ? "Profil" : "Profile"}</h2>
           </div>
 
           <form onSubmit={handleSaveProfile} className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-sm text-slate-400">Display name</label>
+              <label className="mb-1.5 block text-sm text-slate-400">{isFr ? "Nom d'affichage" : "Display name"}</label>
               <input
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-violet-500"
-                placeholder="Your name"
+                placeholder={isFr ? "Votre nom" : "Your name"}
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm text-slate-400">Email address</label>
+              <label className="mb-1.5 block text-sm text-slate-400">{isFr ? "Adresse email" : "Email address"}</label>
               <input
                 type="email"
                 value={user.email ?? ""}
@@ -265,8 +270,8 @@ export default function SettingsPage() {
               className="flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-400 disabled:opacity-50 transition"
             >
               {profileSaved ? (
-                <><Check className="h-4 w-4" /> Saved</>
-              ) : profileSaving ? "Saving…" : "Save changes"}
+                <><Check className="h-4 w-4" /> {isFr ? "Enregistré" : "Saved"}</>
+              ) : profileSaving ? (isFr ? "Enregistrement…" : "Saving…") : (isFr ? "Enregistrer" : "Save changes")}
             </button>
           </form>
         </section>
@@ -277,12 +282,12 @@ export default function SettingsPage() {
             <div className="rounded-xl bg-violet-500/20 p-2">
               <Lock className="h-4 w-4 text-violet-400" />
             </div>
-            <h2 className="font-bold text-lg">Password</h2>
+            <h2 className="font-bold text-lg">{isFr ? "Mot de passe" : "Password"}</h2>
           </div>
 
           <form onSubmit={handleChangePassword} className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-sm text-slate-400">Current password</label>
+              <label className="mb-1.5 block text-sm text-slate-400">{isFr ? "Mot de passe actuel" : "Current password"}</label>
               <input
                 type="password"
                 value={currentPassword}
@@ -293,7 +298,7 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm text-slate-400">New password</label>
+              <label className="mb-1.5 block text-sm text-slate-400">{isFr ? "Nouveau mot de passe" : "New password"}</label>
               <input
                 type="password"
                 value={newPassword}
@@ -304,7 +309,7 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm text-slate-400">Confirm new password</label>
+              <label className="mb-1.5 block text-sm text-slate-400">{isFr ? "Confirmer le nouveau mot de passe" : "Confirm new password"}</label>
               <input
                 type="password"
                 value={confirmPassword}
@@ -321,8 +326,8 @@ export default function SettingsPage() {
               className="flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-400 disabled:opacity-50 transition"
             >
               {passwordSaved ? (
-                <><Check className="h-4 w-4" /> Password updated</>
-              ) : passwordSaving ? "Updating…" : "Update password"}
+                <><Check className="h-4 w-4" /> {isFr ? "Mot de passe mis à jour" : "Password updated"}</>
+              ) : passwordSaving ? (isFr ? "Mise à jour…" : "Updating…") : (isFr ? "Mettre à jour" : "Update password")}
             </button>
           </form>
         </section>
@@ -333,24 +338,24 @@ export default function SettingsPage() {
             <div className="rounded-xl bg-violet-500/20 p-2">
               <CreditCard className="h-4 w-4 text-violet-400" />
             </div>
-            <h2 className="font-bold text-lg">Subscription</h2>
+            <h2 className="font-bold text-lg">{isFr ? "Abonnement" : "Subscription"}</h2>
           </div>
 
           <div className="flex items-center justify-between rounded-xl border border-white/10 bg-[#1a2135] p-4 mb-4">
             <div>
-              <p className="text-sm text-slate-400 mb-1">Current plan</p>
+              <p className="text-sm text-slate-400 mb-1">{isFr ? "Formule actuelle" : "Current plan"}</p>
               <div className="flex items-center gap-2">
                 {isActive ? (
                   <>
                     <Zap className="h-4 w-4 text-violet-400" />
                     <span className="font-bold text-violet-300">Lite</span>
-                    <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-400">Active</span>
+                    <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-400">{isFr ? "Actif" : "Active"}</span>
                   </>
                 ) : (
                   <>
-                    <span className="font-bold">Free</span>
+                    <span className="font-bold">{isFr ? "Gratuit" : "Free"}</span>
                     <span className="rounded-full bg-slate-500/20 px-2 py-0.5 text-xs text-slate-400">
-                      {sessionCount}/2 sessions used
+                      {isFr ? `${sessionCount}/2 sessions utilisées` : `${sessionCount}/2 sessions used`}
                     </span>
                   </>
                 )}
@@ -370,7 +375,7 @@ export default function SettingsPage() {
                 disabled={portalLoading}
                 className="w-full rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 disabled:opacity-50 transition"
               >
-                {portalLoading ? "Opening portal…" : "Manage billing →"}
+                {portalLoading ? (isFr ? "Ouverture du portail…" : "Opening portal…") : (isFr ? "Gérer la facturation →" : "Manage billing →")}
               </button>
               {portalError && (
                 <p className="mt-2 text-sm text-red-400">{portalError}</p>
@@ -381,7 +386,7 @@ export default function SettingsPage() {
               href="/pricing"
               className="block w-full rounded-xl bg-violet-500 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-violet-400 transition"
             >
-              Upgrade to Lite — £3.99/month
+              {isFr ? "Passer à Lite — £3.99/mois" : "Upgrade to Lite — £3.99/month"}
             </a>
           )}
         </section>
@@ -394,8 +399,12 @@ export default function SettingsPage() {
                 <Tag className="h-4 w-4 text-violet-400" />
               </div>
               <div>
-                <h2 className="font-bold text-lg">Redeem a pilot code</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Have a code from your organisation? Enter it here for 1 month of free access.</p>
+                <h2 className="font-bold text-lg">{isFr ? "Utiliser un code pilote" : "Redeem a pilot code"}</h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {isFr
+                    ? "Vous avez un code de votre organisation ? Saisissez-le ici pour 1 mois d'accès gratuit."
+                    : "Have a code from your organisation? Enter it here for 1 month of free access."}
+                </p>
               </div>
             </div>
             <form onSubmit={handlePilotRedeem} className="flex gap-3">
@@ -410,7 +419,7 @@ export default function SettingsPage() {
                 disabled={pilotLoading || !pilotCode.trim()}
                 className="rounded-xl bg-violet-500 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-400 disabled:opacity-50 transition"
               >
-                {pilotLoading ? "…" : "Apply"}
+                {pilotLoading ? "…" : (isFr ? "Appliquer" : "Apply")}
               </button>
             </form>
             {pilotError && <p className="mt-3 text-sm text-red-400">{pilotError}</p>}
@@ -430,10 +439,11 @@ export default function SettingsPage() {
                 <Tag className="h-4 w-4 text-green-400" />
               </div>
               <div>
-                <p className="font-bold text-green-300">Pilot access active</p>
+                <p className="font-bold text-green-300">{isFr ? "Accès pilote actif" : "Pilot access active"}</p>
                 <p className="text-xs text-slate-400 mt-0.5">
                   {presenter.pilotOrgName && `${presenter.pilotOrgName} · `}
-                  Expires {presenter.pilotExpiresAt?.toDate().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                  {isFr ? "Expire le " : "Expires "}
+                  {presenter.pilotExpiresAt?.toDate().toLocaleDateString(isFr ? "fr-FR" : "en-GB", { day: "numeric", month: "long", year: "numeric" })}
                 </p>
               </div>
             </div>
@@ -448,7 +458,11 @@ export default function SettingsPage() {
             </div>
             <div>
               <h2 className="font-bold text-white text-sm">Language / Langue</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Resources and emails will be served in your chosen language.</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {isFr
+                  ? "Les ressources et emails seront fournis dans la langue choisie."
+                  : "Resources and emails will be served in your chosen language."}
+              </p>
             </div>
           </div>
           <div className="flex rounded-xl border border-white/10 bg-[#0f1424] p-1">
@@ -467,7 +481,7 @@ export default function SettingsPage() {
           </div>
           {(localeSaving || localeSaved) && (
             <p className="text-xs text-sky-400 flex items-center gap-1">
-              {localeSaved ? <><Check className="h-3 w-3" /> Saved</> : "Saving…"}
+              {localeSaved ? <><Check className="h-3 w-3" /> {isFr ? "Enregistré" : "Saved"}</> : (isFr ? "Enregistrement…" : "Saving…")}
             </p>
           )}
         </section>
@@ -478,7 +492,7 @@ export default function SettingsPage() {
           className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-[#111827] px-5 py-4 text-sm font-semibold text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition"
         >
           <LogOut className="h-4 w-4" />
-          Sign out
+          {isFr ? "Se déconnecter" : "Sign out"}
         </button>
 
       </div>

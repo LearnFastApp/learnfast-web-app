@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { ARTICLES } from "@/lib/articles";
+import { ARTICLES, ARTICLES_FR } from "@/lib/articles";
 import { sendResourceAlertEmail, BrokenLink } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
@@ -50,9 +50,9 @@ export async function POST(req: NextRequest) {
   const results: { url: string; ok: boolean; status: number; reason: string }[] = [];
   const newlyBroken: BrokenLink[] = [];
 
-  // Deduplicate URLs (Feynman Technique appears in two dimensions)
+  // Combine EN + FR, deduplicate by URL
   const seen = new Set<string>();
-  const toCheck = ARTICLES.filter((a) => {
+  const toCheck = [...ARTICLES, ...ARTICLES_FR].filter((a) => {
     if (seen.has(a.url)) return false;
     seen.add(a.url);
     return true;

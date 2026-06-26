@@ -222,6 +222,14 @@ export default function Dashboard() {
     router.push(`/sessions/${sessionId}`);
   }
 
+  async function handleToggleLocale(newLocale: "en" | "fr") {
+    if (newLocale === locale) return;
+    setLocale(newLocale);
+    if (user) {
+      await updateDoc(doc(db, "presenters", user.uid), { locale: newLocale });
+    }
+  }
+
   if (loading || !user) {
     return (
       <main className="min-h-screen bg-[#05070d] flex items-center justify-center">
@@ -328,13 +336,15 @@ export default function Dashboard() {
         <CreateSessionModal
           onClose={() => setShowModal(false)}
           onCreated={handleSessionCreated}
+          locale={locale}
         />
       )}
-      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} locale={locale} />}
       {showOnboarding && (
         <OnboardingModal
           onClose={markOnboardingSeen}
           onCreateSession={() => { markOnboardingSeen(); setShowModal(true); }}
+          locale={locale}
         />
       )}
       <MobileNav locale={locale} onCreateSession={() => {
@@ -456,19 +466,38 @@ export default function Dashboard() {
               </p>
             </div>
 
-            <button
-              onClick={() => {
-                if (!isPaidOrPilot && sessions.length >= 2) {
-                  setShowUpgrade(true);
-                } else {
-                  setShowModal(true);
-                }
-              }}
-              className="flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-400"
-            >
-              <Plus className="h-5 w-5" />
-              {t.createSession}
-            </button>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-0.5 rounded-lg border border-white/10 bg-[#0f1424] p-0.5">
+                <button
+                  onClick={() => handleToggleLocale("en")}
+                  title="English"
+                  className={`rounded-md px-1.5 py-0.5 text-lg leading-none transition ${locale === "en" ? "bg-white/15" : "opacity-30 hover:opacity-60"}`}
+                >
+                  🇬🇧
+                </button>
+                <button
+                  onClick={() => handleToggleLocale("fr")}
+                  title="Français"
+                  className={`rounded-md px-1.5 py-0.5 text-lg leading-none transition ${locale === "fr" ? "bg-white/15" : "opacity-30 hover:opacity-60"}`}
+                >
+                  🇫🇷
+                </button>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (!isPaidOrPilot && sessions.length >= 2) {
+                    setShowUpgrade(true);
+                  } else {
+                    setShowModal(true);
+                  }
+                }}
+                className="flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-400"
+              >
+                <Plus className="h-5 w-5" />
+                <span className="hidden sm:inline">{t.createSession}</span>
+              </button>
+            </div>
           </header>
 
           {!isPaidOrPilot && sessions.length >= 2 && (

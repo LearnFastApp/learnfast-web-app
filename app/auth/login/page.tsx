@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
   createUserWithEmailAndPassword,
@@ -27,8 +27,25 @@ export default function LoginPage() {
   const [verificationSent, setVerificationSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [verifyNeeded, setVerifyNeeded] = useState(false);
+  const [isFr, setIsFr] = useState(false);
+
+  useEffect(() => {
+    setIsFr(navigator.language?.toLowerCase().startsWith("fr"));
+  }, []);
 
   function friendlyError(code: string): string {
+    if (isFr) {
+      switch (code) {
+        case "auth/email-already-in-use": return "Un compte avec cet email existe déjà.";
+        case "auth/invalid-email": return "Veuillez entrer une adresse email valide.";
+        case "auth/weak-password": return "Le mot de passe doit contenir au moins 6 caractères.";
+        case "auth/user-not-found":
+        case "auth/wrong-password":
+        case "auth/invalid-credential": return "Email ou mot de passe incorrect.";
+        case "auth/too-many-requests": return "Trop de tentatives. Veuillez réessayer plus tard.";
+        default: return "Une erreur s'est produite. Veuillez réessayer.";
+      }
+    }
     switch (code) {
       case "auth/email-already-in-use": return "An account with this email already exists.";
       case "auth/invalid-email": return "Please enter a valid email address.";
@@ -60,8 +77,14 @@ export default function LoginPage() {
     }
 
     if (mode === "signup") {
-      if (password !== confirm) { setError("Passwords don't match."); return; }
-      if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+      if (password !== confirm) {
+        setError(isFr ? "Les mots de passe ne correspondent pas." : "Passwords don't match.");
+        return;
+      }
+      if (password.length < 6) {
+        setError(isFr ? "Le mot de passe doit contenir au moins 6 caractères." : "Password must be at least 6 characters.");
+        return;
+      }
     }
 
     setLoading(true);
@@ -120,18 +143,23 @@ export default function LoginPage() {
           {verificationSent ? (
             <div className="text-center">
               <p className="text-4xl mb-4">📬</p>
-              <h2 className="text-xl font-bold text-white mb-2">Check your email</h2>
+              <h2 className="text-xl font-bold text-white mb-2">
+                {isFr ? "Vérifiez vos emails" : "Check your email"}
+              </h2>
               <p className="text-sm text-slate-400 mb-2">
-                We&apos;ve sent a confirmation link to <span className="text-white">{email}</span>.
+                {isFr ? "Nous avons envoyé un lien de confirmation à " : "We've sent a confirmation link to "}
+                <span className="text-white">{email}</span>.
               </p>
               <p className="text-sm text-slate-400 mb-6">
-                Click the link to verify your account, then sign in below.
+                {isFr
+                  ? "Cliquez sur le lien pour vérifier votre compte, puis connectez-vous ci-dessous."
+                  : "Click the link to verify your account, then sign in below."}
               </p>
               <button
                 onClick={() => { setVerificationSent(false); setMode("signin"); }}
                 className="w-full rounded-xl bg-violet-500 px-4 py-3 font-semibold text-white hover:bg-violet-400 transition"
               >
-                Go to sign in
+                {isFr ? "Aller à la connexion" : "Go to sign in"}
               </button>
             </div>
           ) : null}
@@ -139,9 +167,13 @@ export default function LoginPage() {
           {verifyNeeded ? (
             <div className="text-center">
               <p className="text-4xl mb-4">✉️</p>
-              <h2 className="text-xl font-bold text-white mb-2">Verify your email first</h2>
+              <h2 className="text-xl font-bold text-white mb-2">
+                {isFr ? "Vérifiez d'abord votre email" : "Verify your email first"}
+              </h2>
               <p className="text-sm text-slate-400 mb-6">
-                Please click the link we sent to <span className="text-white">{email}</span> before signing in.
+                {isFr ? "Cliquez sur le lien envoyé à " : "Please click the link we sent to "}
+                <span className="text-white">{email}</span>
+                {isFr ? " avant de vous connecter." : " before signing in."}
               </p>
               <button
                 onClick={async () => {
@@ -155,29 +187,30 @@ export default function LoginPage() {
                 }}
                 className="w-full rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-slate-300 hover:text-white transition mb-3"
               >
-                Resend verification email
+                {isFr ? "Renvoyer l'email de vérification" : "Resend verification email"}
               </button>
               <button
                 onClick={() => { setVerifyNeeded(false); setMode("signin"); }}
                 className="w-full text-sm text-slate-500 hover:text-slate-300 transition"
               >
-                Back to sign in
+                {isFr ? "Retour à la connexion" : "Back to sign in"}
               </button>
             </div>
           ) : null}
+
           {!verificationSent && !verifyNeeded && mode !== "reset" && (
             <div className="mb-8 flex rounded-xl border border-white/10 bg-[#0f1424] p-1">
               <button
                 onClick={() => { setMode("signin"); setError(""); }}
                 className={`flex-1 rounded-lg py-2 text-sm font-semibold transition ${mode === "signin" ? "bg-violet-500 text-white" : "text-slate-400 hover:text-white"}`}
               >
-                Sign in
+                {isFr ? "Connexion" : "Sign in"}
               </button>
               <button
                 onClick={() => { setMode("signup"); setError(""); }}
                 className={`flex-1 rounded-lg py-2 text-sm font-semibold transition ${mode === "signup" ? "bg-violet-500 text-white" : "text-slate-400 hover:text-white"}`}
               >
-                Create account
+                {isFr ? "Créer un compte" : "Create account"}
               </button>
             </div>
           )}
@@ -186,21 +219,28 @@ export default function LoginPage() {
             resetSent ? (
               <div className="text-center">
                 <p className="text-2xl mb-3">📬</p>
-                <h2 className="text-xl font-bold text-white mb-2">Check your email</h2>
+                <h2 className="text-xl font-bold text-white mb-2">
+                  {isFr ? "Vérifiez vos emails" : "Check your email"}
+                </h2>
                 <p className="text-slate-400 text-sm mb-6">
-                  We sent a password reset link to <span className="text-white">{email}</span>.
+                  {isFr ? "Nous avons envoyé un lien de réinitialisation à " : "We sent a password reset link to "}
+                  <span className="text-white">{email}</span>.
                 </p>
                 <button
                   onClick={() => { setMode("signin"); setResetSent(false); }}
                   className="text-sm text-violet-400 hover:text-violet-300"
                 >
-                  Back to sign in
+                  {isFr ? "Retour à la connexion" : "Back to sign in"}
                 </button>
               </div>
             ) : (
               <>
-                <h2 className="text-xl font-bold text-white mb-2">Reset password</h2>
-                <p className="text-sm text-slate-400 mb-6">Enter your email and we&apos;ll send a reset link.</p>
+                <h2 className="text-xl font-bold text-white mb-2">
+                  {isFr ? "Réinitialiser le mot de passe" : "Reset password"}
+                </h2>
+                <p className="text-sm text-slate-400 mb-6">
+                  {isFr ? "Entrez votre email et nous vous enverrons un lien de réinitialisation." : "Enter your email and we'll send a reset link."}
+                </p>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <input
                     type="email"
@@ -216,14 +256,14 @@ export default function LoginPage() {
                     disabled={loading}
                     className="w-full rounded-xl bg-violet-500 px-4 py-3 font-semibold text-white hover:bg-violet-400 disabled:opacity-50"
                   >
-                    {loading ? "Sending…" : "Send reset link"}
+                    {loading ? (isFr ? "Envoi…" : "Sending…") : (isFr ? "Envoyer le lien" : "Send reset link")}
                   </button>
                   <button
                     type="button"
                     onClick={() => { setMode("signin"); setError(""); }}
                     className="w-full text-sm text-slate-500 hover:text-slate-300 transition"
                   >
-                    Back to sign in
+                    {isFr ? "Retour à la connexion" : "Back to sign in"}
                   </button>
                 </form>
               </>
@@ -233,7 +273,7 @@ export default function LoginPage() {
               {mode === "signup" && (
                 <input
                   type="text"
-                  placeholder="Your name (optional)"
+                  placeholder={isFr ? "Votre nom (facultatif)" : "Your name (optional)"}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-violet-500"
@@ -242,7 +282,7 @@ export default function LoginPage() {
               <input
                 type="email"
                 required
-                placeholder="Email address"
+                placeholder={isFr ? "Adresse email" : "Email address"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-violet-500"
@@ -250,7 +290,7 @@ export default function LoginPage() {
               <input
                 type="password"
                 required
-                placeholder="Password"
+                placeholder={isFr ? "Mot de passe" : "Password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-violet-500"
@@ -259,7 +299,7 @@ export default function LoginPage() {
                 <input
                   type="password"
                   required
-                  placeholder="Confirm password"
+                  placeholder={isFr ? "Confirmer le mot de passe" : "Confirm password"}
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-violet-500"
@@ -274,8 +314,8 @@ export default function LoginPage() {
                 className="w-full rounded-xl bg-violet-500 px-4 py-3 font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-400 disabled:opacity-50"
               >
                 {loading
-                  ? mode === "signup" ? "Creating account…" : "Signing in…"
-                  : mode === "signup" ? "Create account" : "Sign in"}
+                  ? mode === "signup" ? (isFr ? "Création du compte…" : "Creating account…") : (isFr ? "Connexion…" : "Signing in…")
+                  : mode === "signup" ? (isFr ? "Créer un compte" : "Create account") : (isFr ? "Se connecter" : "Sign in")}
               </button>
 
               {mode === "signin" && (
@@ -284,7 +324,7 @@ export default function LoginPage() {
                   onClick={() => { setMode("reset"); setError(""); }}
                   className="w-full text-sm text-slate-500 hover:text-slate-300 transition"
                 >
-                  Forgot password?
+                  {isFr ? "Mot de passe oublié ?" : "Forgot password?"}
                 </button>
               )}
             </form>
@@ -293,7 +333,9 @@ export default function LoginPage() {
 
         {mode === "signup" && (
           <p className="mt-4 text-center text-xs text-slate-600">
-            By creating an account you agree to our terms of service.
+            {isFr
+              ? "En créant un compte, vous acceptez nos conditions d'utilisation."
+              : "By creating an account you agree to our terms of service."}
           </p>
         )}
       </div>

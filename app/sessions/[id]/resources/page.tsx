@@ -152,6 +152,7 @@ function ResourceSection({
   label,
   dimLabels,
   descriptions,
+  isFr,
 }: {
   dimension: Dimension;
   score: number;
@@ -160,6 +161,7 @@ function ResourceSection({
   label: string;
   dimLabels: Record<Dimension, string>;
   descriptions: Record<Dimension, string>;
+  isFr: boolean;
 }) {
   const color = DIM_COLORS[dimension];
 
@@ -193,7 +195,7 @@ function ResourceSection({
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <Play className="h-4 w-4 text-red-500" />
-                  <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400">Videos</h3>
+                  <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400">{isFr ? "Vidéos" : "Videos"}</h3>
                 </div>
                 <div className="space-y-2">
                   {resources.videos.slice(0, 3).map((v) => (
@@ -249,7 +251,7 @@ function ResourceSection({
             )}
           </div>
         ) : (
-          <p className="text-sm text-slate-500">Resources unavailable right now.</p>
+          <p className="text-sm text-slate-500">{isFr ? "Ressources indisponibles pour l'instant." : "Resources unavailable right now."}</p>
         )}
       </div>
     </section>
@@ -339,10 +341,12 @@ export default function ResourcesPage() {
     });
   }, [audienceAverages, user, locale]);
 
+  const isFr = locale === "fr";
+
   if (pageLoading || authLoading) {
     return (
       <main className="min-h-screen bg-[#05070d] flex items-center justify-center">
-        <p className="text-slate-400 animate-pulse">Loading resources…</p>
+        <p className="text-slate-400 animate-pulse">{isFr ? "Chargement des ressources…" : "Loading resources…"}</p>
       </main>
     );
   }
@@ -354,8 +358,14 @@ export default function ResourcesPage() {
     return (
       <main className="min-h-screen bg-[#05070d] flex items-center justify-center p-6">
         <div className="text-center">
-          <p className="text-slate-400 mb-4">No feedback data yet — resources will appear once your audience has responded.</p>
-          <a href={`/sessions/${id}`} className="text-violet-400 hover:text-violet-300 text-sm">← Back to session</a>
+          <p className="text-slate-400 mb-4">
+            {isFr
+              ? "Aucune donnée de feedback pour l'instant — les ressources apparaîtront une fois que votre audience aura répondu."
+              : "No feedback data yet — resources will appear once your audience has responded."}
+          </p>
+          <a href={`/sessions/${id}`} className="text-violet-400 hover:text-violet-300 text-sm">
+            {isFr ? "← Retour à la session" : "← Back to session"}
+          </a>
         </div>
       </main>
     );
@@ -367,18 +377,22 @@ export default function ResourcesPage() {
       <header className="sticky top-0 z-10 border-b border-white/10 bg-[#05070d]/90 backdrop-blur px-6 py-4">
         <div className="mx-auto max-w-4xl flex items-center justify-between">
           <a href={`/sessions/${id}`} className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition">
-            ← {sessionTitle || "Back to session"}
+            ← {sessionTitle || (isFr ? "Retour à la session" : "Back to session")}
           </a>
-          <h1 className="text-sm font-semibold text-white">Improvement Resources</h1>
+          <h1 className="text-sm font-semibold text-white">
+            {isFr ? "Ressources d'amélioration" : "Improvement Resources"}
+          </h1>
           <div className="w-32" />
         </div>
       </header>
 
       <div className="mx-auto max-w-4xl px-6 py-8 space-y-8">
         <div>
-          <h2 className="text-2xl font-bold">Your resources</h2>
+          <h2 className="text-2xl font-bold">{isFr ? "Vos ressources" : "Your resources"}</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Curated based on your audience feedback · personalised to what you haven&apos;t seen yet.
+            {isFr
+              ? "Sélectionnées d'après les retours de votre audience · personnalisées selon ce que vous n'avez pas encore vu."
+              : "Curated based on your audience feedback · personalised to what you haven't seen yet."}
           </p>
         </div>
 
@@ -387,9 +401,10 @@ export default function ResourcesPage() {
           score={audienceAverages[primary]}
           resources={primaryResources}
           loading={primaryLoading}
-          label={locale === "fr" ? "Axe prioritaire" : "Recommended focus"}
+          label={isFr ? "Axe prioritaire" : "Recommended focus"}
           dimLabels={DIMENSION_LABELS}
           descriptions={DESCRIPTIONS}
+          isFr={isFr}
         />
 
         {secondary && (
@@ -398,9 +413,10 @@ export default function ResourcesPage() {
             score={audienceAverages[secondary]}
             resources={secondaryResources}
             loading={secondaryLoading}
-            label={locale === "fr" ? "À améliorer aussi" : "Also worth working on"}
+            label={isFr ? "À améliorer aussi" : "Also worth working on"}
             dimLabels={DIMENSION_LABELS}
             descriptions={DESCRIPTIONS}
+            isFr={isFr}
           />
         )}
       </div>
