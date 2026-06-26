@@ -205,12 +205,6 @@ export default function AnalyticsPage() {
     DIMENSIONS.map((dim) => [dim, avg(filtered.map((s) => s.averages[dim]))])
   ) as Record<Dimension, number>;
 
-  const radarData = DIMENSIONS.map((dim) => ({
-    dimension: dim.charAt(0).toUpperCase() + dim.slice(1),
-    score: overallAverages[dim],
-    fullMark: 100,
-  }));
-
   const lowestDim = filtered.length
     ? (Object.entries(overallAverages) as [Dimension, number][]).reduce((a, b) => b[1] < a[1] ? b : a)[0]
     : null;
@@ -220,12 +214,83 @@ export default function AnalyticsPage() {
     : null;
 
   const totalResponses = filtered.reduce((acc, s) => acc + s.responseCount, 0);
-  const insights = generateInsights(filtered);
+  const insights = generateInsights(filtered, locale);
+
+  const DIM_LABELS_FR: Record<Dimension, string> = {
+    clarity: "Clarté", engagement: "Engagement", energy: "Énergie",
+    understanding: "Compréhension", connection: "Connexion",
+  };
+  const isFr = locale === "fr";
+  const dimLabel = (dim: Dimension) => isFr ? DIM_LABELS_FR[dim] : dim.charAt(0).toUpperCase() + dim.slice(1);
+
+  const radarData = DIMENSIONS.map((dim) => ({
+    dimension: dimLabel(dim),
+    score: overallAverages[dim],
+    fullMark: 100,
+  }));
+
+  const t = isFr ? {
+    pageTitle: "Analytiques",
+    pageSubtitle: "Tendances de performance sur vos sessions.",
+    backLink: "← Tableau de bord",
+    allSessions: "Toutes les sessions",
+    sessionsAnalysed: "Sessions analysées",
+    totalResponses: (n: number) => `${n} réponse${n !== 1 ? "s" : ""} au total`,
+    overallAverage: "Moyenne globale",
+    acrossDimensions: "sur toutes les dimensions /100",
+    strongestArea: "Point fort",
+    focusArea: "Axe d'amélioration",
+    avgScore: (n: number) => `moy. ${n}/100`,
+    insightsTitle: "Insights",
+    insightsSubtitle: "détectés automatiquement",
+    hide: "masquer ▲",
+    show: "afficher ▼",
+    noSessions: "Aucune session avec des retours pour l'instant.",
+    noSessionsSub: "Créez une session et collectez des réponses pour voir vos analytiques.",
+    perfOverTime: "Performance dans le temps",
+    perfOverTimeSub: "Activez/désactivez des dimensions pour affiner votre vue.",
+    overallProfile: "Profil global",
+    overallProfileSub: "Moyenne sur toutes les sessions filtrées.",
+    dimTrends: "Tendances par dimension",
+    flat: "stable",
+    liteFeature: "Fonctionnalité Lite",
+    liteTitle: "Analytiques & suivi des tendances",
+    liteDesc: "Visualisez l'évolution de vos scores entre sessions, détectez des tendances et prouvez votre progression dans le temps.",
+    liteBtn: "Commencer l'essai de 7 jours →",
+  } : {
+    pageTitle: "Analytics",
+    pageSubtitle: "Performance trends across your sessions.",
+    backLink: "← Dashboard",
+    allSessions: "All sessions",
+    sessionsAnalysed: "Sessions analysed",
+    totalResponses: (n: number) => `${n} total response${n !== 1 ? "s" : ""}`,
+    overallAverage: "Overall average",
+    acrossDimensions: "across all dimensions /100",
+    strongestArea: "Strongest area",
+    focusArea: "Focus area",
+    avgScore: (n: number) => `avg ${n}/100`,
+    insightsTitle: "Insights",
+    insightsSubtitle: "auto-detected from your data",
+    hide: "hide ▲",
+    show: "show ▼",
+    noSessions: "No sessions with feedback yet.",
+    noSessionsSub: "Create a session and collect responses to see your analytics.",
+    perfOverTime: "Performance over time",
+    perfOverTimeSub: "Toggle dimensions to focus your view.",
+    overallProfile: "Overall profile",
+    overallProfileSub: "Average across all filtered sessions.",
+    dimTrends: "Dimension trends",
+    flat: "flat",
+    liteFeature: "Lite feature",
+    liteTitle: "Analytics & trend tracking",
+    liteDesc: "See how your scores move across sessions, detect patterns, and prove your improvement over time.",
+    liteBtn: "Start 7-day free trial →",
+  };
 
   if (authLoading || loading) {
     return (
       <main className="min-h-screen bg-[#05070d] flex items-center justify-center">
-        <p className="text-slate-400 animate-pulse">Loading analytics…</p>
+        <p className="text-slate-400 animate-pulse">{isFr ? "Chargement des analytiques…" : "Loading analytics…"}</p>
       </main>
     );
   }
@@ -236,10 +301,10 @@ export default function AnalyticsPage() {
       <header className="border-b border-white/10 bg-[#101523] px-6 py-6 lg:px-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Analytics</h1>
-            <p className="text-sm text-slate-400">Performance trends across your sessions.</p>
+            <h1 className="text-2xl font-bold">{t.pageTitle}</h1>
+            <p className="text-sm text-slate-400">{t.pageSubtitle}</p>
           </div>
-          <a href="/dashboard" className="text-sm text-slate-400 hover:text-white">← Dashboard</a>
+          <a href="/dashboard" className="text-sm text-slate-400 hover:text-white">{t.backLink}</a>
         </div>
 
         {allTags.length > 0 && (
@@ -248,7 +313,7 @@ export default function AnalyticsPage() {
               onClick={() => setSelectedTag("all")}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${selectedTag === "all" ? "bg-violet-500 text-white" : "border border-white/10 text-slate-400 hover:text-white"}`}
             >
-              All sessions
+              {t.allSessions}
             </button>
             {allTags.map((tag) => (
               <button
@@ -268,7 +333,7 @@ export default function AnalyticsPage() {
         <div className="relative">
           <div className="p-6 lg:p-8 space-y-8 pointer-events-none select-none blur-[3px] opacity-60">
             <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {[["Sessions analysed", "—", "responses"], ["Overall average", "—", "across all dimensions /100"], ["Strongest area", "—", "avg —/100"], ["Focus area", "—", "avg —/100"]].map(([label, val, sub]) => (
+              {[[t.sessionsAnalysed, "—", isFr ? "réponses" : "responses"], [t.overallAverage, "—", t.acrossDimensions], [t.strongestArea, "—", isFr ? "moy. —/100" : "avg —/100"], [t.focusArea, "—", isFr ? "moy. —/100" : "avg —/100"]].map(([label, val, sub]) => (
                 <div key={label} className="rounded-2xl border border-white/10 bg-[#111827] p-5">
                   <p className="text-sm text-slate-400 mb-1">{label}</p>
                   <p className="text-3xl font-bold">{val}</p>
@@ -287,16 +352,16 @@ export default function AnalyticsPage() {
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/15 border border-violet-500/30 mx-auto">
                 <BarChart3 className="h-6 w-6 text-violet-400" />
               </div>
-              <p className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-2">Lite feature</p>
-              <h2 className="text-xl font-bold text-white mb-2">Analytics & trend tracking</h2>
+              <p className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-2">{t.liteFeature}</p>
+              <h2 className="text-xl font-bold text-white mb-2">{t.liteTitle}</h2>
               <p className="text-sm text-slate-400 mb-6 leading-relaxed">
-                See how your scores move across sessions, detect patterns, and prove your improvement over time.
+                {t.liteDesc}
               </p>
               <a
                 href="/pricing"
                 className="block w-full rounded-xl bg-violet-500 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition text-center"
               >
-                Start 7-day free trial →
+                {t.liteBtn}
               </a>
             </div>
           </div>
@@ -307,37 +372,37 @@ export default function AnalyticsPage() {
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <BarChart3 className="h-12 w-12 text-slate-600 mb-4" />
-            <p className="text-slate-400">No sessions with feedback yet.</p>
-            <p className="text-sm text-slate-600 mt-1">Create a session and collect responses to see your analytics.</p>
+            <p className="text-slate-400">{t.noSessions}</p>
+            <p className="text-sm text-slate-600 mt-1">{t.noSessionsSub}</p>
           </div>
         ) : (
           <>
             <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-2xl border border-white/10 bg-[#111827] p-5">
-                <p className="text-sm text-slate-400 mb-1">Sessions analysed</p>
+                <p className="text-sm text-slate-400 mb-1">{t.sessionsAnalysed}</p>
                 <p className="text-3xl font-bold">{filtered.length}</p>
-                <p className="text-xs text-slate-500 mt-1">{totalResponses} total responses</p>
+                <p className="text-xs text-slate-500 mt-1">{t.totalResponses(totalResponses)}</p>
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-[#111827] p-5">
-                <p className="text-sm text-slate-400 mb-1">Overall average</p>
+                <p className="text-sm text-slate-400 mb-1">{t.overallAverage}</p>
                 <p className="text-3xl font-bold">{avg(Object.values(overallAverages))}</p>
-                <p className="text-xs text-slate-500 mt-1">across all dimensions /100</p>
+                <p className="text-xs text-slate-500 mt-1">{t.acrossDimensions}</p>
               </div>
 
               {highestDim && (
                 <div className="rounded-2xl border border-green-500/20 bg-[#111827] p-5">
-                  <p className="text-sm text-slate-400 mb-1">Strongest area</p>
-                  <p className="text-3xl font-bold text-green-400 capitalize">{highestDim}</p>
-                  <p className="text-xs text-slate-500 mt-1">avg {overallAverages[highestDim]}/100</p>
+                  <p className="text-sm text-slate-400 mb-1">{t.strongestArea}</p>
+                  <p className="text-3xl font-bold text-green-400">{dimLabel(highestDim)}</p>
+                  <p className="text-xs text-slate-500 mt-1">{t.avgScore(overallAverages[highestDim])}</p>
                 </div>
               )}
 
               {lowestDim && (
                 <div className="rounded-2xl border border-amber-500/20 bg-[#111827] p-5">
-                  <p className="text-sm text-slate-400 mb-1">Focus area</p>
-                  <p className="text-3xl font-bold text-amber-400 capitalize">{lowestDim}</p>
-                  <p className="text-xs text-slate-500 mt-1">avg {overallAverages[lowestDim]}/100</p>
+                  <p className="text-sm text-slate-400 mb-1">{t.focusArea}</p>
+                  <p className="text-3xl font-bold text-amber-400">{dimLabel(lowestDim)}</p>
+                  <p className="text-xs text-slate-500 mt-1">{t.avgScore(overallAverages[lowestDim])}</p>
                 </div>
               )}
             </section>
@@ -349,10 +414,10 @@ export default function AnalyticsPage() {
                   className="flex items-center gap-2 mb-4 group"
                 >
                   <Lightbulb className="h-4 w-4 text-violet-400" />
-                  <h2 className="text-lg font-bold">Insights</h2>
-                  <span className="text-xs text-slate-500 ml-1">auto-detected from your data</span>
+                  <h2 className="text-lg font-bold">{t.insightsTitle}</h2>
+                  <span className="text-xs text-slate-500 ml-1">{t.insightsSubtitle}</span>
                   <span className="ml-2 text-xs text-slate-600 group-hover:text-slate-400 transition">
-                    {showInsights ? "hide ▲" : "show ▼"}
+                    {showInsights ? t.hide : t.show}
                   </span>
                 </button>
                 {showInsights && (
@@ -368,8 +433,8 @@ export default function AnalyticsPage() {
             <section className="rounded-2xl border border-white/10 bg-[#111827] p-6">
               <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
                 <div>
-                  <h2 className="text-lg font-bold mb-1">Performance over time</h2>
-                  <p className="text-sm text-slate-400">Toggle dimensions to focus your view.</p>
+                  <h2 className="text-lg font-bold mb-1">{t.perfOverTime}</h2>
+                  <p className="text-sm text-slate-400">{t.perfOverTimeSub}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {DIMENSIONS.map((dim) => {
@@ -389,7 +454,7 @@ export default function AnalyticsPage() {
                           className="h-2 w-2 rounded-full"
                           style={{ backgroundColor: active ? DIM_COLORS[dim] : "#64748b" }}
                         />
-                        {dim}
+                        {dimLabel(dim)}
                       </button>
                     );
                   })}
@@ -416,7 +481,7 @@ export default function AnalyticsPage() {
                       strokeWidth={2}
                       dot={{ fill: DIM_COLORS[dim], r: 4, strokeWidth: 0 }}
                       activeDot={{ r: 7, fill: DIM_COLORS[dim], stroke: "#111827", strokeWidth: 2 }}
-                      name={dim.charAt(0).toUpperCase() + dim.slice(1)}
+                      name={dimLabel(dim)}
                     />
                   ))}
                 </LineChart>
@@ -425,8 +490,8 @@ export default function AnalyticsPage() {
 
             <section className="grid gap-6 lg:grid-cols-2">
               <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
-                <h2 className="text-lg font-bold mb-1">Overall profile</h2>
-                <p className="text-sm text-slate-400 mb-4">Average across all filtered sessions.</p>
+                <h2 className="text-lg font-bold mb-1">{t.overallProfile}</h2>
+                <p className="text-sm text-slate-400 mb-4">{t.overallProfileSub}</p>
                 <ResponsiveContainer width="100%" height={260}>
                   <RadarChart data={radarData}>
                     <PolarGrid stroke="#ffffff15" />
@@ -437,14 +502,14 @@ export default function AnalyticsPage() {
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
-                <h2 className="text-lg font-bold mb-4">Dimension trends</h2>
+                <h2 className="text-lg font-bold mb-4">{t.dimTrends}</h2>
                 <div className="space-y-4">
                   {DIMENSIONS.filter((dim) => activeDims.has(dim)).map((dim) => {
-                    const t = trend(filtered, dim);
+                    const trendVal = trend(filtered, dim);
                     const score = overallAverages[dim];
                     return (
                       <div key={dim} className="flex items-center gap-3">
-                        <div className="w-24 text-sm capitalize text-slate-300">{dim}</div>
+                        <div className="w-24 text-sm text-slate-300">{dimLabel(dim)}</div>
                         <div className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all"
@@ -452,9 +517,9 @@ export default function AnalyticsPage() {
                           />
                         </div>
                         <div className="w-10 text-right text-sm font-bold">{score}</div>
-                        <div className={`flex items-center gap-0.5 text-xs w-14 ${t > 0 ? "text-green-400" : t < 0 ? "text-red-400" : "text-slate-500"}`}>
-                          {t > 0 ? <TrendingUp className="h-3 w-3" /> : t < 0 ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
-                          {t !== 0 ? `${t > 0 ? "+" : ""}${t}` : "flat"}
+                        <div className={`flex items-center gap-0.5 text-xs w-14 ${trendVal > 0 ? "text-green-400" : trendVal < 0 ? "text-red-400" : "text-slate-500"}`}>
+                          {trendVal > 0 ? <TrendingUp className="h-3 w-3" /> : trendVal < 0 ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
+                          {trendVal !== 0 ? `${trendVal > 0 ? "+" : ""}${trendVal}` : t.flat}
                         </div>
                       </div>
                     );

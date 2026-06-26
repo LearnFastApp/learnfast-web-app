@@ -481,6 +481,7 @@ export default function LiveSessionPage() {
         <PresenterReflectionModal
           sessionId={id}
           presenterId={user.uid}
+          locale={locale}
           onClose={() => setShowReflection(false)}
           onSubmitted={() => setShowReflection(false)}
         />
@@ -694,7 +695,7 @@ export default function LiveSessionPage() {
                       {t.gapNote}
                     </p>
                     <p className="mt-4 text-sm text-slate-300 leading-relaxed border-t border-white/10 pt-4">
-                      {generateGapInsight(audienceAverages, reflection)}
+                      {generateGapInsight(audienceAverages, reflection, locale)}
                     </p>
                   </div>
                 )}

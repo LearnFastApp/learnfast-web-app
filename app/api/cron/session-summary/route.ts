@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
 
       const gapInsight =
         reflection && responses.length > 0
-          ? generateGapInsight(averages, reflection)
+          ? generateGapInsight(averages, reflection, (presenter.locale as "en" | "fr" | undefined) ?? "en")
           : null;
 
       const createdAt: Date | undefined = session.createdAt?.toDate?.();
