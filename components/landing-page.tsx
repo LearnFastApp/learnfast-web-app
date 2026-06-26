@@ -446,7 +446,7 @@ export default function LandingPage() {
           {/* Team enquiry */}
           <p className="text-center text-sm text-slate-500 mt-10">
             Planning for a team or organisation?{" "}
-            <a href="mailto:info@learnfast.com" className="text-violet-400 hover:text-violet-300 underline underline-offset-2 transition">
+            <a href="mailto:info@learnfastapp.com" className="text-violet-400 hover:text-violet-300 underline underline-offset-2 transition">
               Get in touch →
             </a>
           </p>
