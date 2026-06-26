@@ -53,7 +53,9 @@ interface ArticleResult {
 
 const CACHE_TTL_MS = 1000 * 60 * 60 * 24;
 
-async function getCachedResources(dimension: string) {
+// Only videos + TED are cached — articles are served fresh every request
+// so that fixes to lib/articles.ts and article_overrides take effect immediately.
+async function getCachedVideos(dimension: string) {
   const db = getAdminDb();
   const doc = await db.collection("resource_cache").doc(dimension).get();
   if (!doc.exists) return null;
@@ -63,13 +65,12 @@ async function getCachedResources(dimension: string) {
   return {
     videos: data.videos as VideoResult[],
     tedTalks: data.tedTalks as VideoResult[],
-    articles: data.articles as ArticleResult[],
   };
 }
 
-async function setCachedResources(
+async function setCachedVideos(
   dimension: string,
-  payload: { videos: VideoResult[]; tedTalks: VideoResult[]; articles: ArticleResult[] }
+  payload: { videos: VideoResult[]; tedTalks: VideoResult[] }
 ) {
   const db = getAdminDb();
   const { FieldValue } = await import("firebase-admin/firestore");
@@ -151,52 +152,61 @@ export async function GET(req: NextRequest) {
   // Optional auth — personalise if authenticated, serve full pool if not
   const uid = await verifyAuthToken(req);
 
-  // Fetch full pool (from Firestore cache or YouTube API)
-  let pool = await getCachedResources(cacheKey);
-  if (!pool) {
+  // Videos + TED: serve from cache (YouTube API is expensive); articles: always fresh
+  const [cachedVideos, articles] = await Promise.all([
+    getCachedVideos(cacheKey),
+    getHealthyArticles(dimension, locale),
+  ]);
+
+  let videos_pool: VideoResult[];
+  let tedTalks_pool: VideoResult[];
+
+  if (cachedVideos) {
+    videos_pool = cachedVideos.videos;
+    tedTalks_pool = cachedVideos.tedTalks;
+  } else {
     const apiKey = process.env.YOUTUBE_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: "YouTube API not configured" }, { status: 500 });
     }
-    const [videoRes, tedRes, articles] = await Promise.all([
+    const [videoRes, tedRes] = await Promise.all([
       fetch(buildYouTubeUrl(videoQueries[dimension], 6, apiKey, locale)),
       fetch(buildYouTubeUrl(tedQueries[dimension], 6, apiKey, locale)),
-      getHealthyArticles(dimension, locale),
     ]);
     if (!videoRes.ok || !tedRes.ok) {
       return NextResponse.json({ error: "YouTube API error" }, { status: 502 });
     }
     const [videoJson, tedJson] = await Promise.all([videoRes.json(), tedRes.json()]);
-    pool = { videos: parseVideos(videoJson), tedTalks: parseVideos(tedJson), articles };
-    await setCachedResources(cacheKey, pool);
+    videos_pool = parseVideos(videoJson);
+    tedTalks_pool = parseVideos(tedJson);
+    await setCachedVideos(cacheKey, { videos: videos_pool, tedTalks: tedTalks_pool });
   }
 
   if (!uid) {
-    // Unauthenticated — serve full pool, no history tracking
-    return NextResponse.json(pool);
+    return NextResponse.json({ videos: videos_pool, tedTalks: tedTalks_pool, articles });
   }
 
   // Filter seen resources for this user
   const seen = await getSeenResources(uid, dimension);
 
   const { items: videos, didReset: videosReset } = filterUnseen(
-    pool.videos, (v) => v.videoId, seen.videos
+    videos_pool, (v) => v.videoId, seen.videos
   );
   const { items: tedTalks, didReset: tedReset } = filterUnseen(
-    pool.tedTalks, (v) => v.videoId, seen.ted
+    tedTalks_pool, (v) => v.videoId, seen.ted
   );
-  const { items: articles, didReset: articlesReset } = filterUnseen(
-    pool.articles, (a) => a.url, seen.articles
+  const { items: filteredArticles, didReset: articlesReset } = filterUnseen(
+    articles, (a) => a.url, seen.articles
   );
 
-  const response = { videos, tedTalks, articles };
+  const response = { videos, tedTalks, articles: filteredArticles };
 
   // Record served resources in the background — don't block the response
   recordSeenResources(
     uid,
     dimension,
     {
-      articles: articles.map((a) => a.url),
+      articles: filteredArticles.map((a) => a.url),
       videos: videos.map((v) => v.videoId),
       ted: tedTalks.map((v) => v.videoId),
       podcasts: [],
