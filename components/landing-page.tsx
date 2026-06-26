@@ -399,7 +399,7 @@ export default function LandingPage() {
                 COMING SOON
               </div>
               <p className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-5">Pro</p>
-              <p className="text-5xl font-black mb-1 text-slate-300">TBC<span className="text-lg font-normal text-slate-500">/mo</span></p>
+              <p className="text-5xl font-black mb-1 text-slate-300">£9.99<span className="text-lg font-normal text-slate-500">/mo</span></p>
               <p className="text-sm text-slate-500 mb-8">Premium plan · launching soon</p>
               <ul className="space-y-3 text-sm text-slate-300 mb-8 flex-1">
                 {[
