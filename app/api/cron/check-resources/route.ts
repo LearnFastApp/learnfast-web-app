@@ -19,9 +19,9 @@ async function checkUrl(url: string): Promise<CheckResult> {
       signal: AbortSignal.timeout(12000),
     });
 
-    // 429 = rate-limited — content is fine for users
-    if (res.status === 429) {
-      return { ok: true, status: 429, reason: "", finalUrl: res.url };
+    // 429 = rate-limited; 406 = bot-detection (e.g. Entrepreneur.com) — content is fine for users
+    if (res.status === 429 || res.status === 406) {
+      return { ok: true, status: res.status, reason: "", finalUrl: res.url };
     }
 
     if (!res.ok) {

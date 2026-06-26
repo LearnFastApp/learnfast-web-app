@@ -21,9 +21,9 @@ export const ARTICLES: ArticleEntry[] = [
   { dimension: "clarity", title: "How to Start a Presentation: 12 Ways to Keep Them Engaged", url: "https://visme.co/blog/how-to-start-a-presentation/", source: "Visme" },
   { dimension: "clarity", title: "The Pyramid Principle: How to Communicate With Clarity", url: "https://www.myconsultingoffer.org/case-study-interview-prep/pyramid-principle/", source: "My Consulting Offer" },
   { dimension: "clarity", title: "How to Simplify Complex Information for Any Audience", url: "https://www.entrepreneur.com/leadership/how-to-simplify-complex-information-for-any-audience/229935", source: "Entrepreneur" },
-  { dimension: "clarity", title: "Business Communication Skills: What They Are and How to Improve", url: "https://www.coursera.org/articles/business-communication", source: "Coursera" },
+  { dimension: "clarity", title: "Verbal Communication Skills: What They Are and How to Improve", url: "https://www.coursera.org/articles/verbal-communication", source: "Coursera" },
   { dimension: "clarity", title: "Presentation Skills: Your Guide to Communicating Ideas Clearly", url: "https://www.coursera.org/articles/presentation-skills", source: "Coursera" },
-  { dimension: "clarity", title: "How to Structure a Presentation", url: "https://www.indeed.com/career-advice/career-development/how-to-structure-a-presentation", source: "Indeed" },
+  { dimension: "clarity", title: "Circle of Competence: Why Knowing What You Don't Know Matters", url: "https://fs.blog/circle-of-competence/", source: "Farnam Street" },
 
   // ── Engagement ───────────────────────────────────────────────────────────
   { dimension: "engagement", title: "Active Listening: The Art of Empathetic Conversation", url: "https://positivepsychology.com/active-listening/", source: "Positive Psychology" },
@@ -38,10 +38,10 @@ export const ARTICLES: ArticleEntry[] = [
   { dimension: "engagement", title: "The Surprising Power of Questions", url: "https://hbr.org/2018/05/the-surprising-power-of-questions", source: "Harvard Business Review" },
   { dimension: "engagement", title: "Storytelling That Moves People", url: "https://hbr.org/2003/06/storytelling-that-moves-people", source: "Harvard Business Review" },
   { dimension: "engagement", title: "How to Hook Your Audience in 30 Seconds", url: "https://www.entrepreneur.com/leadership/how-to-hook-your-audience-in-30-seconds/245761", source: "Entrepreneur" },
-  { dimension: "engagement", title: "Storytelling Skills: How to Captivate Any Audience", url: "https://www.coursera.org/articles/storytelling-skills", source: "Coursera" },
-  { dimension: "engagement", title: "How to Tell a Great Story", url: "https://hbr.org/2020/02/how-to-tell-a-great-story", source: "Harvard Business Review" },
+  { dimension: "engagement", title: "Active Constructive Responding: A Deeper Form of Listening", url: "https://positivepsychology.com/active-constructive-responding/", source: "Positive Psychology" },
+  { dimension: "engagement", title: "Listening Skills: Why Listening Is Important", url: "https://www.skillsyouneed.com/ips/listening-skills.html", source: "Skills You Need" },
   { dimension: "engagement", title: "Interactive Presentations: Techniques to Engage Your Audience", url: "https://visme.co/blog/interactive-presentation/", source: "Visme" },
-  { dimension: "engagement", title: "How to Engage an Audience: Techniques That Actually Work", url: "https://www.indeed.com/career-advice/career-development/how-to-engage-an-audience", source: "Indeed" },
+  { dimension: "engagement", title: "Motivational Interviewing: Listening With Empathy", url: "https://positivepsychology.com/motivational-interviewing/", source: "Positive Psychology" },
   { dimension: "engagement", title: "The Power of Questions: Engaging Your Audience", url: "https://www.entrepreneur.com/leadership/the-power-of-questions-how-asking-the-right-ones-can/243855", source: "Entrepreneur" },
 
   // ── Energy ───────────────────────────────────────────────────────────────
@@ -54,13 +54,13 @@ export const ARTICLES: ArticleEntry[] = [
   { dimension: "energy", title: "Sound Advice: How to Make Your Voice More Effective", url: "https://www.entrepreneur.com/growing-a-business/sound-advice-how-to-make-your-voice-more-effective/228515", source: "Entrepreneur" },
   { dimension: "energy", title: "How to Overcome Performance Anxiety as a Speaker", url: "https://positivepsychology.com/performance-anxiety/", source: "Positive Psychology" },
   { dimension: "energy", title: "Presentation Skills for Professionals", url: "https://www.skillsyouneed.com/rhubarb/presentation-skills-professionals.html", source: "Skills You Need" },
-  { dimension: "energy", title: "Body Language Tips for the Workplace", url: "https://www.coursera.org/articles/body-language", source: "Coursera" },
+  { dimension: "energy", title: "Body Language: Understand and Use Nonverbal Communication", url: "https://www.skillsyouneed.com/ips/body-language.html", source: "Skills You Need" },
   { dimension: "energy", title: "Deliberate Practice: What It Is and Why You Need It", url: "https://fs.blog/deliberate-practice-guide/", source: "Farnam Street" },
   { dimension: "energy", title: "Growth Mindset: How to Develop It and Why It Matters", url: "https://positivepsychology.com/growth-mindset/", source: "Positive Psychology" },
-  { dimension: "energy", title: "How to Build Confidence as a Speaker", url: "https://www.coursera.org/articles/how-to-build-confidence", source: "Coursera" },
+  { dimension: "energy", title: "Self-Determination Theory: Intrinsic Motivation and Confidence", url: "https://positivepsychology.com/self-determination-theory/", source: "Positive Psychology" },
   { dimension: "energy", title: "Executive Presence: What It Is and How to Develop It", url: "https://www.indeed.com/career-advice/career-development/executive-presence", source: "Indeed" },
-  { dimension: "energy", title: "To Sound Like a Leader, Think About What You Say and How You Say It", url: "https://hbr.org/2016/06/to-sound-like-a-leader-think-about-what-you-say-and-how-and-when-you-say-it", source: "Harvard Business Review" },
-  { dimension: "energy", title: "Nonverbal Communication in the Workplace", url: "https://www.indeed.com/career-advice/career-development/nonverbal-communication-in-the-workplace", source: "Indeed" },
+  { dimension: "energy", title: "Confidence at Work: Projecting Presence and Authority", url: "https://www.indeed.com/career-advice/career-development/confidence-at-work", source: "Indeed" },
+  { dimension: "energy", title: "Positive Psychology in the Workplace: Creating a Thriving Environment", url: "https://positivepsychology.com/positive-psychology-workplace/", source: "Positive Psychology" },
   { dimension: "energy", title: "How to Build Resilience and Confidence as a Speaker", url: "https://positivepsychology.com/resilience-in-the-workplace/", source: "Positive Psychology" },
 
   // ── Understanding ────────────────────────────────────────────────────────
@@ -74,16 +74,16 @@ export const ARTICLES: ArticleEntry[] = [
   { dimension: "understanding", title: "Mental Models: The Best Way to Make Intelligent Decisions", url: "https://fs.blog/mental-models/", source: "Farnam Street" },
   { dimension: "understanding", title: "Knowledge Makes Everything Simpler", url: "https://fs.blog/knowledge-makes-everything-simpler/", source: "Farnam Street" },
   { dimension: "understanding", title: "The Curse of Knowledge: Why Experts Struggle to Explain Things", url: "https://hbr.org/2006/12/the-curse-of-knowledge", source: "Harvard Business Review" },
-  { dimension: "understanding", title: "How to Learn New Skills Effectively", url: "https://www.coursera.org/articles/how-to-learn-new-skills", source: "Coursera" },
-  { dimension: "understanding", title: "Teaching Skills: How to Break Down Complex Ideas", url: "https://www.coursera.org/articles/teaching-skills", source: "Coursera" },
+  { dimension: "understanding", title: "Build Your Knowledge Through Compounding", url: "https://fs.blog/compounding-knowledge/", source: "Farnam Street" },
+  { dimension: "understanding", title: "Inversion: The Power of Thinking Backwards", url: "https://fs.blog/inversion/", source: "Farnam Street" },
   { dimension: "understanding", title: "Critical Thinking Skills: Definition and How to Develop Them", url: "https://www.coursera.org/articles/critical-thinking-skills", source: "Coursera" },
   { dimension: "understanding", title: "Critical Thinking: Why It Matters and How to Build It", url: "https://www.indeed.com/career-advice/career-development/critical-thinking-skills", source: "Indeed" },
-  { dimension: "understanding", title: "Active Listening Skills: How to Know Your Message Is Landing", url: "https://www.coursera.org/articles/active-listening-skills", source: "Coursera" },
-  { dimension: "understanding", title: "Active Learning: What It Is and Why It Matters", url: "https://www.coursera.org/articles/active-learning", source: "Coursera" },
-  { dimension: "understanding", title: "Learning Styles: Finding the Best Ways to Retain Information", url: "https://www.coursera.org/articles/learning-styles", source: "Coursera" },
+  { dimension: "understanding", title: "Questioning Skills: How to Ask Better Questions", url: "https://www.skillsyouneed.com/ips/questioning.html", source: "Skills You Need" },
+  { dimension: "understanding", title: "Interpersonal Skills: How to Connect With Anyone", url: "https://www.coursera.org/articles/interpersonal-skills", source: "Coursera" },
+  { dimension: "understanding", title: "Mindfulness at Work: How to Be More Present and Effective", url: "https://positivepsychology.com/mindfulness-at-work/", source: "Positive Psychology" },
 
   // ── Connection ───────────────────────────────────────────────────────────
-  { dimension: "connection", title: "Work and the Loneliness Epidemic", url: "https://hbr.org/2017/05/work-and-the-loneliness-epidemic", source: "Harvard Business Review" },
+  { dimension: "connection", title: "Social Intelligence: Navigating Social Situations Effectively", url: "https://positivepsychology.com/social-intelligence/", source: "Positive Psychology" },
   { dimension: "connection", title: "How to Build Rapport: 18 Examples and Techniques", url: "https://positivepsychology.com/rapport/", source: "Positive Psychology" },
   { dimension: "connection", title: "Empathy in Communication: How to Connect Authentically", url: "https://positivepsychology.com/empathy/", source: "Positive Psychology" },
   { dimension: "connection", title: "The Secret of Charismatic People", url: "https://www.entrepreneur.com/living/the-secret-of-charismatic-people/234374", source: "Entrepreneur" },
@@ -97,9 +97,9 @@ export const ARTICLES: ArticleEntry[] = [
   { dimension: "connection", title: "Emotional Intelligence: Why It Matters More Than IQ", url: "https://positivepsychology.com/emotional-intelligence-eq/", source: "Positive Psychology" },
   { dimension: "connection", title: "The Neuroscience of Trust", url: "https://hbr.org/2017/01/the-neuroscience-of-trust", source: "Harvard Business Review" },
   { dimension: "connection", title: "How to Win Friends and Influence People — Key Lessons", url: "https://fs.blog/how-to-win-friends-and-influence-people/", source: "Farnam Street" },
-  { dimension: "connection", title: "What Is Empathy and Why Does It Matter?", url: "https://www.coursera.org/articles/what-is-empathy", source: "Coursera" },
-  { dimension: "connection", title: "How to Build Rapport With Anyone", url: "https://www.indeed.com/career-advice/career-development/how-to-build-rapport", source: "Indeed" },
-  { dimension: "connection", title: "How to Make a Positive First Impression", url: "https://www.indeed.com/career-advice/career-development/making-a-good-first-impression", source: "Indeed" },
+  { dimension: "connection", title: "Empathy: Definition, Types, and How to Practise It", url: "https://www.skillsyouneed.com/ips/empathy.html", source: "Skills You Need" },
+  { dimension: "connection", title: "Assertive Communication: Connecting Whilst Standing Your Ground", url: "https://positivepsychology.com/assertive-communication/", source: "Positive Psychology" },
+  { dimension: "connection", title: "Active Listening Skills: The Art of Truly Hearing Others", url: "https://www.skillsyouneed.com/ips/active-listening.html", source: "Skills You Need" },
 ];
 
 export function articlesByDimension(dimension: string, locale = "en") {

@@ -22,16 +22,21 @@ export const ARTICLE_POOL: ArticleEntry[] = [
   { dimension: "energy", title: "Body Language: Understand and Use Nonverbal Communication", url: "https://www.skillsyouneed.com/ips/body-language.html", source: "Skills You Need" },
   { dimension: "energy", title: "Confidence at Work: Projecting Presence and Authority", url: "https://www.indeed.com/career-advice/career-development/confidence-at-work", source: "Indeed" },
   { dimension: "energy", title: "Self-Determination Theory: Intrinsic Motivation Explained", url: "https://positivepsychology.com/self-determination-theory/", source: "Positive Psychology" },
+  { dimension: "energy", title: "Positive Psychology in the Workplace: Creating a Thriving Environment", url: "https://positivepsychology.com/positive-psychology-workplace/", source: "Positive Psychology" },
+  { dimension: "energy", title: "Mindfulness at Work: How to Be More Present and Effective", url: "https://positivepsychology.com/mindfulness-at-work/", source: "Positive Psychology" },
 
   // ── Understanding ─────────────────────────────────────────────────────────
   { dimension: "understanding", title: "Inversion: The Power of Thinking Backwards", url: "https://fs.blog/inversion/", source: "Farnam Street" },
   { dimension: "understanding", title: "Build Your Knowledge Through Compounding", url: "https://fs.blog/compounding-knowledge/", source: "Farnam Street" },
   { dimension: "understanding", title: "Verbal Communication: How to Express Your Ideas Clearly", url: "https://www.coursera.org/articles/verbal-communication", source: "Coursera" },
   { dimension: "understanding", title: "Questioning Skills: How to Ask Better Questions", url: "https://www.skillsyouneed.com/ips/questioning.html", source: "Skills You Need" },
+  { dimension: "understanding", title: "Interpersonal Skills: How to Connect With Anyone", url: "https://www.coursera.org/articles/interpersonal-skills", source: "Coursera" },
+  { dimension: "understanding", title: "Mindfulness at Work: How to Be More Present and Effective", url: "https://positivepsychology.com/mindfulness-at-work/", source: "Positive Psychology" },
 
   // ── Connection ────────────────────────────────────────────────────────────
   { dimension: "connection", title: "Empathy: Definition, Types, and How to Practise It", url: "https://www.skillsyouneed.com/ips/empathy.html", source: "Skills You Need" },
   { dimension: "connection", title: "Social Intelligence: Navigating Social Situations Effectively", url: "https://positivepsychology.com/social-intelligence/", source: "Positive Psychology" },
   { dimension: "connection", title: "Assertive Communication: Connecting Whilst Standing Your Ground", url: "https://positivepsychology.com/assertive-communication/", source: "Positive Psychology" },
   { dimension: "connection", title: "Active Listening: The Art of Empathetic Conversation", url: "https://www.skillsyouneed.com/ips/active-listening.html", source: "Skills You Need" },
+  { dimension: "connection", title: "Interpersonal Skills: How to Connect With Anyone", url: "https://www.coursera.org/articles/interpersonal-skills", source: "Coursera" },
 ];
