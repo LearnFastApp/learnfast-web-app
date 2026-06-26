@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
-import { articlesByDimension } from "@/lib/articles";
+import { articlesByDimension, applyOverrides, ArticleOverride } from "@/lib/articles";
 import { rateLimit, getIp } from "@/lib/rate-limit";
 import { getSeenResources, recordSeenResources, filterUnseen } from "@/lib/resource-history";
 
@@ -112,13 +112,21 @@ async function getHealthyArticles(dimension: string, locale: string): Promise<Ar
   const all = articlesByDimension(dimension, locale);
   try {
     const db = getAdminDb();
-    const snap = await db
-      .collection("resource_health")
-      .where("dimension", "==", dimension)
-      .where("status", "==", "broken")
-      .get();
-    const brokenUrls = new Set(snap.docs.map((d) => d.data().url as string));
-    return all.filter((a) => !brokenUrls.has(a.url));
+    const [brokenSnap, overrideSnap] = await Promise.all([
+      db.collection("resource_health").where("dimension", "==", dimension).where("status", "==", "broken").get(),
+      db.collection("article_overrides").where("dimension", "==", dimension).where("locale", "==", locale).get(),
+    ]);
+    const brokenUrls = new Set(brokenSnap.docs.map((d) => d.data().url as string));
+    const overrides: ArticleOverride[] = overrideSnap.docs.map((d) => ({
+      originalUrl: d.data().originalUrl as string,
+      replacementUrl: d.data().replacementUrl as string,
+      replacementTitle: d.data().replacementTitle as string,
+      replacementSource: d.data().replacementSource as string,
+      dimension: d.data().dimension as string,
+    }));
+    // Apply overrides (replaces broken URLs with working ones), then filter any still-broken
+    const patched = applyOverrides(all, overrides);
+    return patched.filter((a) => !brokenUrls.has(a.url));
   } catch {
     return all;
   }

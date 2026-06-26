@@ -107,6 +107,23 @@ export function articlesByDimension(dimension: string, locale = "en") {
   return library.filter((a) => a.dimension === dimension);
 }
 
+export interface ArticleOverride {
+  originalUrl: string;
+  replacementUrl: string;
+  replacementTitle: string;
+  replacementSource: string;
+  dimension: string;
+}
+
+export function applyOverrides(articles: ArticleEntry[], overrides: ArticleOverride[]): ArticleEntry[] {
+  if (!overrides.length) return articles;
+  const map = new Map(overrides.map((o) => [o.originalUrl, o]));
+  return articles.map((a) => {
+    const o = map.get(a.url);
+    return o ? { ...a, url: o.replacementUrl, title: o.replacementTitle, source: o.replacementSource } : a;
+  });
+}
+
 // ── French article library ────────────────────────────────────────────────────
 
 export const ARTICLES_FR: ArticleEntry[] = [

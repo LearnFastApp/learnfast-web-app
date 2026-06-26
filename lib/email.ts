@@ -163,6 +163,7 @@ export interface BrokenLink {
   url: string;
   dimension: string;
   reason: string;
+  repairedWith?: { url: string; title: string; source: string };
 }
 
 export interface ActivationEmailOptions {
@@ -299,19 +300,40 @@ export async function sendResourceAlertEmail(brokenLinks: BrokenLink[]) {
   const from = `LearnFast <${process.env.GMAIL_USER}>`;
   const adminEmail = process.env.ADMIN_ALERT_EMAIL || process.env.GMAIL_USER!;
 
+  const repaired = brokenLinks.filter((l) => l.repairedWith);
+  const unrepaired = brokenLinks.filter((l) => !l.repairedWith);
+
   const rows = brokenLinks
-    .map(
-      (l) => `
+    .map((l) => {
+      const statusColor = l.repairedWith ? "#4ade80" : "#f87171";
+      const statusLabel = l.repairedWith ? "Auto-repaired" : "Needs fix";
+      const repairRow = l.repairedWith
+        ? `<tr><td colspan="3" style="padding:2px 0 6px 0;">
+            <span style="color:#4ade80;font-size:11px;">↳ Replaced with: </span>
+            <a href="${l.repairedWith.url}" style="color:#4ade80;font-size:11px;font-family:monospace;">${l.repairedWith.url}</a>
+            <span style="color:#475569;font-size:11px;"> (${l.repairedWith.source})</span>
+           </td></tr>`
+        : "";
+      return `
       <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
-        <td style="padding:10px 0;color:#f87171;font-size:13px;font-weight:600;width:100px;text-transform:capitalize;">${l.dimension}</td>
+        <td style="padding:10px 0;color:${statusColor};font-size:12px;font-weight:600;width:110px;text-transform:capitalize;">${l.dimension}</td>
         <td style="padding:10px 16px;color:#cbd5e1;font-size:13px;">${l.title}</td>
-        <td style="padding:10px 0;font-size:11px;color:#475569;font-family:monospace;">${l.reason}</td>
+        <td style="padding:10px 0;font-size:11px;color:${statusColor};font-weight:600;">${statusLabel}</td>
       </tr>
-      <tr><td colspan="3" style="padding:2px 0 6px;">
-        <a href="${l.url}" style="color:#60a5fa;font-size:11px;font-family:monospace;">${l.url}</a>
-      </td></tr>`
-    )
+      <tr><td colspan="3" style="padding:2px 0 2px;">
+        <a href="${l.url}" style="color:#60a5fa;font-size:11px;font-family:monospace;text-decoration:line-through;opacity:0.6;">${l.url}</a>
+        <span style="color:#475569;font-size:11px;"> — ${l.reason}</span>
+      </td></tr>
+      ${repairRow}`;
+    })
     .join("");
+
+  const summary =
+    repaired.length === brokenLinks.length
+      ? `All ${brokenLinks.length} were auto-repaired.`
+      : repaired.length > 0
+      ? `${repaired.length} auto-repaired, ${unrepaired.length} still need manual attention.`
+      : `None could be auto-repaired — manual update required.`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -328,16 +350,13 @@ export async function sendResourceAlertEmail(brokenLinks: BrokenLink[]) {
           <p style="color:#f87171;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;">
             ${brokenLinks.length} broken link${brokenLinks.length !== 1 ? "s" : ""} detected
           </p>
-          <p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">
-            The daily resource health check found the following articles are no longer accessible.
-            They have been automatically hidden from users until fixed.
+          <p style="color:#94a3b8;font-size:14px;margin:0 0 4px;">
+            The resource health check found broken articles. ${summary}
           </p>
+          ${unrepaired.length > 0 ? `<p style="color:#fbbf24;font-size:13px;margin:0 0 24px;">
+            ${unrepaired.length} link${unrepaired.length !== 1 ? "s" : ""} could not be auto-repaired — update <code style="color:#a78bfa;">lib/articles.ts</code> or the pool.
+          </p>` : `<p style="color:#4ade80;font-size:13px;margin:0 0 24px;">No manual action needed.</p>`}
           <table cellpadding="0" cellspacing="0" width="100%">${rows}</table>
-          <div style="border-top:1px solid rgba(255,255,255,0.08);margin-top:24px;padding-top:20px;">
-            <p style="color:#64748b;font-size:12px;margin:0;">
-              Update the article list in <code style="color:#a78bfa;">lib/articles.ts</code> to replace broken links.
-            </p>
-          </div>
         </td></tr>
       </table>
     </td></tr>
@@ -345,10 +364,11 @@ export async function sendResourceAlertEmail(brokenLinks: BrokenLink[]) {
 </body>
 </html>`;
 
+  const repairSuffix = repaired.length > 0 ? `, ${repaired.length} auto-repaired` : "";
   await getTransporter().sendMail({
     from,
     to: adminEmail,
-    subject: `[LearnFast] ${brokenLinks.length} broken resource link${brokenLinks.length !== 1 ? "s" : ""} detected`,
+    subject: `[LearnFast] ${brokenLinks.length} broken resource link${brokenLinks.length !== 1 ? "s" : ""} detected${repairSuffix}`,
     html,
   });
 }
