@@ -448,8 +448,8 @@ export default function LandingPage() {
         <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
           <p>© {new Date().getFullYear()} LearnFast™. Feedback Intelligence.</p>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-slate-400 transition">Privacy Policy</a>
-            <a href="#" className="hover:text-slate-400 transition">Terms & Conditions</a>
+            <a href="/privacy" className="hover:text-slate-400 transition">Privacy Policy</a>
+            <a href="/terms" className="hover:text-slate-400 transition">Terms &amp; Conditions</a>
           </div>
         </div>
       </footer>

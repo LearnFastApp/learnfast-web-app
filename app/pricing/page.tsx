@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Zap } from "lucide-react";
+import { Check, Zap, Bell } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 
 const TIERS = [
@@ -62,6 +62,8 @@ export default function PricingPage() {
   const [checkoutError, setCheckoutError] = useState("");
   const [success, setSuccess] = useState(false);
   const [cancelled, setCancelled] = useState(false);
+  const [notifyEmail, setNotifyEmail] = useState("");
+  const [notifySubmitted, setNotifySubmitted] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -172,8 +174,36 @@ export default function PricingPage() {
               </ul>
 
               {tier.comingSoon ? (
-                <div className="rounded-xl border border-white/10 px-4 py-3 text-center text-sm text-slate-500">
-                  Coming Soon
+                <div className="space-y-3">
+                  {notifySubmitted ? (
+                    <div className="rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-center text-sm text-green-300">
+                      ✓ We&apos;ll notify you when Pro launches
+                    </div>
+                  ) : (
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (notifyEmail.trim()) setNotifySubmitted(true);
+                      }}
+                      className="flex flex-col gap-2"
+                    >
+                      <input
+                        type="email"
+                        required
+                        placeholder="your@email.com"
+                        value={notifyEmail}
+                        onChange={(e) => setNotifyEmail(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-2.5 text-sm text-white placeholder-slate-600 outline-none focus:border-violet-500"
+                      />
+                      <button
+                        type="submit"
+                        className="flex items-center justify-center gap-2 w-full rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:text-white hover:border-white/40 transition"
+                      >
+                        <Bell className="h-4 w-4" />
+                        Notify me when Pro launches
+                      </button>
+                    </form>
+                  )}
                 </div>
               ) : tier.cta ? (
                 <>
