@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const RED = "#d13b1a";
@@ -40,6 +40,26 @@ const PARTNERS = [
 export default function LandingPage() {
   const router = useRouter();
   const goToLogin = () => router.push("/auth/login");
+
+  const [proEmail, setProEmail] = useState("");
+  const [proSubmitted, setProSubmitted] = useState(false);
+  const [proLoading, setProLoading] = useState(false);
+
+  async function handleProNotify(e: React.FormEvent) {
+    e.preventDefault();
+    if (!proEmail.trim()) return;
+    setProLoading(true);
+    try {
+      await fetch("/api/pro-waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: proEmail }),
+      });
+    } finally {
+      setProLoading(false);
+      setProSubmitted(true);
+    }
+  }
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -314,11 +334,11 @@ export default function LandingPage() {
 
       {/* ── PRICING ── */}
       <section id="pricing" className="py-20 sm:py-28 px-5 lg:px-12">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4 text-center">Pricing</p>
           <h2 className="text-4xl sm:text-6xl font-light text-slate-400 text-center leading-none mb-1">START FREE,</h2>
           <h2 className="text-4xl sm:text-6xl font-black text-center leading-none mb-16">SCALE WHEN READY</h2>
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="grid gap-5 md:grid-cols-3">
 
             {/* Free */}
             <div className="rounded-2xl border border-white/10 bg-[#0f1118] p-7 sm:p-8">
@@ -372,7 +392,64 @@ export default function LandingPage() {
               </button>
               <p className="text-center text-xs text-slate-600 mt-3">No charge until your trial ends</p>
             </div>
+
+            {/* Pro */}
+            <div className="rounded-2xl border border-violet-500/30 bg-[#0f1118] p-7 sm:p-8 relative flex flex-col" style={{ background: "linear-gradient(135deg, #0d0b1a 0%, #0f1118 100%)" }}>
+              <div className="absolute top-5 right-5 text-[10px] font-bold px-2.5 py-1 rounded-sm text-violet-300 tracking-wider border border-violet-500/40 bg-violet-500/10">
+                COMING SOON
+              </div>
+              <p className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-5">Pro</p>
+              <p className="text-5xl font-black mb-1 text-slate-300">TBC<span className="text-lg font-normal text-slate-500">/mo</span></p>
+              <p className="text-sm text-slate-500 mb-8">Premium plan · launching soon</p>
+              <ul className="space-y-3 text-sm text-slate-300 mb-8 flex-1">
+                {[
+                  "Everything in Lite",
+                  "Premium curated content library",
+                  "BBC Maestro, Harvard & more",
+                  "Individualised learning pathways",
+                  "Personal development dashboard",
+                  "Progress milestones & certifications",
+                  "Priority support",
+                ].map((f) => (
+                  <li key={f} className="flex items-center gap-2.5">
+                    <span className="text-violet-400 shrink-0">✓</span> {f}
+                  </li>
+                ))}
+              </ul>
+              {proSubmitted ? (
+                <div className="rounded-xl bg-violet-500/10 border border-violet-500/20 px-4 py-3 text-center">
+                  <p className="text-sm font-semibold text-violet-300">You&apos;re on the list!</p>
+                  <p className="text-xs text-slate-500 mt-1">We&apos;ll email you the moment Pro launches.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleProNotify} className="space-y-2">
+                  <input
+                    type="email"
+                    required
+                    placeholder="Your email address"
+                    value={proEmail}
+                    onChange={(e) => setProEmail(e.target.value)}
+                    className="w-full rounded-lg border border-white/10 bg-[#1a1f2e] px-4 py-2.5 text-sm text-white placeholder-slate-600 outline-none focus:border-violet-500/60 transition"
+                  />
+                  <button
+                    type="submit"
+                    disabled={proLoading}
+                    className="w-full py-3 text-sm font-bold text-white border border-violet-500/40 hover:border-violet-400 hover:bg-violet-500/10 transition rounded-lg disabled:opacity-50"
+                  >
+                    {proLoading ? "Saving…" : "NOTIFY ME WHEN PRO LAUNCHES →"}
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
+
+          {/* Team enquiry */}
+          <p className="text-center text-sm text-slate-500 mt-10">
+            Planning for a team or organisation?{" "}
+            <a href="mailto:hello@learnfastapp.com" className="text-violet-400 hover:text-violet-300 underline underline-offset-2 transition">
+              Get in touch →
+            </a>
+          </p>
         </div>
       </section>
 
