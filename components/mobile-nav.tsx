@@ -3,18 +3,14 @@
 import { BarChart3, LayoutDashboard, Plus, Settings } from "lucide-react";
 import { usePathname } from "next/navigation";
 
-const NAV = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/" },
-  { label: "Analytics", icon: BarChart3, href: "/analytics" },
-  { label: "Settings", icon: Settings, href: "/settings" },
-];
-
 interface Props {
   onCreateSession?: () => void;
+  locale?: "en" | "fr";
 }
 
-export default function MobileNav({ onCreateSession }: Props) {
+export default function MobileNav({ onCreateSession, locale = "en" }: Props) {
   const pathname = usePathname();
+  const isFr = locale === "fr";
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#0f1424] lg:hidden safe-bottom">
@@ -26,7 +22,7 @@ export default function MobileNav({ onCreateSession }: Props) {
           }`}
         >
           <LayoutDashboard className="h-5 w-5" />
-          Dashboard
+          {isFr ? "Tableau de bord" : "Dashboard"}
         </a>
 
         <a
@@ -36,7 +32,7 @@ export default function MobileNav({ onCreateSession }: Props) {
           }`}
         >
           <BarChart3 className="h-5 w-5" />
-          Analytics
+          {isFr ? "Analytiques" : "Analytics"}
         </a>
 
         {onCreateSession && (
@@ -57,7 +53,7 @@ export default function MobileNav({ onCreateSession }: Props) {
           }`}
         >
           <Settings className="h-5 w-5" />
-          Settings
+          {isFr ? "Paramètres" : "Settings"}
         </a>
       </div>
     </nav>

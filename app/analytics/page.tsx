@@ -121,6 +121,7 @@ export default function AnalyticsPage() {
   const [activeDims, setActiveDims] = useState<Set<Dimension>>(new Set(DIMENSIONS));
   const [showInsights, setShowInsights] = useState(true);
   const [subscriptionStatus, setSubscriptionStatus] = useState<"free" | "active">("free");
+  const [locale, setLocale] = useState<"en" | "fr">("en");
 
   function toggleDim(dim: Dimension) {
     setActiveDims((prev) => {
@@ -136,8 +137,10 @@ export default function AnalyticsPage() {
     if (!user) { router.replace("/auth/login"); return; }
 
     getDoc(doc(db, "presenters", user.uid)).then((snap) => {
-      if (snap.exists() && snap.data().subscriptionStatus === "active") {
-        setSubscriptionStatus("active");
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.subscriptionStatus === "active") setSubscriptionStatus("active");
+        if (data.locale === "fr") setLocale("fr");
       }
     });
 
@@ -229,7 +232,7 @@ export default function AnalyticsPage() {
 
   return (
     <main className="min-h-screen bg-[#05070d] text-white pb-20 lg:pb-0">
-      <MobileNav />
+      <MobileNav locale={locale} />
       <header className="border-b border-white/10 bg-[#101523] px-6 py-6 lg:px-8">
         <div className="flex items-center justify-between">
           <div>

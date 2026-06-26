@@ -214,7 +214,7 @@ export default function SettingsPage() {
 
   return (
     <main className="min-h-screen bg-[#05070d] text-white pb-20 lg:pb-0">
-      <MobileNav />
+      <MobileNav locale={locale} />
       <header className="border-b border-white/10 bg-[#101523] px-6 py-6 lg:px-8">
         <div className="flex items-center justify-between">
           <div>

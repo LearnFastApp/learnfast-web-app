@@ -26,13 +26,6 @@ import UpgradeModal from "@/components/upgrade-modal";
 import MobileNav from "@/components/mobile-nav";
 import OnboardingModal from "@/components/onboarding-modal";
 
-const navItems = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", active: true },
-  { label: "Session Calendar", icon: Calendar, href: "#", comingSoon: true },
-  { label: "Analytics", icon: BarChart3, href: "/analytics" },
-  { label: "Premium Resource Hub", icon: BookOpen, href: "#", comingSoon: true },
-  { label: "Settings", icon: Settings, href: "/settings" },
-];
 
 interface Session {
   id: string;
@@ -71,6 +64,7 @@ function scoreBadgeClass(score: number) {
 export default function Dashboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [locale, setLocale] = useState<"en" | "fr">("en");
   const [showModal, setShowModal] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -104,6 +98,7 @@ export default function Dashboard() {
     getDoc(doc(db, "presenters", user.uid)).then((snap) => {
       if (snap.exists()) {
         const data = snap.data();
+        if (data.locale === "fr") setLocale("fr");
         if (data.subscriptionStatus === "active") setSubscriptionStatus("active");
         if (data.subscriptionStatus === "pilot") {
           const expiry = data.pilotExpiresAt?.toDate?.() as Date | undefined;
@@ -241,6 +236,92 @@ export default function Dashboard() {
     ? Math.max(0, Math.ceil((pilotExpiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
 
+  const isFr = locale === "fr";
+  const navItems = [
+    { label: isFr ? "Tableau de bord" : "Dashboard", icon: LayoutDashboard, href: "/dashboard", active: true },
+    { label: isFr ? "Calendrier de sessions" : "Session Calendar", icon: Calendar, href: "#", comingSoon: true },
+    { label: isFr ? "Analytiques" : "Analytics", icon: BarChart3, href: "/analytics" },
+    { label: isFr ? "Hub de ressources" : "Premium Resource Hub", icon: BookOpen, href: "#", comingSoon: true },
+    { label: isFr ? "Paramètres" : "Settings", icon: Settings, href: "/settings" },
+  ];
+  const t = isFr ? {
+    comingSoon: "Bientôt",
+    pilotAccess: "Accès pilote",
+    pilotDaysLeft: (n: number) => `${n} jour${n !== 1 ? "s" : ""} restant${n !== 1 ? "s" : ""} — accès complet à toutes les fonctionnalités.`,
+    freePlan: "Plan gratuit",
+    session: (n: number) => `Session ${n}`,
+    freeSessionsExplore: "2 sessions gratuites pour découvrir LearnFast.",
+    freeSession1Left: "1 session gratuite restante.",
+    freeSessionsUsed: "Vous avez utilisé vos 2 sessions gratuites. Commencez votre essai de 7 jours pour continuer.",
+    startTrial: "Commencer l'essai de 7 jours →",
+    upgradeLite: "Passer à Lite — £3.99/mois",
+    trialFree: "7 jours d'essai gratuit",
+    cancelAnytime: "annulable à tout moment",
+    presenter: "Présentateur",
+    signOut: "Se déconnecter",
+    pageTitle: "Tableau de bord",
+    pageSubtitle: "Suivez vos retours de présentation et votre progression.",
+    createSession: "Créer une session",
+    usedBothFree: "Vous avez utilisé vos 2 sessions gratuites.",
+    upgradeLiteShort: "Passer à Lite",
+    tabSessions: "Sessions",
+    tabReflections: "Réflexions",
+    yourSessions: "Vos sessions",
+    noSessionsYet: (cta: string) => <>Aucune session pour l&apos;instant — cliquez sur <strong className="text-slate-300">{cta}</strong> pour commencer.</>,
+    live: "En direct",
+    ended: "Terminée",
+    responses: (n: number) => `${n} réponse${n !== 1 ? "s" : ""}`,
+    deleteBtn: "Supprimer",
+    loadMore: "Charger plus de sessions",
+    loading: "Chargement…",
+    reflectionLog: "Journal de réflexions",
+    reflectionLogSub: "Vos scores auto-évalués sur toutes les sessions.",
+    noReflections: "Aucune réflexion pour l'instant — évaluez-vous à la fin d'une session pour construire votre journal.",
+    nextFocusPrefix: "Objectif — ",
+    howItWent: "Comment ça s'est passé",
+    joinLinkTitle: "Lien de participation",
+    joinLinkDesc: "Partagez",
+    joinLinkSuffix: "ou scannez le QR depuis n'importe quelle session active.",
+  } : {
+    comingSoon: "Coming Soon",
+    pilotAccess: "Pilot Access",
+    pilotDaysLeft: (n: number) => `${n} day${n !== 1 ? "s" : ""} remaining — full access to all features.`,
+    freePlan: "Free Plan",
+    session: (n: number) => `Session ${n}`,
+    freeSessionsExplore: "2 free sessions to explore LearnFast.",
+    freeSession1Left: "1 free session remaining.",
+    freeSessionsUsed: "You've used both free sessions. Start your 7-day trial to continue.",
+    startTrial: "Start 7-Day Free Trial →",
+    upgradeLite: "Upgrade to Lite — £3.99/mo",
+    trialFree: "7 day free trial",
+    cancelAnytime: "cancel anytime",
+    presenter: "Presenter",
+    signOut: "Sign Out",
+    pageTitle: "Dashboard",
+    pageSubtitle: "Track presentation feedback and development progress.",
+    createSession: "Create Session",
+    usedBothFree: "You've used both free sessions.",
+    upgradeLiteShort: "Upgrade to Lite",
+    tabSessions: "Sessions",
+    tabReflections: "Reflections",
+    yourSessions: "Your sessions",
+    noSessionsYet: (cta: string) => <>No sessions yet — hit <strong className="text-slate-300">{cta}</strong> to start.</>,
+    live: "Live",
+    ended: "Ended",
+    responses: (n: number) => `${n} response${n !== 1 ? "s" : ""}`,
+    deleteBtn: "Delete",
+    loadMore: "Load more sessions",
+    loading: "Loading…",
+    reflectionLog: "Reflection log",
+    reflectionLogSub: "Your self-assessed scores across all sessions.",
+    noReflections: "No reflections yet — rate yourself at the end of a session to build your log.",
+    nextFocusPrefix: "Next session focus — ",
+    howItWent: "How it went",
+    joinLinkTitle: "Audience join link",
+    joinLinkDesc: "Share",
+    joinLinkSuffix: "or scan the QR from any active session.",
+  };
+
   return (
     <main className="min-h-screen bg-[#05070d] text-white">
       {showModal && (
@@ -256,7 +337,7 @@ export default function Dashboard() {
           onCreateSession={() => { markOnboardingSeen(); setShowModal(true); }}
         />
       )}
-      <MobileNav onCreateSession={() => {
+      <MobileNav locale={locale} onCreateSession={() => {
         if (!isPaidOrPilot && sessions.length >= 2) {
           setShowUpgrade(true);
         } else {
@@ -291,7 +372,7 @@ export default function Dashboard() {
                   <span className="flex-1">{item.label}</span>
                   {item.comingSoon && (
                     <span className="rounded-md bg-violet-500/20 px-2 py-0.5 text-xs text-violet-400">
-                      Coming Soon
+                      {t.comingSoon}
                     </span>
                   )}
                 </a>
@@ -310,38 +391,38 @@ export default function Dashboard() {
 
           {subscriptionStatus === "pilot" && (
             <div className="mt-6 rounded-xl border border-green-500/30 bg-green-500/5 p-4">
-              <p className="text-xs font-semibold text-green-400 uppercase tracking-wider mb-1">Pilot Access</p>
+              <p className="text-xs font-semibold text-green-400 uppercase tracking-wider mb-1">{t.pilotAccess}</p>
               {pilotOrgName && <p className="text-xs text-slate-400 mb-2">{pilotOrgName}</p>}
               <p className="text-xs text-slate-300">
-                {pilotDaysLeft} day{pilotDaysLeft !== 1 ? "s" : ""} remaining — full access to all features.
+                {t.pilotDaysLeft(pilotDaysLeft)}
               </p>
             </div>
           )}
 
           {!isPaidOrPilot && (
             <div className={`mt-6 rounded-xl border p-4 ${sessions.length >= 2 ? "border-amber-500/30 bg-amber-500/5" : "border-white/10 bg-[#0a0d1a]"}`}>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Free Plan</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t.freePlan}</p>
               <div className="flex gap-2 mb-3">
                 {[0, 1].map((i) => (
                   <div key={i} className="flex-1">
                     <div className={`h-1.5 rounded-full ${i < sessions.length ? (sessions.length >= 2 ? "bg-amber-400" : "bg-violet-500") : "bg-white/10"}`} />
-                    <p className="text-[10px] text-slate-600 mt-1 text-center">Session {i + 1}</p>
+                    <p className="text-[10px] text-slate-600 mt-1 text-center">{t.session(i + 1)}</p>
                   </div>
                 ))}
               </div>
               <p className="text-xs text-slate-400 mb-3">
-                {sessions.length === 0 && "2 free sessions to explore LearnFast."}
-                {sessions.length === 1 && "1 free session remaining."}
-                {sessions.length >= 2 && "You've used both free sessions. Start your 7-day trial to continue."}
+                {sessions.length === 0 && t.freeSessionsExplore}
+                {sessions.length === 1 && t.freeSession1Left}
+                {sessions.length >= 2 && t.freeSessionsUsed}
               </p>
               <button
                 onClick={() => setShowUpgrade(true)}
                 className={`w-full rounded-lg px-3 py-2.5 text-xs font-bold text-white transition ${sessions.length >= 2 ? "bg-amber-500 hover:bg-amber-400" : "bg-violet-500 hover:bg-violet-400"}`}
               >
-                {sessions.length >= 2 ? "Start 7-Day Free Trial →" : "Upgrade to Lite — £3.99/mo"}
+                {sessions.length >= 2 ? t.startTrial : t.upgradeLite}
               </button>
-              <p className="text-[10px] font-semibold text-slate-400 text-center mt-1.5">7 day free trial</p>
-              <p className="text-[10px] text-slate-600 text-center">cancel anytime</p>
+              <p className="text-[10px] font-semibold text-slate-400 text-center mt-1.5">{t.trialFree}</p>
+              <p className="text-[10px] text-slate-600 text-center">{t.cancelAnytime}</p>
             </div>
           )}
 
@@ -352,7 +433,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <p className="font-semibold">{displayName}</p>
-                <p className="text-sm text-slate-400">Presenter</p>
+                <p className="text-sm text-slate-400">{t.presenter}</p>
               </div>
             </div>
 
@@ -361,7 +442,7 @@ export default function Dashboard() {
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/40 px-4 py-3 text-red-300 hover:bg-red-500/10"
             >
               <LogOut className="h-4 w-4" />
-              Sign Out
+              {t.signOut}
             </button>
           </div>
         </aside>
@@ -369,9 +450,9 @@ export default function Dashboard() {
         <section className="flex-1">
           <header className="flex items-center justify-between border-b border-white/10 bg-[#101523] px-6 py-6 lg:px-8">
             <div>
-              <h1 className="text-2xl font-bold">Dashboard</h1>
+              <h1 className="text-2xl font-bold">{t.pageTitle}</h1>
               <p className="text-sm text-slate-400">
-                Track presentation feedback and development progress.
+                {t.pageSubtitle}
               </p>
             </div>
 
@@ -386,20 +467,20 @@ export default function Dashboard() {
               className="flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-400"
             >
               <Plus className="h-5 w-5" />
-              Create Session
+              {t.createSession}
             </button>
           </header>
 
           {!isPaidOrPilot && sessions.length >= 2 && (
             <div className="flex items-center justify-between border-b border-amber-500/20 bg-amber-500/5 px-6 py-3 lg:px-8">
               <p className="text-sm text-amber-300">
-                You&apos;ve used both free sessions.
+                {t.usedBothFree}
               </p>
               <button
                 onClick={() => setShowUpgrade(true)}
                 className="rounded-lg bg-violet-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-violet-400 transition"
               >
-                Upgrade to Lite
+                {t.upgradeLiteShort}
               </button>
             </div>
           )}
@@ -411,14 +492,14 @@ export default function Dashboard() {
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-lg transition border-b-2 -mb-px ${activeTab === "sessions" ? "border-violet-500 text-white" : "border-transparent text-slate-400 hover:text-white"}`}
             >
               <LayoutDashboard className="h-4 w-4" />
-              Sessions
+              {t.tabSessions}
             </button>
             <button
               onClick={() => setActiveTab("reflections")}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-lg transition border-b-2 -mb-px ${activeTab === "reflections" ? "border-cyan-400 text-white" : "border-transparent text-slate-400 hover:text-white"}`}
             >
               <PenLine className="h-4 w-4" />
-              Reflections
+              {t.tabReflections}
               {reflections.length > 0 && (
                 <span className="rounded-full bg-cyan-500/20 px-2 py-0.5 text-xs text-cyan-400">{reflections.length}</span>
               )}
@@ -428,10 +509,10 @@ export default function Dashboard() {
           <div className="space-y-8 p-6 pb-24 lg:pb-8 lg:p-8">
             {activeTab === "sessions" ? (
               <section>
-                <h2 className="mb-4 text-lg font-bold">Your sessions</h2>
+                <h2 className="mb-4 text-lg font-bold">{t.yourSessions}</h2>
                 {sessions.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-slate-500">
-                    No sessions yet — hit <strong className="text-slate-300">Create Session</strong> to start.
+                    {t.noSessionsYet(t.createSession)}
                   </div>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -446,11 +527,11 @@ export default function Dashboard() {
                             {s.status === "active" ? (
                               <span className="shrink-0 flex items-center gap-1 rounded-full bg-green-500/15 px-2 py-0.5 text-xs font-semibold text-green-400">
                                 <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
-                                Live
+                                {t.live}
                               </span>
                             ) : (
                               <span className="shrink-0 rounded-full bg-white/5 px-2 py-0.5 text-xs text-slate-500">
-                                Ended
+                                {t.ended}
                               </span>
                             )}
                           </div>
@@ -459,7 +540,7 @@ export default function Dashboard() {
                             {responseCounts[s.id] !== undefined && (
                               <span className="flex items-center gap-1 text-xs text-slate-500">
                                 <Users className="h-3 w-3" />
-                                {responseCounts[s.id]} response{responseCounts[s.id] !== 1 ? "s" : ""}
+                                {t.responses(responseCounts[s.id])}
                               </span>
                             )}
                           </div>
@@ -511,7 +592,7 @@ export default function Dashboard() {
                           className="mt-3 flex items-center gap-1.5 text-xs text-slate-600 hover:text-red-400 transition opacity-0 group-hover:opacity-100"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
-                          Delete
+                          {t.deleteBtn}
                         </button>
                       </div>
                     ))}
@@ -524,20 +605,20 @@ export default function Dashboard() {
                       disabled={loadingMore}
                       className="rounded-xl border border-white/10 px-6 py-2.5 text-sm font-semibold text-slate-300 hover:text-white hover:border-white/30 transition disabled:opacity-50"
                     >
-                      {loadingMore ? "Loading…" : "Load more sessions"}
+                      {loadingMore ? t.loading : t.loadMore}
                     </button>
                   </div>
                 )}
               </section>
             ) : (
               <section>
-                <h2 className="mb-1 text-lg font-bold">Reflection log</h2>
-                <p className="mb-6 text-sm text-slate-400">Your self-assessed scores across all sessions.</p>
+                <h2 className="mb-1 text-lg font-bold">{t.reflectionLog}</h2>
+                <p className="mb-6 text-sm text-slate-400">{t.reflectionLogSub}</p>
                 {reflectionsLoading ? (
-                  <p className="text-slate-500 animate-pulse text-sm">Loading…</p>
+                  <p className="text-slate-500 animate-pulse text-sm">{t.loading}</p>
                 ) : reflections.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-slate-500">
-                    No reflections yet — rate yourself at the end of a session to build your log.
+                    {t.noReflections}
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -569,13 +650,13 @@ export default function Dashboard() {
                             <div className="border-t border-white/5 pt-3 space-y-2.5">
                               {session?.commitment?.text && (
                                 <div>
-                                  <p className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-1">Next session focus — {session.commitment.dimension}</p>
+                                  <p className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-1">{t.nextFocusPrefix}{session.commitment.dimension}</p>
                                   <p className="text-sm text-slate-300 leading-relaxed">&ldquo;{session.commitment.text}&rdquo;</p>
                                 </div>
                               )}
                               {session?.commitmentReview?.notes && !session.commitmentReview.skipped && (
                                 <div>
-                                  <p className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-1">How it went</p>
+                                  <p className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-1">{t.howItWent}</p>
                                   <p className="text-sm text-slate-300 leading-relaxed">&ldquo;{session.commitmentReview.notes}&rdquo;</p>
                                 </div>
                               )}
@@ -593,16 +674,16 @@ export default function Dashboard() {
               <div className="flex items-center gap-3">
                 <Users className="h-6 w-6 text-cyan-300" />
                 <div>
-                  <h2 className="text-xl font-bold">Audience join link</h2>
+                  <h2 className="text-xl font-bold">{t.joinLinkTitle}</h2>
                   <p className="text-slate-300">
-                    Share{" "}
+                    {t.joinLinkDesc}{" "}
                     <a
                       href="/join"
                       className="font-mono text-violet-300 underline underline-offset-2 hover:text-violet-200"
                     >
                       {typeof window !== "undefined" ? window.location.origin : ""}/join
                     </a>
-                    {" "}or scan the QR from any active session.
+                    {" "}{t.joinLinkSuffix}
                   </p>
                 </div>
               </div>

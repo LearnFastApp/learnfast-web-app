@@ -159,6 +159,118 @@ export default function LiveSessionPage() {
   const DIMENSION_LABELS = locale === "fr" ? DIMENSION_LABELS_FR : DIMENSION_LABELS_EN;
   const RECOMMENDATIONS = locale === "fr" ? RECOMMENDATIONS_FR : RECOMMENDATIONS_EN;
 
+  const t = locale === "fr" ? {
+    endSessionTitle: "Terminer cette session ?",
+    endSessionBody: "L'audience ne pourra plus soumettre de retours. Vos résultats sont sauvegardés et toujours accessibles.",
+    cancel: "Annuler",
+    ending: "En cours…",
+    endSession: "Terminer la session",
+    code: "Code",
+    sessionEnded: "● Session terminée",
+    live: "● En direct",
+    editReflection: "Modifier ma réflexion",
+    rateSelf: "M'auto-évaluer",
+    addReflection: "Ajouter votre auto-évaluation",
+    reflectionHint: "Évaluez-vous avant de lire les scores de l'audience pour garder votre évaluation impartiale.",
+    rateSelfBtn: "M'auto-évaluer →",
+    sessionComplete: "Session terminée",
+    responsesCollected: (n: number) => `${n} réponse${n !== 1 ? "s" : ""} collectée${n !== 1 ? "s" : ""}`,
+    sessionEndedBody: "Votre session est terminée. Les retours sont enregistrés — analysez vos résultats et travaillez sur ce qui compte le plus.",
+    unlockResources: "Débloquer les ressources →",
+    viewResources: "Voir mes ressources →",
+    liveAverages: "Moyennes en direct",
+    audience: "Audience",
+    yourReflection: "Votre réflexion",
+    fewResponses: (n: number) => `${n} réponse${n !== 1 ? "s" : ""} pour l'instant — visez 5+ pour des résultats fiables.`,
+    lowResponsesInfo: (n: number) => `Basé sur ${n} réponse${n !== 1 ? "s" : ""} — indicatif. 5+ réponses donnent des données statistiquement fiables.`,
+    waitingForResponses: "En attente de réponses…",
+    gapAnalysis: "Analyse des écarts",
+    gapNote: "Ambre = vous vous êtes évalué(e) plus haut que l'audience · Vert = l'audience vous a évalué(e) plus haut",
+    audienceComments: "Commentaires de l'audience",
+    anonymous: "Anonyme",
+    presenterNotes: "Notes du présentateur",
+    notesHint: "Notez ce que vous avez observé pendant la session — changements d'énergie, questions marquantes, moments à revoir.",
+    notesPlaceholder: "Ex. : J'ai perdu l'attention vers la 10e minute, rattrapée après l'exemple…",
+    saved: "Sauvegardé",
+    saveFailed: "Échec de sauvegarde — vérifiez la connexion",
+    saveNotes: "Sauvegarder",
+    nextFocus: "Objectif pour la prochaine session",
+    nextFocusHint: "Choisissez un domaine à améliorer avant votre prochaine session.",
+    changeCommitment: "Modifier l'objectif",
+    commitmentPlaceholder: "Ex. : Je vais m'entraîner mon introduction sans notes pour améliorer le contact visuel et l'énergie…",
+    savingCommitment: "Sauvegarde…",
+    committed: "✓ Engagé(e) !",
+    setFocus: "Définir mon objectif →",
+    weakest: " (le plus faible)",
+    recommendedFocus: "Objectif recommandé",
+    findingResources: "Recherche de ressources…",
+    tabVideos: "Vidéos",
+    tabTed: "TED",
+    tabPodcasts: "Podcasts",
+    tabRead: "Lire",
+    findingPodcasts: "Recherche de podcasts…",
+    basedOnScore: (dim: string, score: number) => `Score audience le plus faible · ${dim} : ${score}/100`,
+    unlockLearning: "Débloquer les ressources",
+    unlockLearningDesc: "Vidéos, TED talks, podcasts & articles adaptés à vos résultats",
+    upgradeBtn: "Passer à Lite →",
+    alsoWorthWorking: (dim: string, score: number) => `À améliorer aussi · ${dim} : ${score}/100`,
+  } : {
+    endSessionTitle: "End this session?",
+    endSessionBody: "Audience members will no longer be able to submit feedback. Your results are saved and you can still view them any time.",
+    cancel: "Cancel",
+    ending: "Ending…",
+    endSession: "End session",
+    code: "Code",
+    sessionEnded: "● Session ended",
+    live: "● Live",
+    editReflection: "Edit reflection",
+    rateSelf: "Rate yourself",
+    addReflection: "Add your self-reflection",
+    reflectionHint: "Rate yourself before reading the audience scores to keep your assessment unbiased.",
+    rateSelfBtn: "Rate yourself →",
+    sessionComplete: "Session complete",
+    responsesCollected: (n: number) => `${n} response${n !== 1 ? "s" : ""} collected`,
+    sessionEndedBody: "Your session has ended. Audience feedback is locked in — review your results below and get to work on what matters most.",
+    unlockResources: "Unlock improvement resources →",
+    viewResources: "View your resources →",
+    liveAverages: "Live averages",
+    audience: "Audience",
+    yourReflection: "Your reflection",
+    fewResponses: (n: number) => `${n} response${n !== 1 ? "s" : ""} so far — aim for 5+ for reliable results.`,
+    lowResponsesInfo: (n: number) => `Based on ${n} response${n !== 1 ? "s" : ""} — treat as indicative. 5+ responses gives statistically reliable data.`,
+    waitingForResponses: "Waiting for responses…",
+    gapAnalysis: "Gap analysis",
+    gapNote: "Amber = you rated yourself higher than the audience · Green = audience rated you higher",
+    audienceComments: "Audience comments",
+    anonymous: "Anonymous",
+    presenterNotes: "Presenter notes",
+    notesHint: "Record anything you noticed during the session — energy shifts, questions that landed, moments to revisit.",
+    notesPlaceholder: "e.g. Lost the room around the 10-min mark, picked up again after the example…",
+    saved: "Saved",
+    saveFailed: "Save failed — check connection",
+    saveNotes: "Save notes",
+    nextFocus: "Next session focus",
+    nextFocusHint: "Commit to one area to improve before your next session.",
+    changeCommitment: "Change commitment",
+    commitmentPlaceholder: "e.g. I'll practise my opening without notes to improve eye contact and energy…",
+    savingCommitment: "Saving…",
+    committed: "✓ Committed!",
+    setFocus: "Set my focus →",
+    weakest: " (weakest)",
+    recommendedFocus: "Recommended focus",
+    findingResources: "Finding resources…",
+    tabVideos: "Videos",
+    tabTed: "TED",
+    tabPodcasts: "Podcasts",
+    tabRead: "Read",
+    findingPodcasts: "Finding podcasts…",
+    basedOnScore: (dim: string, score: number) => `Based on lowest audience score · ${dim}: ${score}/100`,
+    unlockLearning: "Unlock learning resources",
+    unlockLearningDesc: "Videos, TED talks, podcasts & articles matched to your session results",
+    upgradeBtn: "Upgrade to Lite →",
+    alsoWorthWorking: (dim: string, score: number) => `Also worth working on · ${dim}: ${score}/100`,
+  };
+
   useEffect(() => {
     if (authLoading) return;
     if (!user) { router.replace("/auth/login"); return; }
@@ -270,7 +382,7 @@ export default function LiveSessionPage() {
   }, [secondLowestDimension, user, locale]);
 
   const radarData = DIMENSIONS.map((dim) => ({
-    dimension: dim.charAt(0).toUpperCase() + dim.slice(1),
+    dimension: DIMENSION_LABELS[dim],
     audience: audienceAverages[dim],
     presenter: reflection ? reflection[dim] : null,
     fullMark: 100,
@@ -342,23 +454,23 @@ export default function LiveSessionPage() {
       {showEndConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#111827] p-6 text-center">
-            <h2 className="text-lg font-bold text-white mb-2">End this session?</h2>
+            <h2 className="text-lg font-bold text-white mb-2">{t.endSessionTitle}</h2>
             <p className="text-sm text-slate-400 mb-6 leading-relaxed">
-              Audience members will no longer be able to submit feedback. Your results are saved and you can still view them any time.
+              {t.endSessionBody}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowEndConfirm(false)}
                 className="flex-1 rounded-xl border border-white/10 py-2.5 text-sm text-slate-400 hover:bg-white/5 transition"
               >
-                Cancel
+                {t.cancel}
               </button>
               <button
                 onClick={endSession}
                 disabled={ending}
                 className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white hover:bg-red-400 transition disabled:opacity-50"
               >
-                {ending ? "Ending…" : "End session"}
+                {ending ? t.ending : t.endSession}
               </button>
             </div>
           </div>
@@ -384,8 +496,8 @@ export default function LiveSessionPage() {
             Code: <span className="font-mono font-bold text-white">{session.code}</span>
             {" · "}
             {sessionStatus === "closed"
-              ? <span className="text-slate-500">● Session ended</span>
-              : <span className="text-green-400">● Live</span>
+              ? <span className="text-slate-500">{t.sessionEnded}</span>
+              : <span className="text-green-400">{t.live}</span>
             }
           </p>
         </div>
@@ -399,7 +511,7 @@ export default function LiveSessionPage() {
             className="flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-3 py-2 text-sm font-semibold text-cyan-300 hover:bg-cyan-400/20"
           >
             <PenLine className="h-4 w-4" />
-            <span className="hidden sm:inline">{reflection ? "Edit reflection" : "Rate yourself"}</span>
+            <span className="hidden sm:inline">{reflection ? t.editReflection : t.rateSelf}</span>
           </button>
           {sessionStatus === "active" && (
             <button
@@ -407,7 +519,7 @@ export default function LiveSessionPage() {
               className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-semibold text-red-400 hover:bg-red-500/20 transition"
             >
               <StopCircle className="h-4 w-4 shrink-0" />
-              <span className="hidden sm:inline">End session</span>
+              <span className="hidden sm:inline">{t.endSession}</span>
             </button>
           )}
         </div>
@@ -418,15 +530,15 @@ export default function LiveSessionPage() {
           <div className="flex items-center gap-3">
             <PenLine className="h-5 w-5 text-cyan-400 shrink-0" />
             <div>
-              <p className="text-sm font-semibold text-white">Add your self-reflection</p>
-              <p className="text-xs text-slate-400">Rate yourself before reading the audience scores to keep your assessment unbiased.</p>
+              <p className="text-sm font-semibold text-white">{t.addReflection}</p>
+              <p className="text-xs text-slate-400">{t.reflectionHint}</p>
             </div>
           </div>
           <button
             onClick={() => setShowReflection(true)}
             className="shrink-0 rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-400 transition"
           >
-            Rate yourself →
+            {t.rateSelfBtn}
           </button>
         </div>
       )}
@@ -435,12 +547,12 @@ export default function LiveSessionPage() {
         <div className="mx-6 mt-6 rounded-2xl border border-violet-500/40 bg-gradient-to-r from-violet-500/10 to-blue-500/5 p-6">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex-1">
-              <p className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-1">Session complete</p>
+              <p className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-1">{t.sessionComplete}</p>
               <h2 className="text-lg font-bold text-white mb-1">
-                {responses.length} response{responses.length !== 1 ? "s" : ""} collected
+                {t.responsesCollected(responses.length)}
               </h2>
               <p className="text-sm text-slate-400">
-                Your session has ended. Audience feedback is locked in — review your results below and get to work on what matters most.
+                {t.sessionEndedBody}
               </p>
             </div>
             <div className="flex flex-col gap-2 shrink-0">
@@ -449,14 +561,14 @@ export default function LiveSessionPage() {
                   href="/pricing"
                   className="inline-block rounded-xl bg-violet-500 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition text-center"
                 >
-                  Unlock improvement resources →
+                  {t.unlockResources}
                 </a>
               ) : (
                 <a
                   href={`/sessions/${id}/resources`}
                   className="rounded-xl bg-violet-500 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition inline-block text-center"
                 >
-                  View your resources →
+                  {t.viewResources}
                 </a>
               )}
             </div>
@@ -469,16 +581,16 @@ export default function LiveSessionPage() {
           <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
 
             <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-lg font-bold">Live averages</h2>
+              <h2 className="text-lg font-bold">{t.liveAverages}</h2>
               <div className="flex items-center gap-4 text-xs">
                 <span className="flex items-center gap-1.5">
                   <span className="h-2.5 w-2.5 rounded-full bg-violet-500 inline-block" />
-                  <span className="text-slate-400">Audience</span>
+                  <span className="text-slate-400">{t.audience}</span>
                 </span>
                 {reflection && (
                   <span className="flex items-center gap-1.5">
                     <span className="h-2.5 w-2.5 rounded-full bg-cyan-400 inline-block" />
-                    <span className="text-slate-400">Your reflection</span>
+                    <span className="text-slate-400">{t.yourReflection}</span>
                   </span>
                 )}
               </div>
@@ -488,7 +600,7 @@ export default function LiveSessionPage() {
               <div className="mb-4 flex items-center gap-2 rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-2.5">
                 <span className="text-amber-400 text-sm">⚡</span>
                 <p className="text-sm text-amber-300">
-                  {responses.length} response{responses.length !== 1 ? "s" : ""} so far — aim for 5+ for reliable results.
+                  {t.fewResponses(responses.length)}
                 </p>
               </div>
             )}
@@ -496,14 +608,14 @@ export default function LiveSessionPage() {
               <div className="mb-4 flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-4 py-2.5">
                 <span className="text-slate-400 text-sm">ℹ</span>
                 <p className="text-sm text-slate-400">
-                  Based on {responses.length} response{responses.length !== 1 ? "s" : ""} — treat as indicative. 5+ responses gives statistically reliable data.
+                  {t.lowResponsesInfo(responses.length)}
                 </p>
               </div>
             )}
 
             {responses.length === 0 && !reflection ? (
               <div className="flex h-64 items-center justify-center text-slate-500">
-                Waiting for responses…
+                {t.waitingForResponses}
               </div>
             ) : (
               <>
@@ -545,7 +657,7 @@ export default function LiveSessionPage() {
                       : null;
                     return (
                       <div key={dim} className="text-center">
-                        <p className="text-xs text-slate-400 capitalize mb-1">{dim}</p>
+                        <p className="text-xs text-slate-400 mb-1">{DIMENSION_LABELS[dim]}</p>
                         <p className="text-xl font-bold text-violet-300">{audienceAverages[dim]}</p>
                         {delta !== null && delta !== 0 && (
                           <p className={`text-xs font-bold ${delta > 0 ? "text-green-400" : "text-red-400"}`}>
@@ -563,14 +675,14 @@ export default function LiveSessionPage() {
 
                 {reflection && responses.length > 0 && (
                   <div className="mt-6 rounded-xl bg-[#1a2135] p-4">
-                    <p className="text-xs text-slate-400 mb-3 font-semibold uppercase tracking-wider">Gap analysis</p>
+                    <p className="text-xs text-slate-400 mb-3 font-semibold uppercase tracking-wider">{t.gapAnalysis}</p>
                     <div className="grid grid-cols-5 gap-3">
                       {DIMENSIONS.map((dim) => {
                         const gap = reflection[dim] - audienceAverages[dim];
                         const color = gap > 0 ? "text-amber-400" : gap < 0 ? "text-green-400" : "text-slate-400";
                         return (
                           <div key={dim} className="text-center">
-                            <p className="text-xs text-slate-500 capitalize mb-1">{dim}</p>
+                            <p className="text-xs text-slate-500 mb-1">{DIMENSION_LABELS[dim]}</p>
                             <p className={`text-sm font-bold ${color}`}>
                               {gap > 0 ? "+" : ""}{gap.toFixed(1)}
                             </p>
@@ -579,7 +691,7 @@ export default function LiveSessionPage() {
                       })}
                     </div>
                     <p className="mt-3 text-xs text-slate-500">
-                      Amber = you rated yourself higher than the audience · Green = audience rated you higher
+                      {t.gapNote}
                     </p>
                     <p className="mt-4 text-sm text-slate-300 leading-relaxed border-t border-white/10 pt-4">
                       {generateGapInsight(audienceAverages, reflection)}
@@ -592,7 +704,7 @@ export default function LiveSessionPage() {
 
           {responses.some((r) => r.comment) && (
             <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Audience comments</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">{t.audienceComments}</p>
               <div className="space-y-3">
                 {responses
                   .filter((r) => r.comment)
@@ -600,7 +712,7 @@ export default function LiveSessionPage() {
                     <div key={i} className="rounded-xl bg-[#1a2135] px-4 py-3">
                       <p className="text-sm text-slate-200 leading-relaxed">&ldquo;{r.comment}&rdquo;</p>
                       <p className="mt-2 text-xs text-slate-500">
-                        {r.anonymous || !r.commenterName ? "Anonymous" : r.commenterName}
+                        {r.anonymous || !r.commenterName ? t.anonymous : r.commenterName}
                       </p>
                     </div>
                   ))}
@@ -609,14 +721,14 @@ export default function LiveSessionPage() {
           )}
 
           <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Presenter notes</p>
-            <p className="text-xs text-slate-500 mb-3">Record anything you noticed during the session — energy shifts, questions that landed, moments to revisit.</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t.presenterNotes}</p>
+            <p className="text-xs text-slate-500 mb-3">{t.notesHint}</p>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               onBlur={saveNotes}
               rows={4}
-              placeholder="e.g. Lost the room around the 10-min mark, picked up again after the example…"
+              placeholder={t.notesPlaceholder}
               className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-sm text-white placeholder-slate-600 outline-none focus:border-violet-500 resize-none mb-3"
             />
             <button
@@ -624,16 +736,16 @@ export default function LiveSessionPage() {
               className="flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 transition"
             >
               {notesSaved ? (
-                <><span className="text-green-400">✓</span> Saved</>
+                <><span className="text-green-400">✓</span> {t.saved}</>
               ) : notesSaveError ? (
-                <><span className="text-red-400">✕</span> Save failed — check connection</>
-              ) : "Save notes"}
+                <><span className="text-red-400">✕</span> {t.saveFailed}</>
+              ) : t.saveNotes}
             </button>
           </div>
           {sessionStatus === "closed" && responses.length > 0 && (
             <div className="rounded-2xl border border-violet-500/20 bg-[#111827] p-6">
-              <p className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-1">Next session focus</p>
-              <p className="text-xs text-slate-500 mb-4">Commit to one area to improve before your next session.</p>
+              <p className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-1">{t.nextFocus}</p>
+              <p className="text-xs text-slate-500 mb-4">{t.nextFocusHint}</p>
               {savedCommitment ? (
                 <div>
                   <div className="rounded-xl bg-violet-500/10 border border-violet-500/20 p-4 mb-3">
@@ -646,7 +758,7 @@ export default function LiveSessionPage() {
                     onClick={() => { setSavedCommitment(null); setDraftText(""); }}
                     className="text-xs text-slate-500 hover:text-slate-300 transition"
                   >
-                    Change commitment
+                    {t.changeCommitment}
                   </button>
                 </div>
               ) : (
@@ -658,7 +770,7 @@ export default function LiveSessionPage() {
                   >
                     {DIMENSIONS.map((d) => (
                       <option key={d} value={d} className="bg-[#1a2135]">
-                        {DIMENSION_LABELS[d]}{lowestDimension === d ? " (weakest)" : ""}
+                        {DIMENSION_LABELS[d]}{lowestDimension === d ? t.weakest : ""}
                       </option>
                     ))}
                   </select>
@@ -666,7 +778,7 @@ export default function LiveSessionPage() {
                     value={draftText}
                     onChange={(e) => setDraftText(e.target.value)}
                     rows={3}
-                    placeholder="e.g. I'll practise my opening without notes to improve eye contact and energy…"
+                    placeholder={t.commitmentPlaceholder}
                     className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-sm text-white placeholder-slate-600 outline-none focus:border-violet-500 resize-none"
                   />
                   <button
@@ -674,7 +786,7 @@ export default function LiveSessionPage() {
                     disabled={!draftText.trim() || commitmentSaving}
                     className="w-full rounded-xl bg-violet-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-400 disabled:opacity-50 transition"
                   >
-                    {commitmentSaving ? "Saving…" : commitmentSaved ? "✓ Committed!" : "Set my focus →"}
+                    {commitmentSaving ? t.savingCommitment : commitmentSaved ? t.committed : t.setFocus}
                   </button>
                 </div>
               )}
@@ -690,14 +802,14 @@ export default function LiveSessionPage() {
                 <div className="mb-3 flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-violet-400" />
                   <h2 className="text-sm font-semibold text-violet-300 uppercase tracking-wider">
-                    Recommended focus
+                    {t.recommendedFocus}
                   </h2>
                 </div>
                 <p className="mb-1 font-bold text-white">{rec.title}</p>
                 <p className="mb-4 text-xs text-slate-400 leading-relaxed">{rec.description}</p>
 
                 {resourcesLoading && (
-                  <p className="text-xs text-slate-500 animate-pulse">Finding resources…</p>
+                  <p className="text-xs text-slate-500 animate-pulse">{t.findingResources}</p>
                 )}
 
                 {!resourcesLoading && resources && (
@@ -714,7 +826,7 @@ export default function LiveSessionPage() {
                                 : "text-slate-400 hover:text-white"
                             }`}
                           >
-                            {tab === "videos" ? "Videos" : tab === "ted" ? "TED" : tab === "podcasts" ? "Podcasts" : "Read"}
+                            {tab === "videos" ? t.tabVideos : tab === "ted" ? t.tabTed : tab === "podcasts" ? t.tabPodcasts : t.tabRead}
                           </button>
                         ))}
                       </div>
@@ -747,7 +859,7 @@ export default function LiveSessionPage() {
                       {resourceTab === "podcasts" && (
                         <div className="space-y-2">
                           {podcastsLoading && (
-                            <p className="text-xs text-slate-500 animate-pulse">Finding podcasts…</p>
+                            <p className="text-xs text-slate-500 animate-pulse">{t.findingPodcasts}</p>
                           )}
                           {!podcastsLoading && podcasts.map((pod) => (
                             <a
@@ -788,22 +900,22 @@ export default function LiveSessionPage() {
                       )}
 
                       <p className="mt-3 text-xs text-slate-500 text-center">
-                        Based on lowest audience score · {DIMENSION_LABELS[lowestDimension]}: {audienceAverages[lowestDimension]}/100
+                        {t.basedOnScore(DIMENSION_LABELS[lowestDimension], audienceAverages[lowestDimension])}
                       </p>
                     </div>
 
                     {subscriptionStatus !== "active" && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-[#0f1424]/60">
                         <Lock className="h-5 w-5 text-violet-400 mb-2" />
-                        <p className="text-sm font-semibold text-white mb-1">Unlock learning resources</p>
+                        <p className="text-sm font-semibold text-white mb-1">{t.unlockLearning}</p>
                         <p className="text-xs text-slate-400 text-center mb-4 px-6 leading-relaxed">
-                          Videos, TED talks, podcasts & articles matched to your session results
+                          {t.unlockLearningDesc}
                         </p>
                         <a
                           href="/pricing"
                           className="inline-block rounded-lg bg-violet-500 px-4 py-2 text-xs font-semibold text-white hover:bg-violet-400 transition"
                         >
-                          Upgrade to Lite →
+                          {t.upgradeBtn}
                         </a>
                       </div>
                     )}
@@ -818,7 +930,7 @@ export default function LiveSessionPage() {
               <div className="flex items-center gap-2 mb-3">
                 <TrendingUp className="h-3.5 w-3.5 text-slate-500" />
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Also worth working on · {DIMENSION_LABELS[secondLowestDimension]}: {audienceAverages[secondLowestDimension]}/100
+                  {t.alsoWorthWorking(DIMENSION_LABELS[secondLowestDimension], audienceAverages[secondLowestDimension])}
                 </p>
               </div>
               <a
