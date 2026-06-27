@@ -137,7 +137,7 @@ export async function GET(
         await dispatchSessionSummary(data.sessionId as string, {
           assessmentId: docRef.id,
           summary: analysis.summary,
-          scores: analysis.scores as Record<string, number>,
+          scores: analysis.scores as unknown as Record<string, number>,
           primaryTip: analysis.tips?.[0],
         });
       }
