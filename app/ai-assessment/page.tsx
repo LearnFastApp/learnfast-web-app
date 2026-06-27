@@ -50,8 +50,8 @@ export default function AiAssessmentPage() {
       "state_changed",
       (snap) => setUploadProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
       (err) => {
-        console.error("[ai-assessment] upload error:", err);
-        setErrorMsg("Upload failed. Please try again.");
+        console.error("[ai-assessment] storage error:", err.code, err.message);
+        setErrorMsg(`Upload failed (${err.code ?? "storage-error"}). Please try again.`);
         setStage("error");
       },
       async () => {
@@ -62,13 +62,14 @@ export default function AiAssessmentPage() {
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
             body: JSON.stringify({ downloadUrl, fileName: file.name, storagePath: path }),
           });
-          const data = await res.json();
+          let data: Record<string, string> = {};
+          try { data = await res.json(); } catch { /* non-JSON response */ }
           if (!res.ok) {
             const msgs: Record<string, string> = {
               upgrade_required: "AI Analysis is available on Lite and Pro plans.",
               monthly_limit: "You've used your 3 AI assessments for this month. Upgrade to Pro for unlimited access.",
             };
-            setErrorMsg(msgs[data.error] ?? `Error ${res.status}: ${data.error ?? "Something went wrong. Please try again."}`);
+            setErrorMsg(msgs[data.error] ?? `Error ${res.status}: ${data.error ?? "API call failed."}`);
             setStage("error");
             return;
           }
@@ -76,7 +77,7 @@ export default function AiAssessmentPage() {
           router.push(`/ai-assessment/${data.assessmentId}`);
         } catch (err) {
           console.error("[ai-assessment] submit error:", err);
-          setErrorMsg("Something went wrong. Please try again.");
+          setErrorMsg(`Unexpected error: ${err instanceof Error ? err.message : String(err)}`);
           setStage("error");
         }
       }
