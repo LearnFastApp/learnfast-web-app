@@ -1,8 +1,8 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    match /ai-recordings/{uid}/{allPaths=**} {
-      allow write: if request.auth != null && request.auth.uid == uid;
+    match /ai-recordings/{allPaths=**} {
+      allow write: if request.auth != null;
       allow read: if false;
     }
     match /{allPaths=**} {
