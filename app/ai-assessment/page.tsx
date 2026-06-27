@@ -68,7 +68,7 @@ export default function AiAssessmentPage() {
               upgrade_required: "AI Analysis is available on Lite and Pro plans.",
               monthly_limit: "You've used your 3 AI assessments for this month. Upgrade to Pro for unlimited access.",
             };
-            setErrorMsg(msgs[data.error] ?? "Something went wrong. Please try again.");
+            setErrorMsg(msgs[data.error] ?? `Error ${res.status}: ${data.error ?? "Something went wrong. Please try again."}`);
             setStage("error");
             return;
           }
