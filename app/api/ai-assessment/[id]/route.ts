@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Timestamp } from "firebase-admin/firestore";
 import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
 import { getTranscription, countFillerWords } from "@/lib/assemblyai-client";
-import { analyseTranscript } from "@/lib/ai-assessment-analysis";
+import { analyseTranscript, PriorAssessmentContext, AssessmentScores } from "@/lib/ai-assessment-analysis";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +35,30 @@ export async function GET(
   // Fetch presenter locale to pass to Claude
   const presenterSnap = await db.collection("presenters").doc(uid).get();
   const locale = (presenterSnap.data()?.locale ?? "en") as "en" | "fr";
+
+  // Fetch up to 3 prior completed assessments for comparative coaching
+  const priorSnap = await db.collection("ai_assessments")
+    .where("presenterId", "==", uid)
+    .where("status", "==", "complete")
+    .get();
+
+  const now = Date.now();
+  const priorAssessments: PriorAssessmentContext[] = priorSnap.docs
+    .filter((d) => d.id !== id && d.data().scores)
+    .sort((a, b) => {
+      const aTs = a.data().createdAt?.toDate?.()?.getTime() ?? 0;
+      const bTs = b.data().createdAt?.toDate?.()?.getTime() ?? 0;
+      return bTs - aTs; // most recent first
+    })
+    .slice(0, 3)
+    .map((d) => {
+      const createdAt: Date | undefined = d.data().createdAt?.toDate?.();
+      const diffDays = createdAt ? Math.round((now - createdAt.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+      const label = diffDays < 14
+        ? `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`
+        : `${Math.round(diffDays / 7)} week${Math.round(diffDays / 7) !== 1 ? "s" : ""} ago`;
+      return { label, scores: d.data().scores as AssessmentScores };
+    });
 
   // Check AssemblyAI status
   let transcript;
@@ -77,6 +101,7 @@ export async function GET(
       neutralPercent,
       negativePercent,
       locale,
+      priorAssessments,
     });
   } catch (err) {
     console.error("[ai-assessment/get] Claude analysis failed:", err);

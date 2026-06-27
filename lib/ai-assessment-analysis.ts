@@ -30,6 +30,11 @@ export interface AssessmentAnalysis {
   summary: string;
 }
 
+export interface PriorAssessmentContext {
+  label: string; // e.g. "2 weeks ago"
+  scores: AssessmentScores;
+}
+
 function getClient() {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) throw new Error("ANTHROPIC_API_KEY not set");
@@ -45,6 +50,7 @@ export async function analyseTranscript(opts: {
   neutralPercent: number;
   negativePercent: number;
   locale?: "en" | "fr";
+  priorAssessments?: PriorAssessmentContext[];
 }): Promise<AssessmentAnalysis> {
   const client = getClient();
 
@@ -58,9 +64,18 @@ export async function analyseTranscript(opts: {
 
   const lang = opts.locale === "fr" ? "French (français)" : "English";
 
+  const prior = opts.priorAssessments ?? [];
+  const historyBlock = prior.length > 0
+    ? `\nDEVELOPMENT HISTORY (most recent first — use this to write comparative commentary):
+${prior.map((p) =>
+  `- ${p.label}: Clarity ${p.scores.clarity}, Energy ${p.scores.energy}, Engagement ${p.scores.engagement}, Understanding ${p.scores.understanding}, Connection ${p.scores.connection}`
+).join("\n")}
+In the summary, include ONE sentence noting the most significant change since the previous session (improvement or regression). If a dimension has been consistently low across all prior sessions, acknowledge it as a persistent development area rather than repeating the same advice. If a dimension has improved meaningfully (≥8 points), acknowledge the progress explicitly.\n`
+    : "\nThis is the presenter's first assessment — no prior history available. Provide a clear baseline assessment.\n";
+
   const prompt = `You are an expert presentation coach scoring a presenter across five core communication dimensions.
 LANGUAGE: Write all text fields (rationale, highlights, tips, summary) in ${lang}.
-
+${historyBlock}
 
 DIMENSIONS (score each 0–100):
 - Clarity: Clear structure, precise language, minimal jargon, logical flow. Filler words and pace directly affect this.
