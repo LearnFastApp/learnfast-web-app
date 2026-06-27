@@ -177,62 +177,69 @@ export default function AnalyticsPage() {
     });
 
     async function load() {
-      const sessSnap = await getDocs(
-        query(
-          collection(db, "sessions"),
-          where("presenterId", "==", user!.uid),
-          orderBy("createdAt", "asc")
-        )
-      );
+      try {
+        const sessSnap = await getDocs(
+          query(
+            collection(db, "sessions"),
+            where("presenterId", "==", user!.uid),
+            orderBy("createdAt", "asc")
+          )
+        );
 
-      const results: SessionData[] = [];
+        const results: SessionData[] = [];
 
-      await Promise.all(
-        sessSnap.docs.map(async (sessDoc) => {
-          const data = sessDoc.data();
-          const respSnap = await getDocs(
-            query(collection(db, "feedback_responses"), where("sessionId", "==", sessDoc.id))
+        await Promise.all(
+          sessSnap.docs.map(async (sessDoc) => {
+            const data = sessDoc.data();
+            const respSnap = await getDocs(
+              query(collection(db, "feedback_responses"), where("sessionId", "==", sessDoc.id))
+            );
+            if (respSnap.empty) return;
+
+            const responses = respSnap.docs.map((d) => d.data());
+            const averages = Object.fromEntries(
+              DIMENSIONS.map((dim) => [dim, avg(responses.map((r) => r[dim] ?? 0))])
+            ) as Record<Dimension, number>;
+
+            results.push({
+              id: sessDoc.id,
+              title: data.title ?? "Untitled",
+              code: data.code,
+              tags: data.tags ?? [],
+              createdAt: data.createdAt?.toDate() ?? new Date(),
+              averages,
+              responseCount: responses.length,
+            });
+          })
+        );
+
+        results.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+        setSessions(results);
+
+        // Load AI assessments — best-effort, don't block analytics if this fails
+        try {
+          const aiSnap = await getDocs(
+            query(collection(db, "ai_assessments"), where("presenterId", "==", user!.uid))
           );
-          if (respSnap.empty) return;
-
-          const responses = respSnap.docs.map((d) => d.data());
-          const averages = Object.fromEntries(
-            DIMENSIONS.map((dim) => [dim, avg(responses.map((r) => r[dim] ?? 0))])
-          ) as Record<Dimension, number>;
-
-          results.push({
-            id: sessDoc.id,
-            title: data.title ?? "Untitled",
-            code: data.code,
-            tags: data.tags ?? [],
-            createdAt: data.createdAt?.toDate() ?? new Date(),
-            averages,
-            responseCount: responses.length,
-          });
-        })
-      );
-
-      // Load AI assessments
-      const aiSnap = await getDocs(
-        query(collection(db, "ai_assessments"), where("presenterId", "==", user!.uid))
-      );
-      const aiData: AiScoreEntry[] = aiSnap.docs
-        .filter((d) => {
-          const data = d.data();
-          return data.status === "complete" && data.scores;
-        })
-        .map((d) => {
-          const data = d.data();
-          return {
-            sessionId: data.sessionId ?? null,
-            scores: data.scores as Record<Dimension, number>,
-          };
-        });
-
-      results.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-      setSessions(results);
-      setAiScores(aiData);
-      setLoading(false);
+          const aiData: AiScoreEntry[] = aiSnap.docs
+            .filter((d) => {
+              const data = d.data();
+              return data.status === "complete" && data.scores;
+            })
+            .map((d) => {
+              const data = d.data();
+              return {
+                sessionId: data.sessionId ?? null,
+                scores: data.scores as Record<Dimension, number>,
+              };
+            });
+          setAiScores(aiData);
+        } catch {
+          // AI scores unavailable — analytics still works without them
+        }
+      } finally {
+        setLoading(false);
+      }
     }
 
     load();
