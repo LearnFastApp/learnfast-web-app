@@ -7,6 +7,7 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, Lege
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { Brain, Loader2, CheckCircle, AlertCircle, ChevronRight, Lightbulb, Star, TrendingUp } from "lucide-react";
+import { classifyArchetype, ARCHETYPE_DEFS } from "@/lib/archetypes";
 
 const DIMENSIONS = ["clarity", "energy", "engagement", "understanding", "connection"] as const;
 type Dimension = (typeof DIMENSIONS)[number];
@@ -57,6 +58,9 @@ const STRINGS = {
     wpm: "words/min",
     totalWords: "total words",
     fillerWords: "filler words",
+    archetypeLabel: "Presenter Archetype",
+    archetypeStrength: "Key strength",
+    archetypeDevelopment: "Development focus",
   },
   fr: {
     navBack: "← Nouvelle analyse",
@@ -89,6 +93,9 @@ const STRINGS = {
     wpm: "mots/min",
     totalWords: "mots au total",
     fillerWords: "mots de remplissage",
+    archetypeLabel: "Profil de présentateur",
+    archetypeStrength: "Point fort",
+    archetypeDevelopment: "Axe de développement",
   },
 };
 
@@ -276,6 +283,37 @@ export default function AiAssessmentResultsPage() {
             <p className="text-sm text-slate-300 leading-relaxed">{assessment.summary}</p>
           </div>
         )}
+
+        {/* Presenter Archetype */}
+        {(() => {
+          const archetypeKey = classifyArchetype(scores, reflectionScores);
+          const arch = ARCHETYPE_DEFS[archetypeKey];
+          return (
+            <div className={`rounded-2xl border ${arch.borderClass} ${arch.bgClass} p-6`}>
+              <div className="flex items-start gap-4">
+                <span className="text-4xl shrink-0 leading-none mt-0.5">{arch.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold tracking-[0.2em] uppercase mb-1" style={{ color: arch.color }}>
+                    {s.archetypeLabel}
+                  </p>
+                  <h3 className="text-xl font-black text-white mb-0.5">{arch.name[locale]}</h3>
+                  <p className="text-xs font-medium mb-3" style={{ color: arch.color }}>{arch.tagline[locale]}</p>
+                  <p className="text-sm text-slate-300 leading-relaxed mb-4">{arch.description[locale]}</p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-3">
+                      <p className="text-[10px] font-semibold text-green-400 uppercase tracking-wider mb-1">{s.archetypeStrength}</p>
+                      <p className="text-xs text-slate-300 leading-relaxed">{arch.strength[locale]}</p>
+                    </div>
+                    <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-3">
+                      <p className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider mb-1">{s.archetypeDevelopment}</p>
+                      <p className="text-xs text-slate-300 leading-relaxed">{arch.development[locale]}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* 3-Signal Radar */}
         <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">

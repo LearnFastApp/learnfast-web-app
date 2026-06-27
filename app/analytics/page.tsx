@@ -17,6 +17,7 @@ import {
   PolarAngleAxis,
 } from "recharts";
 import { TrendingUp, TrendingDown, Minus, Tag, BarChart3, Lightbulb, AlertTriangle, Sparkles, ArrowUpRight, Brain } from "lucide-react";
+import { classifyArchetype, ARCHETYPE_DEFS } from "@/lib/archetypes";
 import MobileNav from "@/components/mobile-nav";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
@@ -46,6 +47,7 @@ interface SessionData {
 interface AiScoreEntry {
   sessionId: string | null;
   scores: Record<Dimension, number>;
+  createdAt: Date;
 }
 
 function avg(values: number[]): number {
@@ -231,6 +233,7 @@ export default function AnalyticsPage() {
               return {
                 sessionId: data.sessionId ?? null,
                 scores: data.scores as Record<Dimension, number>,
+                createdAt: data.createdAt?.toDate?.() ?? new Date(0),
               };
             });
           setAiScores(aiData);
@@ -266,6 +269,13 @@ export default function AnalyticsPage() {
     ])
   ) as Record<Dimension, number>;
   const hasAiData = Object.keys(aiMap).length > 0;
+
+  // Archetype from most recent AI assessment in filtered set
+  const mostRecentAi = aiInFiltered.length > 0
+    ? aiInFiltered.reduce((a, b) => (a.createdAt > b.createdAt ? a : b))
+    : null;
+  const archetype = mostRecentAi ? classifyArchetype(mostRecentAi.scores) : null;
+  const archetypeDef = archetype ? ARCHETYPE_DEFS[archetype] : null;
 
   const chartData = filtered.map((s, i) => {
     const aiEntry = aiMap[s.id];
@@ -653,7 +663,19 @@ export default function AnalyticsPage() {
             <section className="grid gap-6 lg:grid-cols-2">
               {/* Overall profile radar */}
               <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
-                <h2 className="text-lg font-bold mb-1">{t.overallProfile}</h2>
+                <div className="flex items-start justify-between gap-3 mb-1">
+                  <h2 className="text-lg font-bold">{t.overallProfile}</h2>
+                  {archetypeDef && (
+                    <div
+                      className={`shrink-0 flex items-center gap-2 rounded-xl border px-3 py-1.5 ${archetypeDef.borderClass} ${archetypeDef.bgClass}`}
+                    >
+                      <span className="text-base leading-none">{archetypeDef.emoji}</span>
+                      <span className="text-xs font-bold" style={{ color: archetypeDef.color }}>
+                        {archetypeDef.name[locale]}
+                      </span>
+                    </div>
+                  )}
+                </div>
                 <p className="text-sm text-slate-400 mb-4">{t.overallProfileSub}</p>
                 <ResponsiveContainer width="100%" height={260}>
                   <RadarChart data={radarData}>
