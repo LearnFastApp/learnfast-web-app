@@ -18,10 +18,53 @@ type Stage = "idle" | "uploading" | "processing" | "complete" | "failed";
 interface Props {
   sessionId: string;
   existingAssessmentId?: string | null;
+  locale?: "en" | "fr";
   onComplete: (scores: Record<string, number>, assessmentId: string) => void;
 }
 
-export default function SessionAiUpload({ sessionId, existingAssessmentId, onComplete }: Props) {
+const STRINGS = {
+  en: {
+    bannerTitle: "Add AI Analysis",
+    bannerDesc: "Upload your recording to get AI scores across all five dimensions",
+    uploadBtn: "Upload →",
+    heading: "AI Analysis",
+    cancel: "Cancel",
+    dropLabel: "Drop recording here or click to browse",
+    dropSub: "MP4, MOV, WebM, MP3, WAV · max 500 MB",
+    uploading: "Uploading…",
+    analysing: "Analysing your recording…",
+    analysingDesc: "AI scores will appear on the chart when ready · 1–3 minutes",
+    complete: "AI Analysis complete",
+    completeDesc: "View your full report — rationale, highlights, tips and vocal stats",
+    failedDefault: "Analysis failed. Please try with a different file.",
+    errBadType: "Unsupported file type. Use MP4, MOV, WebM, MP3 or WAV.",
+    errTooLarge: "File too large — maximum 500 MB.",
+    errUpgrade: "AI Analysis is available on Lite and Pro plans.",
+    errMonthlyLimit: "You've used your 3 AI assessments this month. Upgrade to Pro for unlimited.",
+  },
+  fr: {
+    bannerTitle: "Ajouter l'analyse IA",
+    bannerDesc: "Téléchargez votre enregistrement pour obtenir des scores IA sur les cinq dimensions",
+    uploadBtn: "Télécharger →",
+    heading: "Analyse IA",
+    cancel: "Annuler",
+    dropLabel: "Déposez votre enregistrement ici ou cliquez pour parcourir",
+    dropSub: "MP4, MOV, WebM, MP3, WAV · max 500 Mo",
+    uploading: "Téléchargement…",
+    analysing: "Analyse de votre enregistrement…",
+    analysingDesc: "Les scores IA apparaîtront sur le graphique dès que prêts · 1–3 minutes",
+    complete: "Analyse IA terminée",
+    completeDesc: "Voir votre rapport complet — justifications, points clés, conseils et statistiques vocales",
+    failedDefault: "Échec de l'analyse. Veuillez réessayer avec un autre fichier.",
+    errBadType: "Format non supporté. Utilisez MP4, MOV, WebM, MP3 ou WAV.",
+    errTooLarge: "Fichier trop volumineux — maximum 500 Mo.",
+    errUpgrade: "L'analyse IA est disponible sur les abonnements Lite et Pro.",
+    errMonthlyLimit: "Vous avez utilisé vos 3 analyses IA ce mois-ci. Passez à Pro pour un accès illimité.",
+  },
+};
+
+export default function SessionAiUpload({ sessionId, existingAssessmentId, locale = "en", onComplete }: Props) {
+  const s = STRINGS[locale];
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -49,7 +92,7 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, onCom
         onComplete(data.scores, assessmentId!);
       } else if (data.status === "failed") {
         setStage("failed");
-        setErrorMsg("Analysis failed. Please try with a different file.");
+        setErrorMsg(s.failedDefault);
       } else {
         pollRef.current = setTimeout(poll, 5000);
       }
@@ -63,12 +106,12 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, onCom
     if (!user) return;
 
     if (!ACCEPTED_TYPES.includes(file.type) && !file.name.match(/\.(mp4|mov|webm|mkv|mp3|wav|m4a)$/i)) {
-      setErrorMsg("Unsupported file type. Use MP4, MOV, WebM, MP3 or WAV.");
+      setErrorMsg(s.errBadType);
       setStage("failed");
       return;
     }
     if (file.size > MAX_SIZE_BYTES) {
-      setErrorMsg("File too large — maximum 500 MB.");
+      setErrorMsg(s.errTooLarge);
       setStage("failed");
       return;
     }
@@ -100,8 +143,8 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, onCom
           const data = await res.json().catch(() => ({}));
           if (!res.ok) {
             const msgs: Record<string, string> = {
-              upgrade_required: "AI Analysis is available on Lite and Pro plans.",
-              monthly_limit: "You've used your 3 AI assessments this month. Upgrade to Pro for unlimited.",
+              upgrade_required: s.errUpgrade,
+              monthly_limit: s.errMonthlyLimit,
             };
             setErrorMsg(msgs[data.error] ?? `Error ${res.status}: ${data.error ?? "Something went wrong."}`);
             setStage("failed");
@@ -124,15 +167,15 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, onCom
         <div className="flex items-center gap-3">
           <Brain className="h-5 w-5 text-amber-400 shrink-0" />
           <div>
-            <p className="text-sm font-semibold text-white">Add AI Analysis</p>
-            <p className="text-xs text-slate-400">Upload your recording to get AI scores across all five dimensions</p>
+            <p className="text-sm font-semibold text-white">{s.bannerTitle}</p>
+            <p className="text-xs text-slate-400">{s.bannerDesc}</p>
           </div>
         </div>
         <button
           onClick={() => { setStage("idle"); setShowZone(true); }}
           className="shrink-0 rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-400 transition"
         >
-          Upload →
+          {s.uploadBtn}
         </button>
       </div>
     );
@@ -144,8 +187,8 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, onCom
       <div className="mx-6 mt-4 rounded-2xl border border-amber-500/30 bg-[#111827] p-5">
         <div className="flex items-center gap-2 mb-4">
           <Brain className="h-4 w-4 text-amber-400" />
-          <p className="text-sm font-semibold text-white">AI Analysis</p>
-          <button onClick={() => { setShowZone(false); setStage("idle"); setErrorMsg(""); }} className="ml-auto text-xs text-slate-500 hover:text-slate-300 transition">Cancel</button>
+          <p className="text-sm font-semibold text-white">{s.heading}</p>
+          <button onClick={() => { setShowZone(false); setStage("idle"); setErrorMsg(""); }} className="ml-auto text-xs text-slate-500 hover:text-slate-300 transition">{s.cancel}</button>
         </div>
 
         {stage === "failed" && errorMsg && (
@@ -167,8 +210,8 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, onCom
             onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
           />
           <UploadCloud className="h-6 w-6 text-slate-500 mx-auto mb-2" />
-          <p className="text-sm text-slate-300 font-semibold mb-1">Drop recording here or click to browse</p>
-          <p className="text-xs text-slate-500">MP4, MOV, WebM, MP3, WAV · max 500 MB</p>
+          <p className="text-sm text-slate-300 font-semibold mb-1">{s.dropLabel}</p>
+          <p className="text-xs text-slate-500">{s.dropSub}</p>
         </div>
       </div>
     );
@@ -181,8 +224,8 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, onCom
         <div className="flex items-center gap-3 mb-4">
           <FileVideo className="h-5 w-5 text-amber-400 shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-semibold text-white">Uploading…</p>
-            <p className="text-xs text-slate-500">{uploadProgress}% complete</p>
+            <p className="text-sm font-semibold text-white">{s.uploading}</p>
+            <p className="text-xs text-slate-500">{uploadProgress}%</p>
           </div>
         </div>
         <div className="h-2 rounded-full bg-white/10 overflow-hidden">
@@ -198,8 +241,8 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, onCom
       <div className="mx-6 mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/[0.05] p-4 flex items-center gap-3">
         <Loader2 className="h-5 w-5 text-amber-400 shrink-0 animate-spin" />
         <div>
-          <p className="text-sm font-semibold text-white">Analysing your recording…</p>
-          <p className="text-xs text-slate-400">AI scores will appear on the chart when ready · 1–3 minutes</p>
+          <p className="text-sm font-semibold text-white">{s.analysing}</p>
+          <p className="text-xs text-slate-400">{s.analysingDesc}</p>
         </div>
       </div>
     );
@@ -214,8 +257,8 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, onCom
       <div className="flex items-center gap-3">
         <CheckCircle className="h-5 w-5 text-amber-400 shrink-0" />
         <div>
-          <p className="text-sm font-semibold text-white">AI Analysis complete</p>
-          <p className="text-xs text-slate-400">View your full report — rationale, highlights, tips and vocal stats</p>
+          <p className="text-sm font-semibold text-white">{s.complete}</p>
+          <p className="text-xs text-slate-400">{s.completeDesc}</p>
         </div>
       </div>
       <ChevronRight className="h-5 w-5 text-amber-400 shrink-0 group-hover:translate-x-0.5 transition-transform" />

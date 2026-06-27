@@ -11,14 +11,85 @@ import { Brain, Loader2, CheckCircle, AlertCircle, ChevronRight, Lightbulb, Star
 const DIMENSIONS = ["clarity", "energy", "engagement", "understanding", "connection"] as const;
 type Dimension = (typeof DIMENSIONS)[number];
 
-const DIM_LABELS: Record<Dimension, string> = {
+const DIM_LABELS_EN: Record<Dimension, string> = {
   clarity: "Clarity", energy: "Energy", engagement: "Engagement",
   understanding: "Understanding", connection: "Connection",
+};
+const DIM_LABELS_FR: Record<Dimension, string> = {
+  clarity: "Clarté", energy: "Énergie", engagement: "Engagement",
+  understanding: "Compréhension", connection: "Connexion",
 };
 
 const DIM_COLORS: Record<Dimension, string> = {
   clarity: "#8b5cf6", energy: "#f59e0b", engagement: "#22d3ee",
   understanding: "#34d399", connection: "#f472b6",
+};
+
+const STRINGS = {
+  en: {
+    navBack: "← New analysis",
+    navComplete: "Analysis complete",
+    navDash: "Dashboard →",
+    processing: "Analysing your presentation",
+    processingDesc: "Transcribing audio and scoring across all five dimensions…",
+    processingTime: "This usually takes 1–3 minutes",
+    failed: "Analysis failed",
+    failedDesc: "We couldn't process this recording. Please try again with a different file.",
+    tryAgain: "← Try another recording",
+    summary: "AI Summary",
+    radarTitle: "Three-Signal Overview",
+    radarSub: "AI assessment · audience feedback · your self-reflection",
+    radarNoData: "(complete a session to add audience & reflection lines)",
+    aiLegend: "AI Assessment",
+    audLegend: "Audience Feedback",
+    refLegend: "Self-Reflection",
+    audPrefix: "Aud:",
+    breakdownTitle: "Dimension breakdown",
+    priorityLabel: "Priority focus",
+    momentsTitle: "Key moments",
+    strength: "Strength",
+    opportunity: "Opportunity",
+    nextTitle: "Your next steps",
+    resourcesPrefix: "Explore resources for",
+    resourcesDesc: "Videos, podcasts, articles and live events matched to your lowest dimension",
+    vocalTitle: "Vocal statistics",
+    minutes: "minutes",
+    wpm: "words/min",
+    totalWords: "total words",
+    fillerWords: "filler words",
+  },
+  fr: {
+    navBack: "← Nouvelle analyse",
+    navComplete: "Analyse terminée",
+    navDash: "Tableau de bord →",
+    processing: "Analyse de votre présentation",
+    processingDesc: "Transcription de l'audio et évaluation sur les cinq dimensions…",
+    processingTime: "Cela prend généralement 1–3 minutes",
+    failed: "Échec de l'analyse",
+    failedDesc: "Nous n'avons pas pu traiter cet enregistrement. Veuillez réessayer avec un autre fichier.",
+    tryAgain: "← Essayer un autre enregistrement",
+    summary: "Synthèse IA",
+    radarTitle: "Vue d'ensemble trois signaux",
+    radarSub: "Évaluation IA · retours du public · votre auto-réflexion",
+    radarNoData: "(complétez une session pour ajouter les courbes public et réflexion)",
+    aiLegend: "Évaluation IA",
+    audLegend: "Retours du public",
+    refLegend: "Auto-réflexion",
+    audPrefix: "Pub :",
+    breakdownTitle: "Détail par dimension",
+    priorityLabel: "Priorité",
+    momentsTitle: "Moments clés",
+    strength: "Point fort",
+    opportunity: "Axe d'amélioration",
+    nextTitle: "Vos prochaines étapes",
+    resourcesPrefix: "Explorer les ressources pour",
+    resourcesDesc: "Vidéos, podcasts, articles et événements correspondant à votre dimension la plus faible",
+    vocalTitle: "Statistiques vocales",
+    minutes: "minutes",
+    wpm: "mots/min",
+    totalWords: "mots au total",
+    fillerWords: "mots de remplissage",
+  },
 };
 
 interface AssessmentData {
@@ -44,7 +115,16 @@ export default function AiAssessmentResultsPage() {
   const [assessment, setAssessment] = useState<AssessmentData | null>(null);
   const [audienceScores, setAudienceScores] = useState<Record<Dimension, number> | null>(null);
   const [reflectionScores, setReflectionScores] = useState<Record<Dimension, number> | null>(null);
+  const [locale, setLocale] = useState<"en" | "fr">("en");
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Fetch presenter locale
+  useEffect(() => {
+    if (!user) return;
+    getDoc(doc(db, "presenters", user.uid)).then((snap) => {
+      if (snap.exists() && snap.data().locale === "fr") setLocale("fr");
+    }).catch(() => {});
+  }, [user]);
 
   // Poll for assessment status
   useEffect(() => {
@@ -84,7 +164,6 @@ export default function AiAssessmentResultsPage() {
       if (sessionSnap.empty) return;
       const sessionId = sessionSnap.docs[0].id;
 
-      // Audience averages
       const respSnap = await getDocs(
         query(collection(db, "feedback_responses"), where("sessionId", "==", sessionId))
       );
@@ -99,7 +178,6 @@ export default function AiAssessmentResultsPage() {
         setAudienceScores(avgs);
       }
 
-      // Self-reflection
       const refSnap = await getDoc(doc(db, "presenter_reflections", sessionId));
       if (refSnap.exists()) {
         const r = refSnap.data();
@@ -115,6 +193,9 @@ export default function AiAssessmentResultsPage() {
 
   if (authLoading) return null;
 
+  const s = STRINGS[locale];
+  const DIM_LABELS = locale === "fr" ? DIM_LABELS_FR : DIM_LABELS_EN;
+
   // Processing state
   if (!assessment || assessment.status === "queued" || assessment.status === "processing") {
     return (
@@ -126,9 +207,9 @@ export default function AiAssessmentResultsPage() {
             </div>
             <Loader2 className="absolute -bottom-1 -right-1 h-5 w-5 text-amber-400 animate-spin" />
           </div>
-          <p className="text-white font-semibold mb-2">Analysing your presentation</p>
-          <p className="text-slate-400 text-sm">Transcribing audio and scoring across all five dimensions…</p>
-          <p className="text-slate-600 text-xs mt-4">This usually takes 1–3 minutes</p>
+          <p className="text-white font-semibold mb-2">{s.processing}</p>
+          <p className="text-slate-400 text-sm">{s.processingDesc}</p>
+          <p className="text-slate-600 text-xs mt-4">{s.processingTime}</p>
         </div>
       </main>
     );
@@ -139,9 +220,9 @@ export default function AiAssessmentResultsPage() {
       <main className="min-h-screen bg-[#05070d] flex items-center justify-center p-6">
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-          <p className="text-white font-semibold mb-2">Analysis failed</p>
-          <p className="text-slate-400 text-sm mb-6">We couldn't process this recording. Please try again with a different file.</p>
-          <a href="/ai-assessment" className="text-violet-400 hover:text-violet-300 text-sm">← Try another recording</a>
+          <p className="text-white font-semibold mb-2">{s.failed}</p>
+          <p className="text-slate-400 text-sm mb-6">{s.failedDesc}</p>
+          <a href="/ai-assessment" className="text-violet-400 hover:text-violet-300 text-sm">{s.tryAgain}</a>
         </div>
       </main>
     );
@@ -166,12 +247,12 @@ export default function AiAssessmentResultsPage() {
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-white/10 bg-[#05070d]/90 backdrop-blur px-6 py-4">
         <div className="mx-auto max-w-4xl flex items-center justify-between">
-          <a href="/ai-assessment" className="text-sm text-slate-400 hover:text-white transition">← New analysis</a>
+          <a href="/ai-assessment" className="text-sm text-slate-400 hover:text-white transition">{s.navBack}</a>
           <div className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4 text-green-400" />
-            <span className="text-sm font-semibold text-white">Analysis complete</span>
+            <span className="text-sm font-semibold text-white">{s.navComplete}</span>
           </div>
-          <a href="/dashboard" className="text-sm text-slate-400 hover:text-white transition">Dashboard →</a>
+          <a href="/dashboard" className="text-sm text-slate-400 hover:text-white transition">{s.navDash}</a>
         </div>
       </header>
 
@@ -181,9 +262,9 @@ export default function AiAssessmentResultsPage() {
           <div className="flex items-center gap-2">
             <Brain className="h-4 w-4 text-amber-400" />
             <p className="text-sm text-slate-400 truncate">{assessment.fileName}</p>
-            {durationMins && <span className="text-slate-600 text-sm">· {durationMins} min</span>}
+            {durationMins && <span className="text-slate-600 text-sm">· {durationMins} {s.minutes}</span>}
             {assessment.wordsPerMinute && (
-              <span className="text-slate-600 text-sm">· {assessment.wordsPerMinute} wpm</span>
+              <span className="text-slate-600 text-sm">· {assessment.wordsPerMinute} {s.wpm}</span>
             )}
           </div>
         )}
@@ -191,29 +272,29 @@ export default function AiAssessmentResultsPage() {
         {/* Summary */}
         {assessment.summary && (
           <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.06] p-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-amber-400 mb-2">AI Summary</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-amber-400 mb-2">{s.summary}</p>
             <p className="text-sm text-slate-300 leading-relaxed">{assessment.summary}</p>
           </div>
         )}
 
         {/* 3-Signal Radar */}
         <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
-          <h2 className="text-sm font-semibold text-white mb-1">Three-Signal Overview</h2>
+          <h2 className="text-sm font-semibold text-white mb-1">{s.radarTitle}</h2>
           <p className="text-xs text-slate-500 mb-5">
-            AI assessment · audience feedback · your self-reflection
-            {!audienceScores && !reflectionScores && " (complete a session to add audience & reflection lines)"}
+            {s.radarSub}
+            {!audienceScores && !reflectionScores && ` ${s.radarNoData}`}
           </p>
 
           <ResponsiveContainer width="100%" height={300}>
             <RadarChart data={radarData}>
               <PolarGrid stroke="#ffffff15" />
               <PolarAngleAxis dataKey="dimension" tick={{ fill: "#94a3b8", fontSize: 12 }} />
-              <Radar name="AI Assessment" dataKey="ai" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.2} strokeWidth={2} />
+              <Radar name={s.aiLegend} dataKey="ai" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.2} strokeWidth={2} />
               {audienceScores && (
-                <Radar name="Audience Feedback" dataKey="audience" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.15} strokeWidth={2} />
+                <Radar name={s.audLegend} dataKey="audience" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.15} strokeWidth={2} />
               )}
               {reflectionScores && (
-                <Radar name="Self-Reflection" dataKey="reflection" stroke="#22d3ee" fill="#22d3ee" fillOpacity={0.1} strokeWidth={2} strokeDasharray="5 3" />
+                <Radar name={s.refLegend} dataKey="reflection" stroke="#22d3ee" fill="#22d3ee" fillOpacity={0.1} strokeWidth={2} strokeDasharray="5 3" />
               )}
               <Legend
                 formatter={(value) => <span className="text-xs text-slate-400">{value}</span>}
@@ -229,7 +310,7 @@ export default function AiAssessmentResultsPage() {
                 <p className="text-xs text-slate-500 mb-1">{DIM_LABELS[dim]}</p>
                 <p className="text-xl font-bold" style={{ color: DIM_COLORS[dim] }}>{scores[dim]}</p>
                 {audienceScores && (
-                  <p className="text-[10px] text-slate-600 mt-0.5">Aud: {audienceScores[dim]}</p>
+                  <p className="text-[10px] text-slate-600 mt-0.5">{s.audPrefix} {audienceScores[dim]}</p>
                 )}
               </div>
             ))}
@@ -238,7 +319,7 @@ export default function AiAssessmentResultsPage() {
 
         {/* Per-dimension breakdown */}
         <div className="space-y-4">
-          <h2 className="text-lg font-bold">Dimension breakdown</h2>
+          <h2 className="text-lg font-bold">{s.breakdownTitle}</h2>
           {sortedDims.map((dim) => (
             <div
               key={dim}
@@ -248,7 +329,7 @@ export default function AiAssessmentResultsPage() {
               <div className="px-5 py-4 flex items-center justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: DIM_COLORS[dim] }}>
-                    {dim === lowestDim ? "Priority focus" : ""}
+                    {dim === lowestDim ? s.priorityLabel : ""}
                   </p>
                   <h3 className="text-base font-bold text-white">{DIM_LABELS[dim]}</h3>
                   {assessment.rationale?.[dim] && (
@@ -267,7 +348,7 @@ export default function AiAssessmentResultsPage() {
         {/* Highlights */}
         {assessment.highlights && assessment.highlights.length > 0 && (
           <div>
-            <h2 className="text-lg font-bold mb-4">Key moments</h2>
+            <h2 className="text-lg font-bold mb-4">{s.momentsTitle}</h2>
             <div className="space-y-3">
               {assessment.highlights.map((h, i) => (
                 <div key={i} className={`rounded-xl border p-4 flex items-start gap-3 ${h.type === "strength" ? "border-green-500/20 bg-green-500/[0.05]" : "border-amber-500/20 bg-amber-500/[0.05]"}`}>
@@ -278,7 +359,7 @@ export default function AiAssessmentResultsPage() {
                   <div className="min-w-0">
                     <p className="text-sm text-white leading-relaxed">"{h.quote}"</p>
                     <p className="text-[11px] mt-1" style={{ color: DIM_COLORS[h.dimension] }}>
-                      {h.type === "strength" ? "Strength" : "Opportunity"} · {DIM_LABELS[h.dimension]}
+                      {h.type === "strength" ? s.strength : s.opportunity} · {DIM_LABELS[h.dimension]}
                     </p>
                   </div>
                 </div>
@@ -290,16 +371,16 @@ export default function AiAssessmentResultsPage() {
         {/* Improvement tips */}
         {assessment.tips && assessment.tips.length > 0 && (
           <div>
-            <h2 className="text-lg font-bold mb-4">Your next steps</h2>
+            <h2 className="text-lg font-bold mb-4">{s.nextTitle}</h2>
             <div className="space-y-3">
-              {assessment.tips.map((t, i) => (
+              {assessment.tips.map((tip, i) => (
                 <div key={i} className="rounded-xl border border-white/10 bg-[#111827] p-4 flex items-start gap-3">
                   <Lightbulb className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-[11px] font-semibold mb-1" style={{ color: DIM_COLORS[t.dimension] }}>
-                      {DIM_LABELS[t.dimension]}
+                    <p className="text-[11px] font-semibold mb-1" style={{ color: DIM_COLORS[tip.dimension] }}>
+                      {DIM_LABELS[tip.dimension]}
                     </p>
-                    <p className="text-sm text-slate-300">{t.tip}</p>
+                    <p className="text-sm text-slate-300">{tip.tip}</p>
                   </div>
                 </div>
               ))}
@@ -309,12 +390,12 @@ export default function AiAssessmentResultsPage() {
 
         {/* Resources CTA */}
         <a
-          href={`/dashboard`}
+          href="/dashboard"
           className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#111827] p-5 hover:bg-white/5 transition group"
         >
           <div>
-            <p className="text-sm font-semibold text-white">Explore resources for {DIM_LABELS[lowestDim]}</p>
-            <p className="text-xs text-slate-500 mt-0.5">Videos, podcasts, articles and live events matched to your lowest dimension</p>
+            <p className="text-sm font-semibold text-white">{s.resourcesPrefix} {DIM_LABELS[lowestDim]}</p>
+            <p className="text-xs text-slate-500 mt-0.5">{s.resourcesDesc}</p>
           </div>
           <ChevronRight className="h-5 w-5 text-slate-500 group-hover:text-white transition" />
         </a>
@@ -322,24 +403,24 @@ export default function AiAssessmentResultsPage() {
         {/* Vocal stats */}
         {(assessment.wordCount || assessment.fillerWordCount !== undefined) && (
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Vocal statistics</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">{s.vocalTitle}</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {durationMins && (
                 <div className="text-center">
                   <p className="text-xl font-bold text-white">{durationMins}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">minutes</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{s.minutes}</p>
                 </div>
               )}
               {assessment.wordsPerMinute && (
                 <div className="text-center">
                   <p className="text-xl font-bold text-white">{assessment.wordsPerMinute}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">words/min</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{s.wpm}</p>
                 </div>
               )}
               {assessment.wordCount && (
                 <div className="text-center">
                   <p className="text-xl font-bold text-white">{assessment.wordCount.toLocaleString()}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">total words</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{s.totalWords}</p>
                 </div>
               )}
               {assessment.fillerWordCount !== undefined && (
@@ -347,7 +428,7 @@ export default function AiAssessmentResultsPage() {
                   <p className={`text-xl font-bold ${assessment.fillerWordCount > 20 ? "text-red-400" : assessment.fillerWordCount > 8 ? "text-amber-400" : "text-green-400"}`}>
                     {assessment.fillerWordCount}
                   </p>
-                  <p className="text-xs text-slate-500 mt-0.5">filler words</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{s.fillerWords}</p>
                 </div>
               )}
             </div>

@@ -32,6 +32,10 @@ export async function GET(
     return NextResponse.json({ status: data.status });
   }
 
+  // Fetch presenter locale to pass to Claude
+  const presenterSnap = await db.collection("presenters").doc(uid).get();
+  const locale = (presenterSnap.data()?.locale ?? "en") as "en" | "fr";
+
   // Check AssemblyAI status
   let transcript;
   try {
@@ -72,6 +76,7 @@ export async function GET(
       positivePercent,
       neutralPercent,
       negativePercent,
+      locale,
     });
   } catch (err) {
     console.error("[ai-assessment/get] Claude analysis failed:", err);

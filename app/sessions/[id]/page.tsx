@@ -208,6 +208,9 @@ export default function LiveSessionPage() {
     committed: "✓ Engagé(e) !",
     setFocus: "Définir mon objectif →",
     weakest: " (le plus faible)",
+    aiLegend: "Évaluation IA",
+    aiComplete: "Analyse IA terminée",
+    aiCompleteDesc: "Voir votre rapport complet — justifications, points clés, conseils et statistiques vocales",
     recommendedFocus: "Objectif recommandé",
     findingResources: "Recherche de ressources…",
     tabVideos: "Vidéos",
@@ -266,6 +269,9 @@ export default function LiveSessionPage() {
     committed: "✓ Committed!",
     setFocus: "Set my focus →",
     weakest: " (weakest)",
+    aiLegend: "AI Assessment",
+    aiComplete: "AI Analysis complete",
+    aiCompleteDesc: "View your full report — rationale, highlights, tips and vocal stats",
     recommendedFocus: "Recommended focus",
     findingResources: "Finding resources…",
     tabVideos: "Videos",
@@ -590,8 +596,8 @@ export default function LiveSessionPage() {
             <div className="flex items-center gap-3">
               <svg className="h-5 w-5 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               <div>
-                <p className="text-sm font-semibold text-white">AI Analysis complete</p>
-                <p className="text-xs text-slate-400">View your full report — rationale, highlights, tips and vocal stats</p>
+                <p className="text-sm font-semibold text-white">{t.aiComplete}</p>
+                <p className="text-xs text-slate-400">{t.aiCompleteDesc}</p>
               </div>
             </div>
             <svg className="h-5 w-5 text-amber-400 shrink-0 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
@@ -601,6 +607,7 @@ export default function LiveSessionPage() {
           <SessionAiUpload
             sessionId={id}
             existingAssessmentId={aiAssessmentId}
+            locale={locale}
             onComplete={(scores, newAssessmentId) => {
               setAiScores(scores as Record<Dimension, number>);
               setAiAssessmentId(newAssessmentId);
@@ -663,7 +670,7 @@ export default function LiveSessionPage() {
                 {aiScores && (
                   <span className="flex items-center gap-1.5">
                     <span className="h-2.5 w-2.5 rounded-full bg-amber-400 inline-block" />
-                    <span className="text-slate-400">AI Assessment</span>
+                    <span className="text-slate-400">{t.aiLegend}</span>
                   </span>
                 )}
               </div>

@@ -44,6 +44,7 @@ export async function analyseTranscript(opts: {
   positivePercent: number;
   neutralPercent: number;
   negativePercent: number;
+  locale?: "en" | "fr";
 }): Promise<AssessmentAnalysis> {
   const client = getClient();
 
@@ -55,7 +56,11 @@ export async function analyseTranscript(opts: {
     : "0";
   const durationMins = Math.round(opts.audioDurationSeconds / 60);
 
+  const lang = opts.locale === "fr" ? "French (français)" : "English";
+
   const prompt = `You are an expert presentation coach scoring a presenter across five core communication dimensions.
+LANGUAGE: Write all text fields (rationale, highlights, tips, summary) in ${lang}.
+
 
 DIMENSIONS (score each 0–100):
 - Clarity: Clear structure, precise language, minimal jargon, logical flow. Filler words and pace directly affect this.
