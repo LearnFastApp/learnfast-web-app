@@ -347,7 +347,7 @@ export default function LandingPage() {
       {/* ── INDUSTRY LEADERBOARDS ── */}
       <section className="py-16 sm:py-20 px-5 lg:px-12 bg-[#0a0b12] border-y border-white/5">
         <div className="max-w-6xl mx-auto">
-          <div className="grid gap-10 lg:grid-cols-2 items-center">
+          <div className="grid gap-10 lg:grid-cols-2 items-start">
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <span className="h-2 w-2 rounded-full bg-violet-400 shrink-0" />
