@@ -43,7 +43,8 @@ export default function AiAssessmentPage() {
     const token = await user.getIdToken();
     const path = `ai-recordings/${user.uid}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
     const fileRef = storageRef(storage, path);
-    const task = uploadBytesResumable(fileRef, file);
+    const contentType = file.type || "video/mp4";
+    const task = uploadBytesResumable(fileRef, file, { contentType });
 
     task.on(
       "state_changed",
