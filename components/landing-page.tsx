@@ -6,35 +6,81 @@ import { useRouter } from "next/navigation";
 
 const RED = "#d13b1a";
 
-const STEPS = [
-  { n: "01", title: "Create a Session", body: "Name your session and get a unique join code and QR code in seconds." },
-  { n: "02", title: "Share With Your Audience", body: "Display the QR or share the link — no app download needed for your audience." },
-  { n: "03", title: "Collect Live Feedback", body: "Watch scores arrive in real time across all 5 dimensions as your audience responds." },
-  { n: "04", title: "Reflect & Improve", body: "Review your radar chart, compare it with your own self-score, and commit to your next area of focus." },
-];
-
 const DIMENSIONS = [
-  { name: "Clarity", color: "#8b5cf6", desc: "How clearly your message and structure came across to the room." },
-  { name: "Engagement", color: "#22d3ee", desc: "How well you held attention and kept the audience invested throughout." },
-  { name: "Energy", color: "#f59e0b", desc: "The presence, vocal delivery and energy you brought to the room." },
+  { name: "Clarity",       color: "#8b5cf6", desc: "How clearly your message and structure came across to the room." },
+  { name: "Energy",        color: "#f59e0b", desc: "The presence, vocal delivery and energy you brought to the room." },
+  { name: "Engagement",    color: "#22d3ee", desc: "How well you held attention and kept the audience invested throughout." },
   { name: "Understanding", color: "#34d399", desc: "How well the audience grasped the core ideas you shared." },
-  { name: "Connection", color: "#f472b6", desc: "How personally connected the audience felt to you and your content." },
+  { name: "Connection",    color: "#f472b6", desc: "How personally connected the audience felt to you and your content." },
 ];
 
 const FEATURES = [
-  { icon: "📊", title: "Performance Tracking", body: "Track your delivery, engagement, understanding and more — week to week, session to session — and watch yourself improve over time." },
-  { icon: "🎯", title: "Feedback-Specific Development", body: "Based on YOUR scores, LearnFast surfaces the most relevant articles, TED Talks, videos and podcasts — personalised to your exact development areas." },
-  { icon: "🔁", title: "Reflective Practice Loop", body: "Self-score alongside your audience, set a focus commitment for your next session, and check in on progress. Continuous improvement, built in." },
-  { icon: "📱", title: "Audience Connector", body: "Your audience joins via a QR code or link — no account needed, no app to download. Feedback in seconds from any device." },
+  {
+    icon: "🧠",
+    title: "AI Assessment",
+    body: "Upload your recording and receive AI-scored coaching across all five dimensions in 1–3 minutes. Vocal stats, highlight quotes, improvement tips and a full written rationale — all from a single file.",
+  },
+  {
+    icon: "📡",
+    title: "Three-Signal Intelligence",
+    body: "Combine AI scores, live audience feedback and your own self-reflection on a single radar. Where the three signals diverge is exactly where your growth lives.",
+  },
+  {
+    icon: "📈",
+    title: "Comparative Coaching",
+    body: "Your AI feedback evolves with every session. Each new assessment references your full history — noting improvements, calling out persistent patterns and adapting advice to your trajectory.",
+  },
+  {
+    icon: "🏆",
+    title: "Industry Leaderboards",
+    body: "See how you rank against peers in your sector. Leaderboards by dimension — Clarity, Energy, Connection and more — updated with every AI assessment you complete.",
+  },
+  {
+    icon: "🎯",
+    title: "Dimension-Matched Resources",
+    body: "Based on YOUR scores, LearnFast surfaces the most relevant articles, TED Talks, videos and podcasts — matched to your exact development areas, not a generic library.",
+  },
+  {
+    icon: "🔁",
+    title: "Reflective Practice Loop",
+    body: "Self-score alongside your audience, set a focus commitment for your next session, and track progress over time. Continuous improvement, built into every session.",
+  },
+];
+
+const SIGNALS = [
+  {
+    color: "#f59e0b",
+    border: "border-amber-500/30",
+    bg: "bg-amber-500/[0.06]",
+    label: "AI",
+    title: "The Recording",
+    body: "Upload your recording and an AI scores you across all five dimensions. Vocal statistics, exact quotes from your transcript, and specific improvement tips — delivered in minutes.",
+  },
+  {
+    color: "#8b5cf6",
+    border: "border-violet-500/30",
+    bg: "bg-violet-500/[0.06]",
+    label: "Audience",
+    title: "The Room",
+    body: "Your audience scores you in real time via QR code. Completely anonymous. What they actually felt — not what they were polite enough to say.",
+  },
+  {
+    color: "#22d3ee",
+    border: "border-cyan-500/30",
+    bg: "bg-cyan-500/[0.06]",
+    label: "Self",
+    title: "Your Perception",
+    body: "How did YOU think it went? Your self-assessment alongside AI and audience scores reveals whether your internal compass is calibrated — or not.",
+  },
 ];
 
 const PARTNERS = [
   { name: "Harvard Business Review", style: "font-serif font-bold text-white text-sm" },
-  { name: "BBC Maestro", style: "font-bold text-white text-sm tracking-wide" },
-  { name: "Big Think", style: "font-bold text-orange-400 text-sm" },
-  { name: "Fortune", style: "font-serif font-black text-white text-sm" },
-  { name: "The New York Times", style: "font-serif text-white text-sm" },
-  { name: "Farnam Street", style: "font-bold text-white text-sm tracking-wider" },
+  { name: "BBC Maestro",             style: "font-bold text-white text-sm tracking-wide" },
+  { name: "Big Think",               style: "font-bold text-orange-400 text-sm" },
+  { name: "Fortune",                 style: "font-serif font-black text-white text-sm" },
+  { name: "The New York Times",      style: "font-serif text-white text-sm" },
+  { name: "Farnam Street",           style: "font-bold text-white text-sm tracking-wider" },
 ];
 
 export default function LandingPage() {
@@ -61,9 +107,7 @@ export default function LandingPage() {
     }
   }
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  useEffect(() => { window.scrollTo(0, 0); }, []);
 
   return (
     <div className="min-h-screen bg-[#08090f] text-white overflow-x-hidden">
@@ -77,10 +121,10 @@ export default function LandingPage() {
           </span>
         </div>
         <div className="hidden md:flex items-center gap-8 text-xs font-semibold tracking-widest text-slate-400">
-          <a href="#product" className="hover:text-white transition">PRODUCT</a>
+          <a href="#product"      className="hover:text-white transition">PRODUCT</a>
           <a href="#how-it-works" className="hover:text-white transition">HOW IT WORKS</a>
-          <a href="#pricing" className="hover:text-white transition">PRICING</a>
-          <a href="#why" className="hover:text-white transition">WHY</a>
+          <a href="#pricing"      className="hover:text-white transition">PRICING</a>
+          <a href="#why"          className="hover:text-white transition">WHY</a>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={goToLogin} className="text-xs text-slate-400 hover:text-white transition px-3 py-2">Sign in</button>
@@ -100,12 +144,10 @@ export default function LandingPage() {
 
       {/* ── HERO ── */}
       <section className="relative text-center pt-36 pb-0 px-5 lg:px-12 overflow-hidden">
-
-        {/* Background glow */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 90% 50% at 50% 0%, rgba(109,40,217,0.22) 0%, transparent 60%)" }} />
 
         <p className="relative text-[10px] sm:text-xs font-semibold tracking-[0.3em] text-slate-400 uppercase mb-5">
-          Presentation Feedback Technology
+          AI-Powered Presentation Intelligence
         </p>
         <h1 className="relative text-3xl sm:text-6xl md:text-7xl lg:text-8xl font-light leading-tight tracking-tight text-slate-400 mb-1">
           INTRODUCING
@@ -113,10 +155,10 @@ export default function LandingPage() {
         <h1 className="relative text-3xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-tight tracking-tight mb-6">
           THE LEARNFAST APP
         </h1>
-        <p className="relative max-w-xl mx-auto text-base sm:text-lg text-slate-400 leading-relaxed mb-3">
-          Unlock the Power of Real-Time Feedback for Leaders, Managers and Coaches
+        <p className="relative max-w-2xl mx-auto text-base sm:text-lg text-slate-400 leading-relaxed mb-2">
+          The only platform that combines AI analysis, live audience feedback and self-reflection into a single coaching intelligence — scored across the five dimensions of great presenting.
         </p>
-        <p className="relative text-sm text-slate-500 mb-10">No download required — works on any device, in your browser.</p>
+        <p className="relative text-sm text-slate-500 mb-10">No download required · works on any device · available in English and French.</p>
 
         <div className="relative flex flex-col sm:flex-row items-center justify-center gap-3 mb-16">
           <button onClick={goToLogin} className="px-8 py-4 text-sm font-bold tracking-wider text-white rounded-sm transition w-full sm:w-auto" style={{ backgroundColor: RED }}>
@@ -127,43 +169,17 @@ export default function LandingPage() {
           </button>
         </div>
 
-        {/* Assets — phone | laptop | phone, mirroring original site's 3-device layout */}
+        {/* 3-device preview */}
         <div className="relative mx-auto w-full max-w-6xl flex items-end justify-center gap-0">
-          {/* Glow beneath */}
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-48 pointer-events-none" style={{ background: "radial-gradient(ellipse 90% 100% at 50% 100%, rgba(109,40,217,0.28) 0%, transparent 70%)" }} />
-
-          {/* Phone left — performance over time */}
           <div className="hidden md:block relative w-44 lg:w-56 shrink-0 translate-x-8 lg:translate-x-12 z-10" style={{ marginBottom: "-2px" }}>
-            <Image
-              src="/phone-preview-2.png"
-              alt="LearnFast — performance over time"
-              width={400}
-              height={600}
-              className="w-full object-contain drop-shadow-2xl"
-            />
+            <Image src="/phone-preview-2.png" alt="LearnFast — performance over time" width={400} height={600} className="w-full object-contain drop-shadow-2xl" />
           </div>
-
-          {/* Laptop — centre, largest */}
           <div className="relative w-full max-w-3xl shrink z-20">
-            <Image
-              src="/app-preview.png"
-              alt="LearnFast app — live session results"
-              width={1200}
-              height={750}
-              className="w-full object-contain drop-shadow-2xl"
-              priority
-            />
+            <Image src="/app-preview.png" alt="LearnFast — live session results" width={1200} height={750} className="w-full object-contain drop-shadow-2xl" priority />
           </div>
-
-          {/* Phone right — live radar */}
           <div className="hidden md:block relative w-44 lg:w-56 shrink-0 -translate-x-8 lg:-translate-x-12 z-10" style={{ marginBottom: "-2px" }}>
-            <Image
-              src="/phone-preview.png"
-              alt="LearnFast — live audience scores"
-              width={400}
-              height={600}
-              className="w-full object-contain drop-shadow-2xl"
-            />
+            <Image src="/phone-preview.png" alt="LearnFast — live audience scores" width={400} height={600} className="w-full object-contain drop-shadow-2xl" />
           </div>
         </div>
       </section>
@@ -171,97 +187,233 @@ export default function LandingPage() {
       {/* ── TAGLINE BAR ── */}
       <div className="border-y border-white/5 bg-white/[0.02] py-4 px-5 text-center">
         <p className="text-[10px] sm:text-xs font-semibold tracking-[0.3em] text-slate-400 uppercase">
-          Your ideas are only as good as how they are presented
+          Your ideas are only as powerful as how they are delivered
         </p>
       </div>
 
       {/* ── WHAT WE DO ── */}
       <section id="product" className="py-20 sm:py-28 px-5 lg:px-12 max-w-4xl mx-auto text-center">
-        <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4">Performance Insights</p>
+        <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4">Feedback Intelligence</p>
         <h2 className="text-3xl sm:text-6xl font-light text-slate-400 leading-none mb-1">WHAT</h2>
         <h2 className="text-3xl sm:text-6xl font-black leading-none mb-8">WE DO</h2>
-        <p className="text-base sm:text-lg text-slate-400 leading-relaxed max-w-2xl mx-auto mb-10">
-          LearnFast connects you with your audience and allows them to give you honest, real-time feedback on your presentation. Our platform automatically surfaces the most relevant expert learning resources based on your scores — helping you upskill quickly and efficiently.
+        <p className="text-base sm:text-lg text-slate-400 leading-relaxed max-w-2xl mx-auto mb-6">
+          LearnFast is an AI-powered presentation coaching platform. Every session generates three independent signals — your AI assessment, your audience's live feedback, and your own self-reflection — combined on a single radar chart to give you the most complete picture of your performance available anywhere.
+        </p>
+        <p className="text-sm text-slate-500 max-w-xl mx-auto mb-10">
+          Then we use your scores to surface curated learning resources, track your progress over time, and benchmark you against professionals in your industry.
         </p>
         <button onClick={goToLogin} className="px-8 py-4 text-sm font-bold tracking-wider text-white rounded-sm transition" style={{ backgroundColor: RED }}>
           START FREE NOW
         </button>
       </section>
 
-      {/* ── FEATURES ── */}
-      <section className="py-16 px-5 lg:px-12 bg-[#0a0b12] border-y border-white/5">
-        <div className="max-w-6xl mx-auto grid gap-4 md:grid-cols-2">
-          {FEATURES.map((f) => (
-            <div key={f.title} className="rounded-2xl border border-white/10 bg-[#0f1118] p-6 sm:p-8">
-              <p className="text-3xl mb-4">{f.icon}</p>
-              <p className="font-bold text-sm uppercase tracking-wider mb-3">{f.title}</p>
-              <p className="text-sm text-slate-400 leading-relaxed">{f.body}</p>
-            </div>
-          ))}
+      {/* ── THREE-SIGNAL MODEL ── */}
+      <section className="py-16 sm:py-24 px-5 lg:px-12 bg-[#0a0b12] border-y border-white/5">
+        <div className="max-w-6xl mx-auto">
+          <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4 text-center">Proprietary Methodology</p>
+          <h2 className="text-3xl sm:text-5xl font-light text-slate-400 text-center leading-none mb-1">THE THREE-SIGNAL</h2>
+          <h2 className="text-3xl sm:text-5xl font-black text-center leading-none mb-4">INTELLIGENCE MODEL</h2>
+          <p className="text-center text-slate-400 max-w-lg mx-auto mb-12 text-sm">
+            Most feedback tools give you one perspective. LearnFast gives you three — simultaneously. Where they diverge is where your growth lives.
+          </p>
+
+          <div className="grid gap-4 md:grid-cols-3 mb-8">
+            {SIGNALS.map((sig) => (
+              <div key={sig.label} className={`rounded-2xl border ${sig.border} ${sig.bg} p-6`}>
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: sig.color }} />
+                  <span className="text-[10px] font-bold tracking-[0.2em] uppercase" style={{ color: sig.color }}>{sig.label}</span>
+                </div>
+                <h3 className="text-base font-bold text-white mb-2">{sig.title}</h3>
+                <p className="text-sm text-slate-400 leading-relaxed">{sig.body}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-center max-w-3xl mx-auto">
+            <p className="text-sm text-slate-300 leading-relaxed">
+              "The gap between how you think you performed and how your audience actually experienced you is the single most important data point in your development as a presenter."
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* ── HOW IT WORKS — visual onboarding ── */}
-      <section id="how-it-works" className="py-20 sm:py-28 px-5 lg:px-12">
+      {/* ── FEATURES ── */}
+      <section className="py-16 px-5 lg:px-12">
+        <div className="max-w-6xl mx-auto">
+          <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4 text-center">Everything You Need</p>
+          <h2 className="text-3xl sm:text-5xl font-light text-slate-400 text-center leading-none mb-1">BUILT FOR</h2>
+          <h2 className="text-3xl sm:text-5xl font-black text-center leading-none mb-12">SERIOUS PRESENTERS</h2>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {FEATURES.map((f) => (
+              <div key={f.title} className="rounded-2xl border border-white/10 bg-[#0f1118] p-6 sm:p-7">
+                <p className="text-3xl mb-4">{f.icon}</p>
+                <p className="font-bold text-sm uppercase tracking-wider mb-3">{f.title}</p>
+                <p className="text-sm text-slate-400 leading-relaxed">{f.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS ── */}
+      <section id="how-it-works" className="py-20 sm:py-28 px-5 lg:px-12 bg-[#0a0b12] border-y border-white/5">
         <div className="max-w-6xl mx-auto">
           <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4 text-center">Simple by Design</p>
           <h2 className="text-3xl sm:text-6xl font-light text-slate-400 text-center leading-none mb-1">HOW IT</h2>
           <h2 className="text-3xl sm:text-6xl font-black text-center leading-none mb-16">WORKS</h2>
 
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-
-            {/* Step 1 — Create session */}
             <div className="flex flex-col items-center text-center">
               <p className="text-6xl font-black text-white/20 leading-none mb-4">01</p>
               <div className="w-full rounded-2xl overflow-hidden border border-white/10 bg-[#0f1118] mb-5" style={{ aspectRatio: "9/16", maxHeight: 260 }}>
                 <Image src="/onboard-2.jpg" alt="Create a session" width={400} height={711} className="w-full h-full object-cover object-center" />
               </div>
               <p className="text-sm font-bold uppercase tracking-wider mb-2">Create a Session</p>
-              <p className="text-sm text-slate-400 leading-relaxed">Name your session and get a unique code in seconds.</p>
+              <p className="text-sm text-slate-400 leading-relaxed">Name your session and get a unique QR code and join link in seconds.</p>
             </div>
 
-            {/* Step 2 — Share QR */}
             <div className="flex flex-col items-center text-center">
               <p className="text-6xl font-black text-white/20 leading-none mb-4">02</p>
               <div className="w-full rounded-2xl overflow-hidden border border-white/10 bg-[#0f1118] mb-5" style={{ aspectRatio: "9/16", maxHeight: 260 }}>
                 <Image src="/onboard-1.jpg" alt="Share with your audience" width={400} height={711} className="w-full h-full object-cover object-top" />
               </div>
               <p className="text-sm font-bold uppercase tracking-wider mb-2">Share With Your Audience</p>
-              <p className="text-sm text-slate-400 leading-relaxed">Display the QR code or share the link — no app download needed.</p>
+              <p className="text-sm text-slate-400 leading-relaxed">Display the QR or share the link. No app download, no account needed for your audience.</p>
             </div>
 
-            {/* Step 3 — Live feedback */}
             <div className="flex flex-col items-center text-center">
               <p className="text-6xl font-black text-white/20 leading-none mb-4">03</p>
               <div className="w-full rounded-2xl overflow-hidden border border-violet-500/20 bg-[#0f1118] mb-5" style={{ aspectRatio: "9/16", maxHeight: 260 }}>
                 <Image src="/onboard-3.jpg" alt="Collect live feedback" width={400} height={711} className="w-full h-full object-cover object-bottom sm:object-top" />
               </div>
               <p className="text-sm font-bold uppercase tracking-wider mb-2">Collect Live Feedback</p>
-              <p className="text-sm text-slate-400 leading-relaxed">Watch scores arrive in real time across all 5 dimensions.</p>
+              <p className="text-sm text-slate-400 leading-relaxed">Watch scores arrive in real time across all 5 dimensions as your audience responds.</p>
             </div>
 
-            {/* Step 4 — Get Up-Skilled */}
             <div className="flex flex-col items-center text-center">
               <p className="text-6xl font-black text-white/20 leading-none mb-4">04</p>
               <div className="w-full rounded-2xl overflow-hidden border border-violet-500/20 bg-[#0f1118] mb-5" style={{ aspectRatio: "9/16", maxHeight: 260 }}>
-                <Image src="/onboard-4.jpg" alt="Get up-skilled" width={400} height={711} className="w-full h-full object-cover object-top" />
+                <Image src="/onboard-4.jpg" alt="Reflect and improve" width={400} height={711} className="w-full h-full object-cover object-top" />
               </div>
-              <p className="text-sm font-bold uppercase tracking-wider mb-2">Get Up-Skilled</p>
-              <p className="text-sm text-slate-400 leading-relaxed">LearnFast surfaces videos, TED talks and articles matched to your lowest scores.</p>
+              <p className="text-sm font-bold uppercase tracking-wider mb-2">Reflect, Track & Improve</p>
+              <p className="text-sm text-slate-400 leading-relaxed">Self-score, add an AI assessment of your recording, and watch LearnFast surface the exact resources to close your gaps.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── AI ASSESSMENT SPOTLIGHT ── */}
+      <section className="py-20 sm:py-28 px-5 lg:px-12">
+        <div className="max-w-6xl mx-auto">
+          <div className="rounded-3xl border border-amber-500/20 bg-amber-500/[0.04] p-8 sm:p-12 lg:p-16">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-400 shrink-0" />
+              <p className="text-xs font-semibold tracking-[0.25em] text-amber-400 uppercase">AI Assessment</p>
+            </div>
+            <h2 className="text-3xl sm:text-5xl font-light text-slate-300 leading-none mb-1">YOUR RECORDING.</h2>
+            <h2 className="text-3xl sm:text-5xl font-black leading-none mb-6 text-amber-400">YOUR COACHING. IN MINUTES.</h2>
+            <p className="text-base text-slate-400 leading-relaxed max-w-2xl mb-10">
+              Upload any recording from a meeting, talk or practice session. Our AI transcribes the audio, scores your delivery across all five dimensions, and generates a detailed coaching report — complete with exact quotes from your transcript, vocal statistics and targeted improvement tips.
+            </p>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-10">
+              {[
+                ["🎙️", "Vocal statistics", "Words per minute, filler word count, speaking duration and sentiment analysis."],
+                ["💬", "Transcript highlights", "Exact quotes from your session flagged as strengths or development opportunities."],
+                ["🎯", "Dimension rationale", "A written explanation of every score — not just a number, but the reasoning behind it."],
+                ["💡", "Coaching tips", "Targeted, actionable advice for your three lowest-scoring dimensions."],
+                ["📊", "Comparative feedback", "Each assessment references your history — noting progress, regression and persistent patterns."],
+                ["🏭", "Industry context", "Your coaching is tailored to your professional sector for relevant, contextual advice."],
+              ].map(([icon, title, desc]) => (
+                <div key={title as string} className="rounded-xl border border-white/10 bg-[#0f1118] p-4">
+                  <p className="text-xl mb-2">{icon}</p>
+                  <p className="text-sm font-bold text-white mb-1">{title as string}</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">{desc as string}</p>
+                </div>
+              ))}
             </div>
 
+            <div className="flex flex-col sm:flex-row items-start gap-4">
+              <button onClick={goToLogin} className="px-8 py-4 text-sm font-bold tracking-wider text-white rounded-sm transition" style={{ backgroundColor: RED }}>
+                START FREE NOW
+              </button>
+              <p className="text-xs text-slate-600 self-center">3 AI assessments per month on Lite · Unlimited on Pro</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── INDUSTRY LEADERBOARDS ── */}
+      <section className="py-16 sm:py-20 px-5 lg:px-12 bg-[#0a0b12] border-y border-white/5">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid gap-10 lg:grid-cols-2 items-center">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="h-2 w-2 rounded-full bg-violet-400 shrink-0" />
+                <p className="text-xs font-semibold tracking-[0.25em] text-violet-400 uppercase">Premium Feature</p>
+              </div>
+              <h2 className="text-3xl sm:text-5xl font-light text-slate-400 leading-none mb-1">INDUSTRY</h2>
+              <h2 className="text-3xl sm:text-5xl font-black leading-none mb-6">LEADERBOARDS</h2>
+              <p className="text-base text-slate-400 leading-relaxed mb-6">
+                See how you rank against peers in your sector. LearnFast builds real normative data from every AI assessment run on the platform — so your score isn't just a number, it's a percentile rank against Sales professionals, Healthcare leaders, Technology engineers and more.
+              </p>
+              <ul className="space-y-3 text-sm text-slate-400 mb-8">
+                {[
+                  "Ranked by dimension — Overall, Clarity, Energy, Engagement, Understanding, Connection",
+                  "Percentile position against professionals in your industry",
+                  "Anonymous by default — appear under a chosen nickname",
+                  "Updated with every AI assessment you complete",
+                  "Industry normative benchmarks build with every new user",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2.5">
+                    <span className="text-violet-400 shrink-0 mt-0.5">✓</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <button onClick={goToLogin} className="px-8 py-4 text-sm font-bold tracking-wider text-white rounded-sm transition" style={{ backgroundColor: RED }}>
+                GET STARTED →
+              </button>
+            </div>
+
+            {/* Leaderboard visual mockup */}
+            <div className="rounded-2xl border border-white/10 bg-[#111827] p-5 font-mono text-xs">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="h-2 w-2 rounded-full bg-violet-400" />
+                <span className="text-violet-400 font-sans text-[10px] font-bold tracking-widest uppercase">Sales & Business Development</span>
+              </div>
+              <div className="grid grid-cols-[32px_1fr_52px_52px] gap-0 border-b border-white/10 pb-2 mb-2 text-slate-600">
+                <span>#</span><span>Nickname</span><span className="text-right">Score</span><span className="text-right">%ile</span>
+              </div>
+              {[
+                { rank: 1, nick: "PresentPro",  score: 88, pct: 99, medal: "🥇" },
+                { rank: 2, nick: "SalesElite",  score: 84, pct: 97, medal: "🥈" },
+                { rank: 3, nick: "Boardroom_K", score: 81, pct: 94, medal: "🥉" },
+                { rank: 4, nick: "Coach_M",     score: 78, pct: 91, medal: null },
+                { rank: 5, nick: "Keynote_J",   score: 76, pct: 88, medal: null },
+              ].map((row) => (
+                <div key={row.rank} className={`grid grid-cols-[32px_1fr_52px_52px] gap-0 py-2.5 border-b border-white/5 last:border-0 ${row.rank === 4 ? "bg-amber-500/[0.06] -mx-5 px-5 text-amber-300 font-sans font-semibold" : "text-slate-300 font-sans"}`}>
+                  <span className="text-slate-500">{row.medal ?? row.rank}</span>
+                  <span className="truncate">{row.nick}{row.rank === 4 && <span className="ml-2 text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded">You</span>}</span>
+                  <span className="text-right" style={{ color: row.rank === 4 ? "#f59e0b" : undefined }}>{row.score}</span>
+                  <span className="text-right text-slate-500">{row.pct}th</span>
+                </div>
+              ))}
+              <p className="mt-3 text-[10px] text-slate-700 font-sans">Based on most recent AI assessment · Connection dimension</p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* ── 5 DIMENSIONS ── */}
-      <section className="py-16 sm:py-24 px-5 lg:px-12 bg-[#0a0b12] border-y border-white/5">
+      <section className="py-16 sm:py-24 px-5 lg:px-12">
         <div className="max-w-6xl mx-auto">
           <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4 text-center">Scored Across</p>
           <h2 className="text-3xl sm:text-6xl font-light text-slate-400 text-center leading-none mb-1">THE</h2>
           <h2 className="text-3xl sm:text-6xl font-black text-center leading-none mb-6">5 DIMENSIONS</h2>
           <p className="text-center text-slate-400 max-w-lg mx-auto mb-12 text-sm">
-            Every session gives you a complete picture of your performance across five areas that matter most.
+            Every signal — AI, audience and self-reflection — scores you across the same five dimensions. One framework. Three perspectives. The complete picture.
           </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {DIMENSIONS.map((d) => (
@@ -275,7 +427,7 @@ export default function LandingPage() {
             ))}
             <div className="rounded-xl border border-white/5 bg-white/[0.02] p-5 flex items-center justify-center sm:col-span-2 lg:col-span-1">
               <p className="text-sm text-slate-500 text-center leading-relaxed">
-                Audience scores + your own self-reflection = a complete, honest performance picture.
+                AI + Audience + Self-Reflection, all on one radar. The gaps between signals reveal your blind spots and your hidden strengths.
               </p>
             </div>
           </div>
@@ -283,12 +435,12 @@ export default function LandingPage() {
       </section>
 
       {/* ── WHY / GET STARTED ── */}
-      <section id="why" className="py-20 sm:py-28 px-5 lg:px-12 text-center">
+      <section id="why" className="py-20 sm:py-28 px-5 lg:px-12 text-center bg-[#0a0b12] border-y border-white/5">
         <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4">Made for Leaders</p>
         <h2 className="text-3xl sm:text-6xl font-light text-slate-400 leading-none mb-1">GET STARTED WITH</h2>
         <h2 className="text-3xl sm:text-6xl font-black leading-none mb-8">LEARNFAST TODAY</h2>
         <p className="max-w-xl mx-auto text-slate-400 leading-relaxed mb-10 text-sm sm:text-base">
-          Whether you're a corporate trainer, team leader or university lecturer — every great presenter started somewhere. LearnFast gives you the data, the reflection and the resources to improve with every session.
+          Whether you are a corporate trainer, team leader, sales professional or university lecturer — every great presenter started somewhere. LearnFast gives you the data, the AI coaching, the industry benchmarks and the resources to improve with every session.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
           <button onClick={goToLogin} className="px-10 py-4 text-sm font-bold tracking-wider text-white rounded-sm transition w-full sm:w-auto" style={{ backgroundColor: RED }}>
@@ -302,7 +454,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── EDUCATIONAL RESOURCES ── */}
-      <section className="py-16 px-5 lg:px-12 bg-[#0a0b12] border-y border-white/5">
+      <section className="py-16 px-5 lg:px-12 border-b border-white/5">
         <div className="max-w-6xl mx-auto text-center">
           <div className="flex items-start justify-center gap-6 mb-8">
             <div>
@@ -313,17 +465,13 @@ export default function LandingPage() {
             <div className="hidden sm:block">
               <div
                 className="w-16 pt-3 pb-5 text-white text-[10px] font-bold tracking-widest text-center leading-relaxed"
-                style={{
-                  backgroundColor: RED,
-                  clipPath: "polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%)",
-                }}
+                style={{ backgroundColor: RED, clipPath: "polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%)" }}
               >
-                <p>COMING</p>
-                <p>SOON</p>
+                <p>COMING</p><p>SOON</p>
               </div>
             </div>
           </div>
-          <p className="text-sm text-slate-400 mb-10">Learn and upskill with the best in their field.</p>
+          <p className="text-sm text-slate-400 mb-10">Learn and upskill with the best in their field — surfaced automatically based on your dimension scores.</p>
           <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10">
             {PARTNERS.map((p) => (
               <span key={p.name} className={`${p.style} opacity-70 hover:opacity-100 transition`}>{p.name}</span>
@@ -338,6 +486,7 @@ export default function LandingPage() {
           <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4 text-center">Pricing</p>
           <h2 className="text-3xl sm:text-6xl font-light text-slate-400 text-center leading-none mb-1">START FREE,</h2>
           <h2 className="text-3xl sm:text-6xl font-black text-center leading-none mb-16">SCALE WHEN READY</h2>
+
           <div className="grid gap-5 md:grid-cols-3">
 
             {/* Free */}
@@ -351,6 +500,7 @@ export default function LandingPage() {
                   "All 5 scoring dimensions",
                   "Real-time audience radar chart",
                   "Presenter self-reflection scores",
+                  "Three-signal comparison view",
                   "Session notes & tags",
                   "Reflective practice log",
                 ].map((f) => (
@@ -367,7 +517,7 @@ export default function LandingPage() {
             {/* Lite */}
             <div className="rounded-2xl border p-7 sm:p-8 relative" style={{ borderColor: `${RED}44`, background: "linear-gradient(135deg, #1a0d0a 0%, #0f1118 100%)" }}>
               <div className="absolute top-5 right-5 text-[10px] font-bold px-2.5 py-1 rounded-sm text-white tracking-wider" style={{ backgroundColor: RED }}>
-                LITE VERSION
+                MOST POPULAR
               </div>
               <p className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-5">Lite</p>
               <p className="text-5xl font-black mb-1">£3.99<span className="text-lg font-normal text-slate-400">/mo</span></p>
@@ -376,11 +526,13 @@ export default function LandingPage() {
                 {[
                   "Unlimited sessions",
                   "Everything in Free",
-                  "Curated improvement articles",
-                  "TED Talks, videos & podcasts",
+                  "3 AI assessments per month",
+                  "AI coaching — scores, rationale & tips",
+                  "Vocal statistics & transcript highlights",
+                  "Comparative coaching across sessions",
+                  "Curated articles, TED Talks & podcasts",
                   "Advanced analytics & trends",
-                  "Commitment & check-in tracking",
-                  "Feedback-matched learning resources",
+                  "Post-session email summary with AI insights",
                 ].map((f) => (
                   <li key={f} className="flex items-center gap-2.5">
                     <span className="shrink-0" style={{ color: RED }}>✓</span> {f}
@@ -404,11 +556,13 @@ export default function LandingPage() {
               <ul className="space-y-3 text-sm text-slate-300 mb-8 flex-1">
                 {[
                   "Everything in Lite",
+                  "Unlimited AI assessments",
+                  "Industry leaderboard access",
+                  "Industry normative benchmarking",
                   "Premium curated content library",
                   "BBC Maestro, Harvard & more",
                   "Individualised learning pathways",
                   "Personal development dashboard",
-                  "Progress milestones & certifications",
                   "Priority support",
                 ].map((f) => (
                   <li key={f} className="flex items-center gap-2.5">
@@ -443,7 +597,6 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Team enquiry */}
           <p className="text-center text-sm text-slate-500 mt-10">
             Planning for a team or organisation?{" "}
             <a href="mailto:info@learnfastapp.com" className="text-violet-400 hover:text-violet-300 underline underline-offset-2 transition">
@@ -494,11 +647,7 @@ export default function LandingPage() {
           <div>
             <p className="text-xs font-bold tracking-widest uppercase text-slate-400 mb-4">Follow Us</p>
             <div className="flex gap-3">
-              {[
-                { label: "Instagram", icon: "IG" },
-                { label: "X", icon: "𝕏" },
-                { label: "LinkedIn", icon: "in" },
-              ].map((s) => (
+              {[{ label: "Instagram", icon: "IG" }, { label: "X", icon: "𝕏" }, { label: "LinkedIn", icon: "in" }].map((s) => (
                 <div key={s.label} className="h-9 w-9 rounded-full border border-white/20 flex items-center justify-center text-xs font-bold text-slate-400 hover:border-white/60 hover:text-white transition cursor-pointer">
                   {s.icon}
                 </div>
@@ -507,7 +656,7 @@ export default function LandingPage() {
           </div>
         </div>
         <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
-          <p>© {new Date().getFullYear()} LearnFast™. Feedback Intelligence.</p>
+          <p>© {new Date().getFullYear()} LearnFast™. AI-Powered Presentation Intelligence.</p>
           <div className="flex gap-6">
             <a href="/privacy" className="hover:text-slate-400 transition">Privacy Policy</a>
             <a href="/terms" className="hover:text-slate-400 transition">Terms &amp; Conditions</a>
