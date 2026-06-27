@@ -172,9 +172,14 @@ export default function LeaderboardPage() {
       <MobileNav locale={locale} />
 
       <header className="border-b border-white/10 bg-[#101523] px-6 py-6 lg:px-8">
-        <div className="flex items-center gap-3 mb-1">
-          <Trophy className="h-5 w-5 text-amber-400" />
-          <h1 className="text-2xl font-bold">{s.title}</h1>
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-3">
+            <Trophy className="h-5 w-5 text-amber-400" />
+            <h1 className="text-2xl font-bold">{s.title}</h1>
+          </div>
+          <a href="/dashboard" className="text-sm text-slate-400 hover:text-white transition">
+            {locale === "fr" ? "← Tableau de bord" : "← Dashboard"}
+          </a>
         </div>
         <p className="text-sm text-slate-400 ml-8">{s.subtitle}</p>
       </header>
