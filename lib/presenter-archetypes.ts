@@ -151,5 +151,4 @@ export function detectArchetype(
   return ARCHETYPES.developer;
 }
 
-export type { PresenterArchetype };
 export { ARCHETYPES };

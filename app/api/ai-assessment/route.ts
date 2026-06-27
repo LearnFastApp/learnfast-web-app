@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
   const now = new Date();
   await ref.set({
     presenterId: uid,
-    createdAt: Timestamp.fromDate(now),
+    createdAt: now,
     fileName,
     storagePath,
     status: "queued",
