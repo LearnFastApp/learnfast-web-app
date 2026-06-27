@@ -7,9 +7,10 @@ export const INDUSTRIES = [
   { value: "finance",       en: "Finance & Professional Services", fr: "Finance & Services professionnels" },
   { value: "marketing",     en: "Marketing & Communications",      fr: "Marketing & Communication" },
   { value: "consulting",    en: "Consulting",                      fr: "Conseil" },
-  { value: "public_sector", en: "Public Sector & Non-profit",      fr: "Secteur public & Associations" },
-  { value: "academia",      en: "Academia & Research",             fr: "Enseignement supérieur & Recherche" },
-  { value: "other",         en: "Other",                           fr: "Autre" },
+  { value: "public_sector",  en: "Public Sector & Non-profit",      fr: "Secteur public & Associations" },
+  { value: "academia",       en: "Academia & Research",             fr: "Enseignement supérieur & Recherche" },
+  { value: "sports_coaching", en: "Sports Coaching",               fr: "Coaching sportif" },
+  { value: "other",          en: "Other",                           fr: "Autre" },
 ] as const;
 
 export type IndustryValue = (typeof INDUSTRIES)[number]["value"];
