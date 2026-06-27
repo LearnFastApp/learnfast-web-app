@@ -82,6 +82,15 @@ In the summary, include ONE sentence noting the most significant change since th
 LANGUAGE: Write all text fields (rationale, highlights, tips, summary) in ${lang}.
 ${industryCtx}${historyBlock}
 
+SCORING CALIBRATION — apply this strictly. Scores reflect professional presentation standards, not personal encouragement:
+- 85–100: Exceptional. Conference keynote or TED-talk quality. Rare — only award when the evidence strongly supports it.
+- 70–84: Strong. Clearly above average professional standard with only minor development areas.
+- 55–69: Competent. Solid but with noticeable gaps. This is where most working professionals sit.
+- 40–54: Developing. Below average professional standard. Clear weaknesses that impact the audience.
+- 0–39: Significant gaps. Fundamental issues in this dimension that require focused work.
+
+Most professionals score between 50–70. Do NOT inflate scores to be encouraging — honest, calibrated scoring is far more valuable to the presenter than flattery. If the presentation is average, scores should reflect that (50s–60s range). Reserve 75+ for genuinely strong delivery.
+
 DIMENSIONS (score each 0–100):
 - Clarity: Clear structure, precise language, minimal jargon, logical flow. Filler words and pace directly affect this.
 - Energy: Enthusiasm, vocal dynamism, compelling delivery, momentum. Flat or monotone delivery lowers this.
