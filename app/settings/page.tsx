@@ -14,6 +14,7 @@ import { User, Lock, CreditCard, Check, Zap, LogOut, Tag, Globe, Trophy } from "
 import MobileNav from "@/components/mobile-nav";
 import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
+import { INDUSTRIES } from "@/lib/industries";
 
 interface PresenterData {
   displayName?: string;
@@ -23,6 +24,7 @@ interface PresenterData {
   pilotExpiresAt?: { toDate: () => Date };
   locale?: string;
   nickname?: string;
+  industry?: string;
 }
 
 export default function SettingsPage() {
@@ -61,6 +63,9 @@ export default function SettingsPage() {
   const [localeSaving, setLocaleSaving] = useState(false);
   const [localeSaved, setLocaleSaved] = useState(false);
 
+  // Industry
+  const [industry, setIndustry] = useState("");
+
   // Nickname
   const [nickname, setNickname] = useState("");
   const [nicknameSaving, setNicknameSaving] = useState(false);
@@ -83,6 +88,7 @@ export default function SettingsPage() {
         setPresenter(data);
         if (data.locale === "fr") setLocale("fr");
         if (data.nickname) setNickname(data.nickname);
+        if (data.industry) setIndustry(data.industry);
       }
     });
 
@@ -102,6 +108,7 @@ export default function SettingsPage() {
       await updateProfile(user, { displayName: displayName.trim() });
       await updateDoc(doc(db, "presenters", user.uid), {
         displayName: displayName.trim(),
+        ...(industry ? { industry } : {}),
       });
       setProfileSaved(true);
       setTimeout(() => setProfileSaved(false), 3000);
@@ -291,6 +298,30 @@ export default function SettingsPage() {
                 disabled
                 className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-slate-500 outline-none cursor-not-allowed"
               />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm text-slate-400">
+                {isFr ? "Secteur / Profession" : "Industry / Profession"}
+              </label>
+              <select
+                value={industry}
+                onChange={(e) => setIndustry(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white outline-none focus:border-violet-500 appearance-none cursor-pointer"
+              >
+                <option value="" disabled className="text-slate-500">
+                  {isFr ? "Sélectionnez votre secteur" : "Select your industry"}
+                </option>
+                {INDUSTRIES.map((ind) => (
+                  <option key={ind.value} value={ind.value} className="bg-[#1a2135]">
+                    {isFr ? ind.fr : ind.en}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1.5 text-[11px] text-slate-600">
+                {isFr
+                  ? "Utilisé pour les classements sectoriels et les conseils IA personnalisés."
+                  : "Used for industry leaderboards and personalised AI coaching."}
+              </p>
             </div>
             {profileError && <p className="text-sm text-red-400">{profileError}</p>}
             <button

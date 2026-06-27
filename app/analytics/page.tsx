@@ -16,7 +16,7 @@ import {
   PolarGrid,
   PolarAngleAxis,
 } from "recharts";
-import { TrendingUp, TrendingDown, Minus, Tag, BarChart3, Lightbulb, AlertTriangle, Sparkles, ArrowUpRight } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Tag, BarChart3, Lightbulb, AlertTriangle, Sparkles, ArrowUpRight, Brain } from "lucide-react";
 import MobileNav from "@/components/mobile-nav";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
@@ -43,6 +43,11 @@ interface SessionData {
   responseCount: number;
 }
 
+interface AiScoreEntry {
+  sessionId: string | null;
+  scores: Record<Dimension, number>;
+}
+
 function avg(values: number[]): number {
   if (!values.length) return 0;
   return Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10;
@@ -60,19 +65,40 @@ function ChartTooltip(props: Record<string, unknown>) {
   };
   if (!active || !payload?.length) return null;
   const { name: sessionTitle, date } = payload[0].payload;
+
+  const audienceEntries = payload.filter((e) => !e.name.startsWith("AI "));
+  const aiEntries = payload.filter((e) => e.name.startsWith("AI "));
+
   return (
-    <div className="rounded-xl border border-white/15 bg-[#1a2135] px-4 py-3 shadow-xl min-w-[180px]">
+    <div className="rounded-xl border border-white/15 bg-[#1a2135] px-4 py-3 shadow-xl min-w-[200px]">
       {sessionTitle && (
         <p className="text-xs font-semibold text-white mb-0.5 truncate max-w-[200px]">{sessionTitle}</p>
       )}
       <p className="text-[11px] text-slate-500 mb-2">{date}</p>
-      {payload.map((entry) => (
-        <div key={entry.name} className="flex items-center gap-2 text-xs py-0.5">
-          <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
-          <span className="text-slate-300 capitalize">{entry.name}:</span>
-          <span className="text-white font-bold ml-auto pl-3">{entry.value}</span>
-        </div>
-      ))}
+      {audienceEntries.length > 0 && (
+        <>
+          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Audience</p>
+          {audienceEntries.map((entry) => (
+            <div key={entry.name} className="flex items-center gap-2 text-xs py-0.5">
+              <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+              <span className="text-slate-300 capitalize">{entry.name}:</span>
+              <span className="text-white font-bold ml-auto pl-3">{entry.value}</span>
+            </div>
+          ))}
+        </>
+      )}
+      {aiEntries.length > 0 && (
+        <>
+          <p className="text-[10px] font-semibold text-amber-700 uppercase tracking-wider mb-1 mt-2">AI</p>
+          {aiEntries.map((entry) => (
+            <div key={entry.name} className="flex items-center gap-2 text-xs py-0.5">
+              <span className="h-2 w-2 rounded-full shrink-0 border border-amber-500/60" style={{ backgroundColor: entry.color + "66" }} />
+              <span className="text-slate-400 capitalize">{entry.name.replace("AI ", "")}:</span>
+              <span className="text-amber-300 font-bold ml-auto pl-3">{entry.value}</span>
+            </div>
+          ))}
+        </>
+      )}
     </div>
   );
 }
@@ -116,10 +142,13 @@ export default function AnalyticsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [sessions, setSessions] = useState<SessionData[]>([]);
+  const [aiScores, setAiScores] = useState<AiScoreEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTag, setSelectedTag] = useState<string>("all");
   const [activeDims, setActiveDims] = useState<Set<Dimension>>(new Set(DIMENSIONS));
   const [showInsights, setShowInsights] = useState(true);
+  const [showAudience, setShowAudience] = useState(true);
+  const [showAi, setShowAi] = useState(true);
   const [subscriptionStatus, setSubscriptionStatus] = useState<"free" | "active">("free");
   const [locale, setLocale] = useState<"en" | "fr">("en");
 
@@ -139,7 +168,10 @@ export default function AnalyticsPage() {
     getDoc(doc(db, "presenters", user.uid)).then((snap) => {
       if (snap.exists()) {
         const data = snap.data();
-        if (data.subscriptionStatus === "active") setSubscriptionStatus("active");
+        if (data.subscriptionStatus === "active" ||
+            (data.subscriptionStatus === "pilot" && data.pilotExpiresAt?.toDate() > new Date())) {
+          setSubscriptionStatus("active");
+        }
         if (data.locale === "fr") setLocale("fr");
       }
     });
@@ -180,8 +212,26 @@ export default function AnalyticsPage() {
         })
       );
 
+      // Load AI assessments
+      const aiSnap = await getDocs(
+        query(collection(db, "ai_assessments"), where("presenterId", "==", user!.uid))
+      );
+      const aiData: AiScoreEntry[] = aiSnap.docs
+        .filter((d) => {
+          const data = d.data();
+          return data.status === "complete" && data.scores;
+        })
+        .map((d) => {
+          const data = d.data();
+          return {
+            sessionId: data.sessionId ?? null,
+            scores: data.scores as Record<Dimension, number>,
+          };
+        });
+
       results.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
       setSessions(results);
+      setAiScores(aiData);
       setLoading(false);
     }
 
@@ -194,12 +244,34 @@ export default function AnalyticsPage() {
     ? sessions
     : sessions.filter((s) => s.tags.includes(selectedTag));
 
-  const chartData = filtered.map((s, i) => ({
-    xKey: String(i),
-    name: s.title.length > 18 ? s.title.slice(0, 18) + "…" : s.title,
-    date: s.createdAt.toLocaleDateString("en-GB", { day: "numeric", month: "short" }),
-    ...s.averages,
-  }));
+  // Derived AI data
+  const filteredIds = new Set(filtered.map((s) => s.id));
+  const aiMap = Object.fromEntries(
+    aiScores
+      .filter((a) => a.sessionId && filteredIds.has(a.sessionId))
+      .map((a) => [a.sessionId!, a.scores])
+  );
+  const aiInFiltered = aiScores.filter((a) => a.sessionId && filteredIds.has(a.sessionId));
+  const aiAverages = Object.fromEntries(
+    DIMENSIONS.map((dim) => [
+      dim,
+      aiInFiltered.length ? avg(aiInFiltered.map((a) => a.scores[dim] ?? 0)) : 0,
+    ])
+  ) as Record<Dimension, number>;
+  const hasAiData = Object.keys(aiMap).length > 0;
+
+  const chartData = filtered.map((s, i) => {
+    const aiEntry = aiMap[s.id];
+    return {
+      xKey: String(i),
+      name: s.title.length > 18 ? s.title.slice(0, 18) + "…" : s.title,
+      date: s.createdAt.toLocaleDateString("en-GB", { day: "numeric", month: "short" }),
+      ...s.averages,
+      ...(aiEntry
+        ? Object.fromEntries(DIMENSIONS.map((d) => [`ai_${d}`, aiEntry[d]]))
+        : {}),
+    };
+  });
 
   const overallAverages = Object.fromEntries(
     DIMENSIONS.map((dim) => [dim, avg(filtered.map((s) => s.averages[dim]))])
@@ -225,7 +297,8 @@ export default function AnalyticsPage() {
 
   const radarData = DIMENSIONS.map((dim) => ({
     dimension: dimLabel(dim),
-    score: overallAverages[dim],
+    audience: overallAverages[dim],
+    ai: aiInFiltered.length > 0 ? aiAverages[dim] : undefined,
     fullMark: 100,
   }));
 
@@ -257,6 +330,11 @@ export default function AnalyticsPage() {
     liteTitle: "Analytiques & suivi des tendances",
     liteDesc: "Visualisez l'évolution de vos scores entre sessions, détectez des tendances et prouvez votre progression dans le temps.",
     liteBtn: "Commencer l'essai de 7 jours →",
+    aiAssessments: "Évaluations IA",
+    audienceSignal: "Audience",
+    aiSignal: "IA",
+    dimTrendsAudLabel: "Aud.",
+    dimTrendsAiLabel: "IA",
   } : {
     pageTitle: "Analytics",
     pageSubtitle: "Performance trends across your sessions.",
@@ -276,7 +354,7 @@ export default function AnalyticsPage() {
     noSessions: "No sessions with feedback yet.",
     noSessionsSub: "Create a session and collect responses to see your analytics.",
     perfOverTime: "Performance over time",
-    perfOverTimeSub: "Toggle dimensions to focus your view.",
+    perfOverTimeSub: "Toggle signals and dimensions to focus your view.",
     overallProfile: "Overall profile",
     overallProfileSub: "Average across all filtered sessions.",
     dimTrends: "Dimension trends",
@@ -285,6 +363,11 @@ export default function AnalyticsPage() {
     liteTitle: "Analytics & trend tracking",
     liteDesc: "See how your scores move across sessions, detect patterns, and prove your improvement over time.",
     liteBtn: "Start 7-day free trial →",
+    aiAssessments: "AI assessments",
+    audienceSignal: "Audience",
+    aiSignal: "AI",
+    dimTrendsAudLabel: "Aud.",
+    dimTrendsAiLabel: "AI",
   };
 
   if (authLoading || loading) {
@@ -377,6 +460,7 @@ export default function AnalyticsPage() {
           </div>
         ) : (
           <>
+            {/* Stat cards */}
             <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-2xl border border-white/10 bg-[#111827] p-5">
                 <p className="text-sm text-slate-400 mb-1">{t.sessionsAnalysed}</p>
@@ -407,6 +491,19 @@ export default function AnalyticsPage() {
               )}
             </section>
 
+            {/* AI assessment count pill (only if AI data exists) */}
+            {aiScores.length > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/[0.07] px-3 py-2">
+                  <Brain className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                  <span className="text-xs font-semibold text-amber-300">
+                    {aiScores.length} {t.aiAssessments}
+                    {hasAiData && ` · ${Object.keys(aiMap).length} ${isFr ? "liés aux sessions filtrées" : "linked to filtered sessions"}`}
+                  </span>
+                </div>
+              </div>
+            )}
+
             {insights.length > 0 && (
               <section>
                 <button
@@ -430,12 +527,41 @@ export default function AnalyticsPage() {
               </section>
             )}
 
+            {/* Performance over time chart */}
             <section className="rounded-2xl border border-white/10 bg-[#111827] p-6">
               <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
                 <div>
                   <h2 className="text-lg font-bold mb-1">{t.perfOverTime}</h2>
-                  <p className="text-sm text-slate-400">{t.perfOverTimeSub}</p>
+                  <p className="text-sm text-slate-400 mb-3">{t.perfOverTimeSub}</p>
+                  {/* Signal toggles */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowAudience((v) => !v)}
+                      className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold border transition ${
+                        showAudience
+                          ? "border-violet-500/50 bg-violet-500/10 text-violet-300"
+                          : "border-white/10 text-slate-500 hover:text-slate-300"
+                      }`}
+                    >
+                      <span className="h-2 w-2 rounded-full bg-violet-500 shrink-0" />
+                      {t.audienceSignal}
+                    </button>
+                    {hasAiData && (
+                      <button
+                        onClick={() => setShowAi((v) => !v)}
+                        className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold border transition ${
+                          showAi
+                            ? "border-amber-500/50 bg-amber-500/10 text-amber-300"
+                            : "border-white/10 text-slate-500 hover:text-slate-300"
+                        }`}
+                      >
+                        <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
+                        {t.aiSignal}
+                      </button>
+                    )}
+                  </div>
                 </div>
+                {/* Dimension toggles */}
                 <div className="flex flex-wrap gap-2">
                   {DIMENSIONS.map((dim) => {
                     const active = activeDims.has(dim);
@@ -472,7 +598,8 @@ export default function AnalyticsPage() {
                   />
                   <YAxis domain={[0, 100]} tick={{ fill: "#64748b", fontSize: 12 }} />
                   <Tooltip content={ChartTooltip} />
-                  {DIMENSIONS.filter((dim) => activeDims.has(dim)).map((dim) => (
+                  {/* Audience lines */}
+                  {showAudience && DIMENSIONS.filter((dim) => activeDims.has(dim)).map((dim) => (
                     <Line
                       key={dim}
                       type="linear"
@@ -484,11 +611,40 @@ export default function AnalyticsPage() {
                       name={dimLabel(dim)}
                     />
                   ))}
+                  {/* AI lines — dashed, same color */}
+                  {showAi && hasAiData && DIMENSIONS.filter((dim) => activeDims.has(dim)).map((dim) => (
+                    <Line
+                      key={`ai_${dim}`}
+                      type="linear"
+                      dataKey={`ai_${dim}`}
+                      stroke={DIM_COLORS[dim]}
+                      strokeWidth={1.5}
+                      strokeDasharray="5 4"
+                      dot={{ fill: DIM_COLORS[dim], r: 3, strokeWidth: 1, stroke: "#111827" }}
+                      activeDot={{ r: 6, fill: DIM_COLORS[dim], stroke: "#111827", strokeWidth: 2 }}
+                      name={`AI ${dimLabel(dim)}`}
+                      connectNulls={false}
+                    />
+                  ))}
                 </LineChart>
               </ResponsiveContainer>
+              {/* Chart legend */}
+              {hasAiData && (
+                <div className="flex items-center justify-center gap-5 mt-3 text-[11px] text-slate-500">
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-block h-0.5 w-5 bg-violet-500 rounded" />
+                    <span>{t.audienceSignal}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-block h-0.5 w-5 rounded border-t border-dashed border-violet-500 opacity-70" style={{ borderTopColor: "#a78bfa" }} />
+                    <span>{t.aiSignal} {isFr ? "(pointillé)" : "(dashed)"}</span>
+                  </div>
+                </div>
+              )}
             </section>
 
             <section className="grid gap-6 lg:grid-cols-2">
+              {/* Overall profile radar */}
               <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
                 <h2 className="text-lg font-bold mb-1">{t.overallProfile}</h2>
                 <p className="text-sm text-slate-400 mb-4">{t.overallProfileSub}</p>
@@ -496,17 +652,46 @@ export default function AnalyticsPage() {
                   <RadarChart data={radarData}>
                     <PolarGrid stroke="#ffffff15" />
                     <PolarAngleAxis dataKey="dimension" tick={{ fill: "#94a3b8", fontSize: 13 }} />
-                    <Radar dataKey="score" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.25} strokeWidth={2} />
+                    <Radar dataKey="audience" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.25} strokeWidth={2} name={t.audienceSignal} />
+                    {aiInFiltered.length > 0 && (
+                      <Radar dataKey="ai" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.12} strokeWidth={1.5} name={t.aiSignal} />
+                    )}
                   </RadarChart>
                 </ResponsiveContainer>
+                {aiInFiltered.length > 0 && (
+                  <div className="flex items-center justify-center gap-5 mt-1 text-[11px] text-slate-500">
+                    <div className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-violet-500 shrink-0" />
+                      <span>{t.audienceSignal}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
+                      <span>{t.aiSignal}</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
+              {/* Dimension trends */}
               <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
                 <h2 className="text-lg font-bold mb-4">{t.dimTrends}</h2>
+
+                {/* Column header */}
+                {aiInFiltered.length > 0 && (
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-24" />
+                    <div className="flex-1" />
+                    <div className="w-10 text-right text-[10px] text-slate-600 font-semibold">{t.dimTrendsAudLabel}</div>
+                    <div className="w-10 text-right text-[10px] text-amber-700 font-semibold">{t.dimTrendsAiLabel}</div>
+                    <div className="w-14" />
+                  </div>
+                )}
+
                 <div className="space-y-4">
                   {DIMENSIONS.filter((dim) => activeDims.has(dim)).map((dim) => {
                     const trendVal = trend(filtered, dim);
                     const score = overallAverages[dim];
+                    const aiScore = aiInFiltered.length > 0 ? aiAverages[dim] : null;
                     return (
                       <div key={dim} className="flex items-center gap-3">
                         <div className="w-24 text-sm text-slate-300">{dimLabel(dim)}</div>
@@ -517,6 +702,9 @@ export default function AnalyticsPage() {
                           />
                         </div>
                         <div className="w-10 text-right text-sm font-bold">{score}</div>
+                        {aiScore !== null && (
+                          <div className="w-10 text-right text-sm font-bold text-amber-400">{aiScore}</div>
+                        )}
                         <div className={`flex items-center gap-0.5 text-xs w-14 ${trendVal > 0 ? "text-green-400" : trendVal < 0 ? "text-red-400" : "text-slate-500"}`}>
                           {trendVal > 0 ? <TrendingUp className="h-3 w-3" /> : trendVal < 0 ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
                           {trendVal !== 0 ? `${trendVal > 0 ? "+" : ""}${trendVal}` : t.flat}
