@@ -15,6 +15,7 @@ import { ArrowLeft, Copy, Check, Users, PenLine, PlayCircle, TrendingUp, Lock, S
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import PresenterReflectionModal from "@/components/presenter-reflection-modal";
+import SessionAiUpload from "@/components/session-ai-upload";
 import { generateGapInsight } from "@/lib/gap-insight";
 
 const DIMENSIONS = ["clarity", "engagement", "energy", "understanding", "connection"] as const;
@@ -157,6 +158,8 @@ export default function LiveSessionPage() {
   const [commitmentSaving, setCommitmentSaving] = useState(false);
   const [commitmentSaved, setCommitmentSaved] = useState(false);
   const [prevAverages, setPrevAverages] = useState<Record<Dimension, number> | null>(null);
+  const [aiScores, setAiScores] = useState<Record<Dimension, number> | null>(null);
+  const [pendingAiAssessmentId, setPendingAiAssessmentId] = useState<string | null>(null);
 
   const DIMENSION_LABELS = locale === "fr" ? DIMENSION_LABELS_FR : DIMENSION_LABELS_EN;
   const RECOMMENDATIONS = locale === "fr" ? RECOMMENDATIONS_FR : RECOMMENDATIONS_EN;
@@ -347,6 +350,21 @@ export default function LiveSessionPage() {
     });
   }, [user, id]);
 
+  // Fetch existing AI assessment linked to this session
+  useEffect(() => {
+    if (!user) return;
+    getDocs(query(collection(db, "ai_assessments"), where("sessionId", "==", id))).then((snap) => {
+      if (snap.empty) return;
+      const complete = snap.docs.find((d) => d.data().status === "complete");
+      if (complete) {
+        setAiScores(complete.data().scores as Record<Dimension, number>);
+        return;
+      }
+      const inProgress = snap.docs.find((d) => ["queued", "processing"].includes(d.data().status));
+      if (inProgress) setPendingAiAssessmentId(inProgress.id);
+    }).catch(() => {});
+  }, [id, user]);
+
   const audienceAverages = DIMENSIONS.reduce(
     (acc, dim) => ({ ...acc, [dim]: average(responses.map((r) => r[dim])) }),
     {} as Record<Dimension, number>
@@ -405,6 +423,7 @@ export default function LiveSessionPage() {
     dimension: DIMENSION_LABELS[dim],
     audience: audienceAverages[dim],
     presenter: reflection ? reflection[dim] : null,
+    ai: aiScores ? aiScores[dim] : null,
     fullMark: 100,
   }));
 
@@ -564,6 +583,14 @@ export default function LiveSessionPage() {
         </div>
       )}
 
+      {sessionStatus === "closed" && isPaid && !aiScores && (
+        <SessionAiUpload
+          sessionId={id}
+          existingAssessmentId={pendingAiAssessmentId}
+          onComplete={(scores) => setAiScores(scores as Record<Dimension, number>)}
+        />
+      )}
+
       {sessionStatus === "closed" && (
         <div className="mx-6 mt-6 rounded-2xl border border-violet-500/40 bg-gradient-to-r from-violet-500/10 to-blue-500/5 p-6">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -612,6 +639,12 @@ export default function LiveSessionPage() {
                   <span className="flex items-center gap-1.5">
                     <span className="h-2.5 w-2.5 rounded-full bg-cyan-400 inline-block" />
                     <span className="text-slate-400">{t.yourReflection}</span>
+                  </span>
+                )}
+                {aiScores && (
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 rounded-full bg-amber-400 inline-block" />
+                    <span className="text-slate-400">AI Assessment</span>
                   </span>
                 )}
               </div>
@@ -668,6 +701,16 @@ export default function LiveSessionPage() {
                         strokeDasharray="5 3"
                       />
                     )}
+                    {aiScores && (
+                      <Radar
+                        name="AI Assessment"
+                        dataKey="ai"
+                        stroke="#f59e0b"
+                        fill="#f59e0b"
+                        fillOpacity={0.15}
+                        strokeWidth={2}
+                      />
+                    )}
                   </RadarChart>
                 </ResponsiveContainer>
 
@@ -687,6 +730,9 @@ export default function LiveSessionPage() {
                         )}
                         {reflection && (
                           <p className="text-sm font-semibold text-cyan-400">{reflection[dim]}</p>
+                        )}
+                        {aiScores && (
+                          <p className="text-sm font-semibold text-amber-400">{aiScores[dim]}</p>
                         )}
                         <p className="text-xs text-slate-500">/100</p>
                       </div>

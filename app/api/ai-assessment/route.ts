@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
   const downloadUrl = typeof body.downloadUrl === "string" ? body.downloadUrl : null;
   const fileName = typeof body.fileName === "string" ? body.fileName : "recording";
   const storagePath = typeof body.storagePath === "string" ? body.storagePath : null;
+  const sessionId = typeof body.sessionId === "string" ? body.sessionId : null;
 
   if (!downloadUrl) return NextResponse.json({ error: "Missing downloadUrl" }, { status: 400 });
 
@@ -63,6 +64,7 @@ export async function POST(req: NextRequest) {
   const now = new Date();
   await ref.set({
     presenterId: uid,
+    sessionId,
     createdAt: now,
     fileName,
     storagePath,
