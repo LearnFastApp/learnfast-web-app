@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   Tag,
   Trash2,
+  Trophy,
   Users,
 } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
@@ -246,11 +247,15 @@ export default function Dashboard() {
     : 0;
 
   const isFr = locale === "fr";
+  const ADMIN_UID = "zuFmYCIaGLViRSc7LXFwej6wql22";
+  const canSeeLeaderboard = isPaidOrPilot || user.uid === ADMIN_UID;
+
   const navItems = [
     { label: isFr ? "Tableau de bord" : "Dashboard", icon: LayoutDashboard, href: "/dashboard", active: true },
     { label: isFr ? "Calendrier de sessions" : "Session Calendar", icon: Calendar, href: "#", comingSoon: true },
     { label: isFr ? "Analytiques" : "Analytics", icon: BarChart3, href: "/analytics" },
     { label: isFr ? "Analyse IA" : "AI Analysis", icon: Brain, href: "/ai-assessment" },
+    ...(canSeeLeaderboard ? [{ label: isFr ? "Classement" : "Leaderboard", icon: Trophy, href: "/leaderboard" }] : []),
     { label: isFr ? "Hub de ressources" : "Premium Resource Hub", icon: BookOpen, href: "#", comingSoon: true },
     { label: isFr ? "Paramètres" : "Settings", icon: Settings, href: "/settings" },
   ];

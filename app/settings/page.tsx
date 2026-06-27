@@ -10,7 +10,7 @@ import {
   signOut,
 } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { User, Lock, CreditCard, Check, Zap, LogOut, Tag, Globe } from "lucide-react";
+import { User, Lock, CreditCard, Check, Zap, LogOut, Tag, Globe, Trophy } from "lucide-react";
 import MobileNav from "@/components/mobile-nav";
 import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
@@ -22,6 +22,7 @@ interface PresenterData {
   pilotOrgName?: string;
   pilotExpiresAt?: { toDate: () => Date };
   locale?: string;
+  nickname?: string;
 }
 
 export default function SettingsPage() {
@@ -60,6 +61,12 @@ export default function SettingsPage() {
   const [localeSaving, setLocaleSaving] = useState(false);
   const [localeSaved, setLocaleSaved] = useState(false);
 
+  // Nickname
+  const [nickname, setNickname] = useState("");
+  const [nicknameSaving, setNicknameSaving] = useState(false);
+  const [nicknameSaved, setNicknameSaved] = useState(false);
+  const [nicknameError, setNicknameError] = useState("");
+
   const isFr = locale === "fr";
 
   useEffect(() => {
@@ -75,6 +82,7 @@ export default function SettingsPage() {
         const data = snap.data() as PresenterData;
         setPresenter(data);
         if (data.locale === "fr") setLocale("fr");
+        if (data.nickname) setNickname(data.nickname);
       }
     });
 
@@ -207,6 +215,27 @@ export default function SettingsPage() {
     setTimeout(() => window.location.reload(), 2000);
   }
 
+  async function handleSaveNickname(e: React.FormEvent) {
+    e.preventDefault();
+    if (!user) return;
+    setNicknameError("");
+    const trimmed = nickname.trim();
+    if (trimmed && trimmed.length < 2) {
+      setNicknameError(isFr ? "Le pseudo doit contenir au moins 2 caractères." : "Nickname must be at least 2 characters.");
+      return;
+    }
+    setNicknameSaving(true);
+    try {
+      await updateDoc(doc(db, "presenters", user.uid), { nickname: trimmed || null });
+      setNicknameSaved(true);
+      setTimeout(() => setNicknameSaved(false), 3000);
+    } catch {
+      setNicknameError(isFr ? "Échec de l'enregistrement. Veuillez réessayer." : "Failed to save. Please try again.");
+    } finally {
+      setNicknameSaving(false);
+    }
+  }
+
   async function handleSaveLocale(newLocale: "en" | "fr") {
     if (!user) return;
     setLocale(newLocale);
@@ -272,6 +301,54 @@ export default function SettingsPage() {
               {profileSaved ? (
                 <><Check className="h-4 w-4" /> {isFr ? "Enregistré" : "Saved"}</>
               ) : profileSaving ? (isFr ? "Enregistrement…" : "Saving…") : (isFr ? "Enregistrer" : "Save changes")}
+            </button>
+          </form>
+        </section>
+
+        {/* Leaderboard Nickname */}
+        <section className="rounded-2xl border border-white/10 bg-[#111827] p-6">
+          <div className="mb-5 flex items-center gap-3">
+            <div className="rounded-xl bg-amber-500/20 p-2">
+              <Trophy className="h-4 w-4 text-amber-400" />
+            </div>
+            <div>
+              <h2 className="font-bold text-lg">{isFr ? "Classement" : "Leaderboard"}</h2>
+            </div>
+          </div>
+
+          <form onSubmit={handleSaveNickname} className="space-y-4">
+            <div>
+              <label className="mb-1.5 block text-sm text-slate-400">
+                {isFr ? "Pseudo de classement" : "Leaderboard nickname"}
+              </label>
+              <input
+                type="text"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                maxLength={24}
+                placeholder={isFr ? "Choisissez un pseudo" : "Choose a nickname"}
+                className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-amber-500"
+              />
+              <p className="mt-2 text-[11px] text-amber-600">
+                {isFr
+                  ? "⚠ Votre pseudo sera visible par les autres utilisateurs sur le classement sectoriel."
+                  : "⚠ Your nickname will be visible to other users on the industry leaderboard."}
+              </p>
+              <p className="mt-1 text-[11px] text-slate-600">
+                {isFr
+                  ? "Laissez vide pour ne pas apparaître sur le classement."
+                  : "Leave blank to stay off the leaderboard."}
+              </p>
+            </div>
+            {nicknameError && <p className="text-sm text-red-400">{nicknameError}</p>}
+            <button
+              type="submit"
+              disabled={nicknameSaving}
+              className="flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-amber-400 disabled:opacity-50 transition"
+            >
+              {nicknameSaved ? (
+                <><Check className="h-4 w-4" /> {isFr ? "Enregistré" : "Saved"}</>
+              ) : nicknameSaving ? (isFr ? "Enregistrement…" : "Saving…") : (isFr ? "Enregistrer le pseudo" : "Save nickname")}
             </button>
           </form>
         </section>

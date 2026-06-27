@@ -12,22 +12,9 @@ import {
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
+import { INDUSTRIES } from "@/lib/industries";
 
 type Mode = "signin" | "signup" | "reset";
-
-const INDUSTRIES: { value: string; en: string; fr: string }[] = [
-  { value: "sales",         en: "Sales & Business Development",   fr: "Ventes & Développement commercial" },
-  { value: "leadership",    en: "Leadership & Management",         fr: "Direction & Management" },
-  { value: "education",     en: "Education & Training",            fr: "Éducation & Formation" },
-  { value: "healthcare",    en: "Healthcare & Medicine",           fr: "Santé & Médecine" },
-  { value: "technology",    en: "Technology & Engineering",        fr: "Technologie & Ingénierie" },
-  { value: "finance",       en: "Finance & Professional Services", fr: "Finance & Services professionnels" },
-  { value: "marketing",     en: "Marketing & Communications",      fr: "Marketing & Communication" },
-  { value: "consulting",    en: "Consulting",                      fr: "Conseil" },
-  { value: "public_sector", en: "Public Sector & Non-profit",      fr: "Secteur public & Associations" },
-  { value: "academia",      en: "Academia & Research",             fr: "Enseignement supérieur & Recherche" },
-  { value: "other",         en: "Other",                           fr: "Autre" },
-];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,6 +24,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [industry, setIndustry] = useState("");
+  const [nickname, setNickname] = useState("");
   const [error, setError] = useState("");
   const [resetSent, setResetSent] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
@@ -122,6 +110,7 @@ export default function LoginPage() {
             subscriptionStatus: "free",
             locale: detectedLocale,
             industry,
+            nickname: nickname.trim() || null,
             createdAt: serverTimestamp(),
           },
           { merge: true }
@@ -320,6 +309,21 @@ export default function LoginPage() {
                       {isFr
                         ? "Utilisé pour créer des données de référence par secteur — vous aide à vous comparer à vos pairs."
                         : "Used to build industry benchmarks — helps you compare against your peers."}
+                    </p>
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      placeholder={isFr ? "Pseudo pour le classement (facultatif)" : "Leaderboard nickname (optional)"}
+                      value={nickname}
+                      onChange={(e) => setNickname(e.target.value)}
+                      maxLength={24}
+                      className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-violet-500"
+                    />
+                    <p className="mt-1.5 text-[11px] text-amber-600">
+                      {isFr
+                        ? "⚠ Votre pseudo sera visible par les autres utilisateurs sur le classement sectoriel."
+                        : "⚠ Your nickname will be visible to other users on the industry leaderboard."}
                     </p>
                   </div>
                 </>
