@@ -16,7 +16,7 @@ import {
   PolarGrid,
   PolarAngleAxis,
 } from "recharts";
-import { TrendingUp, TrendingDown, Minus, Tag, BarChart3, Lightbulb, AlertTriangle, Sparkles, ArrowUpRight, Brain } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Tag, BarChart3, Lightbulb, AlertTriangle, Sparkles, ArrowUpRight, Brain, X } from "lucide-react";
 import { classifyArchetype, ARCHETYPE_DEFS } from "@/lib/archetypes";
 import MobileNav from "@/components/mobile-nav";
 import { db } from "@/lib/firebase";
@@ -151,6 +151,7 @@ export default function AnalyticsPage() {
   const [showInsights, setShowInsights] = useState(true);
   const [showAudience, setShowAudience] = useState(true);
   const [showAi, setShowAi] = useState(true);
+  const [archetypeModalOpen, setArchetypeModalOpen] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<"free" | "active">("free");
   const [locale, setLocale] = useState<"en" | "fr">("en");
 
@@ -666,14 +667,15 @@ export default function AnalyticsPage() {
                 <div className="flex items-start justify-between gap-3 mb-1">
                   <h2 className="text-lg font-bold">{t.overallProfile}</h2>
                   {archetypeDef && (
-                    <div
-                      className={`shrink-0 flex items-center gap-2 rounded-xl border px-3 py-1.5 ${archetypeDef.borderClass} ${archetypeDef.bgClass}`}
+                    <button
+                      onClick={() => setArchetypeModalOpen(true)}
+                      className={`shrink-0 flex items-center gap-2 rounded-xl border px-3 py-1.5 transition hover:opacity-80 active:scale-95 ${archetypeDef.borderClass} ${archetypeDef.bgClass}`}
                     >
                       <span className="text-base leading-none">{archetypeDef.emoji}</span>
                       <span className="text-xs font-bold" style={{ color: archetypeDef.color }}>
                         {archetypeDef.name[locale]}
                       </span>
-                    </div>
+                    </button>
                   )}
                 </div>
                 <p className="text-sm text-slate-400 mb-4">{t.overallProfileSub}</p>
@@ -747,6 +749,65 @@ export default function AnalyticsPage() {
           </>
         )}
       </div>}
+
+      {/* Archetype modal */}
+      {archetypeModalOpen && archetypeDef && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          onClick={() => setArchetypeModalOpen(false)}
+        >
+          <div
+            className={`relative w-full max-w-md rounded-2xl border ${archetypeDef.borderClass} ${archetypeDef.bgClass} bg-[#111827] p-7 shadow-2xl`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setArchetypeModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-500 hover:text-white transition"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-4xl leading-none">{archetypeDef.emoji}</span>
+              <div>
+                <p className="text-[10px] font-bold tracking-[0.2em] uppercase mb-0.5" style={{ color: archetypeDef.color }}>
+                  {isFr ? "Profil de présentateur" : "Presenter Archetype"}
+                </p>
+                <h3 className="text-xl font-black text-white">{archetypeDef.name[locale]}</h3>
+              </div>
+            </div>
+
+            <p className="text-xs font-semibold mb-3" style={{ color: archetypeDef.color }}>
+              {archetypeDef.tagline[locale]}
+            </p>
+
+            <p className="text-sm text-slate-300 leading-relaxed mb-5">
+              {archetypeDef.description[locale]}
+            </p>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-3">
+                <p className="text-[10px] font-semibold text-green-400 uppercase tracking-wider mb-1">
+                  {isFr ? "Point fort" : "Key strength"}
+                </p>
+                <p className="text-xs text-slate-300 leading-relaxed">{archetypeDef.strength[locale]}</p>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-3">
+                <p className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider mb-1">
+                  {isFr ? "Axe de développement" : "Development focus"}
+                </p>
+                <p className="text-xs text-slate-300 leading-relaxed">{archetypeDef.development[locale]}</p>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-slate-600 mt-4 text-center">
+              {isFr
+                ? "Basé sur votre évaluation IA la plus récente"
+                : "Based on your most recent AI assessment"}
+            </p>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
