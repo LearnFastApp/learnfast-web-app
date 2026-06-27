@@ -287,15 +287,26 @@ export default function LiveSessionPage() {
     if (authLoading) return;
     if (!user) { router.replace("/auth/login"); return; }
 
-    getDoc(doc(db, "sessions", id)).then((snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
-        setSession({ title: data.title, code: data.code });
-        if (data.status === "closed") setSessionStatus("closed");
-        if (data.commitment) {
-          setSavedCommitment({ dimension: data.commitment.dimension, text: data.commitment.text });
-          setDraftDimension(data.commitment.dimension);
-          setDraftText(data.commitment.text);
+    getDoc(doc(db, "sessions", id)).then(async (snap) => {
+      if (!snap.exists()) return;
+      const data = snap.data();
+      setSession({ title: data.title, code: data.code });
+      if (data.status === "closed") setSessionStatus("closed");
+      if (data.commitment) {
+        setSavedCommitment({ dimension: data.commitment.dimension, text: data.commitment.text });
+        setDraftDimension(data.commitment.dimension);
+        setDraftText(data.commitment.text);
+      }
+      // Restore AI assessment state directly from session doc — no secondary query needed
+      if (data.aiAssessmentId) {
+        setAiAssessmentId(data.aiAssessmentId);
+        const assessmentSnap = await getDoc(doc(db, "ai_assessments", data.aiAssessmentId));
+        if (assessmentSnap.exists()) {
+          const a = assessmentSnap.data();
+          if (a.status === "complete" && a.scores) {
+            setAiScores(a.scores as Record<Dimension, number>);
+            setAiAssessmentComplete(true);
+          }
         }
       }
     });
@@ -350,23 +361,6 @@ export default function LiveSessionPage() {
       }, {} as Record<Dimension, number>));
     });
   }, [user, id]);
-
-  // Fetch existing AI assessment linked to this session
-  useEffect(() => {
-    if (!user) return;
-    getDocs(query(collection(db, "ai_assessments"), where("sessionId", "==", id))).then((snap) => {
-      if (snap.empty) return;
-      const complete = snap.docs.find((d) => d.data().status === "complete");
-      if (complete) {
-        setAiScores(complete.data().scores as Record<Dimension, number>);
-        setAiAssessmentId(complete.id);
-        setAiAssessmentComplete(true);
-        return;
-      }
-      const inProgress = snap.docs.find((d) => ["queued", "processing"].includes(d.data().status));
-      if (inProgress) setAiAssessmentId(inProgress.id);
-    }).catch(() => {});
-  }, [id, user]);
 
   const audienceAverages = DIMENSIONS.reduce(
     (acc, dim) => ({ ...acc, [dim]: average(responses.map((r) => r[dim])) }),

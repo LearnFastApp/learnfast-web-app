@@ -76,6 +76,11 @@ export async function POST(req: NextRequest) {
     analysis: null,
   });
 
+  // Link assessment back to the session doc so the session page can find it by direct read
+  if (sessionId) {
+    await db.collection("sessions").doc(sessionId).update({ aiAssessmentId: ref.id }).catch(() => {});
+  }
+
   // Submit to AssemblyAI (non-blocking — returns transcript ID immediately)
   try {
     const transcriptId = await submitTranscription(downloadUrl);
