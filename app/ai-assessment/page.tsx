@@ -70,6 +70,17 @@ export default function AiAssessmentPage() {
     }).catch(() => {});
   }, [user]);
 
+  // Prevent the browser from navigating to the file if the user misses the drop zone
+  useEffect(() => {
+    const prevent = (e: DragEvent) => e.preventDefault();
+    document.addEventListener("dragover", prevent);
+    document.addEventListener("drop", prevent);
+    return () => {
+      document.removeEventListener("dragover", prevent);
+      document.removeEventListener("drop", prevent);
+    };
+  }, []);
+
   const s = STRINGS[locale];
   const dims = DIM_LABELS[locale];
 
@@ -182,8 +193,9 @@ export default function AiAssessmentPage() {
           <div
             className={`relative rounded-2xl border-2 border-dashed transition cursor-pointer ${dragOver ? "border-amber-400 bg-amber-400/5" : "border-white/20 bg-white/[0.03] hover:border-white/40 hover:bg-white/[0.06]"}`}
             onDrop={onDrop}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
+            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragOver(true); }}
+            onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setDragOver(true); }}
+            onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDragOver(false); }}
             onClick={() => fileInputRef.current?.click()}
           >
             <input ref={fileInputRef} type="file" accept={ACCEPTED_EXT} className="sr-only" onChange={onInputChange} />
