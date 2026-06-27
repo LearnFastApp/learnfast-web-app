@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Timestamp } from "firebase-admin/firestore";
 import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
 import { submitTranscription } from "@/lib/assemblyai-client";
 
@@ -26,13 +25,15 @@ async function checkGate(uid: string): Promise<{ allowed: boolean; reason?: stri
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
 
-  const countSnap = await db.collection("ai_assessments")
+  // Single-field query (no composite index needed); filter dates in memory
+  const docsSnap = await db.collection("ai_assessments")
     .where("presenterId", "==", uid)
-    .where("createdAt", ">=", Timestamp.fromDate(startOfMonth))
-    .count()
     .get();
 
-  const used = countSnap.data().count;
+  const used = docsSnap.docs.filter((d) => {
+    const createdAt = d.data().createdAt?.toDate?.() as Date | undefined;
+    return createdAt && createdAt >= startOfMonth;
+  }).length;
   const limit = LITE_LIMIT; // TODO: Pro = unlimited when Pro tier launches
   if (used >= limit) return { allowed: false, reason: "monthly_limit" };
 
