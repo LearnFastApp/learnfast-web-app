@@ -133,7 +133,11 @@ export async function GET(
     try {
       const sessionSnap = await db.collection("sessions").doc(data.sessionId as string).get();
       const session = sessionSnap.data();
-      if (sessionSnap.exists && (!session?.summarySent || session?.summaryPendingAi)) {
+      if (
+        sessionSnap.exists &&
+        !session?.summarySent &&
+        (session?.summaryPendingAi || session?.status === "closed")
+      ) {
         await dispatchSessionSummary(data.sessionId as string, {
           assessmentId: docRef.id,
           summary: analysis.summary,
