@@ -32,6 +32,11 @@ service cloud.firestore {
       allow read, write: if isSessionPresenter(sessionId);
     }
 
+    match /ai_assessments/{assessmentId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.presenterId;
+      allow write: if false;
+    }
+
     match /pilot_codes/{code} {
       allow read, write: if false;
     }
