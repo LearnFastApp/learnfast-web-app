@@ -10,7 +10,7 @@ export async function submitTranscription(audioUrl: string): Promise<string> {
   const client = getClient();
   const transcript = await client.transcripts.submit({
     audio: audioUrl,
-    speech_model: "best",
+    speech_models: ["universal-2"],
     sentiment_analysis: true,
     auto_highlights: true,
     disfluencies: true,
