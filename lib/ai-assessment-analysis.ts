@@ -50,6 +50,7 @@ export async function analyseTranscript(opts: {
   neutralPercent: number;
   negativePercent: number;
   locale?: "en" | "fr";
+  industry?: string | null;
   priorAssessments?: PriorAssessmentContext[];
 }): Promise<AssessmentAnalysis> {
   const client = getClient();
@@ -64,6 +65,10 @@ export async function analyseTranscript(opts: {
 
   const lang = opts.locale === "fr" ? "French (français)" : "English";
 
+  const industryCtx = opts.industry
+    ? `\nPRESENTER CONTEXT: Industry/sector — ${opts.industry}. Tailor coaching language and examples to this professional context where relevant.\n`
+    : "";
+
   const prior = opts.priorAssessments ?? [];
   const historyBlock = prior.length > 0
     ? `\nDEVELOPMENT HISTORY (most recent first — use this to write comparative commentary):
@@ -75,7 +80,7 @@ In the summary, include ONE sentence noting the most significant change since th
 
   const prompt = `You are an expert presentation coach scoring a presenter across five core communication dimensions.
 LANGUAGE: Write all text fields (rationale, highlights, tips, summary) in ${lang}.
-${historyBlock}
+${industryCtx}${historyBlock}
 
 DIMENSIONS (score each 0–100):
 - Clarity: Clear structure, precise language, minimal jargon, logical flow. Filler words and pace directly affect this.

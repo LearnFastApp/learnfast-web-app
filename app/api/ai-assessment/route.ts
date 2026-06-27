@@ -61,12 +61,17 @@ export async function POST(req: NextRequest) {
 
   const db = getAdminDb();
 
+  // Read presenter industry to tag assessment for normative benchmarking
+  const presenterSnap = await db.collection("presenters").doc(uid).get();
+  const industry = (presenterSnap.data()?.industry as string | undefined) ?? null;
+
   // Create the assessment doc
   const ref = db.collection("ai_assessments").doc();
   const now = new Date();
   await ref.set({
     presenterId: uid,
     sessionId,
+    industry,
     createdAt: now,
     fileName,
     storagePath,

@@ -15,6 +15,20 @@ import { auth, db } from "@/lib/firebase";
 
 type Mode = "signin" | "signup" | "reset";
 
+const INDUSTRIES: { value: string; en: string; fr: string }[] = [
+  { value: "sales",         en: "Sales & Business Development",   fr: "Ventes & Développement commercial" },
+  { value: "leadership",    en: "Leadership & Management",         fr: "Direction & Management" },
+  { value: "education",     en: "Education & Training",            fr: "Éducation & Formation" },
+  { value: "healthcare",    en: "Healthcare & Medicine",           fr: "Santé & Médecine" },
+  { value: "technology",    en: "Technology & Engineering",        fr: "Technologie & Ingénierie" },
+  { value: "finance",       en: "Finance & Professional Services", fr: "Finance & Services professionnels" },
+  { value: "marketing",     en: "Marketing & Communications",      fr: "Marketing & Communication" },
+  { value: "consulting",    en: "Consulting",                      fr: "Conseil" },
+  { value: "public_sector", en: "Public Sector & Non-profit",      fr: "Secteur public & Associations" },
+  { value: "academia",      en: "Academia & Research",             fr: "Enseignement supérieur & Recherche" },
+  { value: "other",         en: "Other",                           fr: "Autre" },
+];
+
 export default function LoginPage() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("signin");
@@ -22,6 +36,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [industry, setIndustry] = useState("");
   const [error, setError] = useState("");
   const [resetSent, setResetSent] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
@@ -77,6 +92,10 @@ export default function LoginPage() {
     }
 
     if (mode === "signup") {
+      if (!industry) {
+        setError(isFr ? "Veuillez sélectionner votre secteur d'activité." : "Please select your industry sector.");
+        return;
+      }
       if (password !== confirm) {
         setError(isFr ? "Les mots de passe ne correspondent pas." : "Passwords don't match.");
         return;
@@ -102,6 +121,7 @@ export default function LoginPage() {
             displayName: name.trim() || email.split("@")[0],
             subscriptionStatus: "free",
             locale: detectedLocale,
+            industry,
             createdAt: serverTimestamp(),
           },
           { merge: true }
@@ -271,13 +291,38 @@ export default function LoginPage() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === "signup" && (
-                <input
-                  type="text"
-                  placeholder={isFr ? "Votre nom (facultatif)" : "Your name (optional)"}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-violet-500"
-                />
+                <>
+                  <input
+                    type="text"
+                    placeholder={isFr ? "Votre nom (facultatif)" : "Your name (optional)"}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-violet-500"
+                  />
+                  <div>
+                    <select
+                      required
+                      value={industry}
+                      onChange={(e) => setIndustry(e.target.value)}
+                      className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white outline-none focus:border-violet-500 appearance-none"
+                      style={{ color: industry ? "white" : "#64748b" }}
+                    >
+                      <option value="" disabled style={{ color: "#64748b" }}>
+                        {isFr ? "Votre secteur d'activité" : "Your industry sector"}
+                      </option>
+                      {INDUSTRIES.map((ind) => (
+                        <option key={ind.value} value={ind.value} style={{ color: "white", background: "#1a2135" }}>
+                          {isFr ? ind.fr : ind.en}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-1.5 text-[11px] text-slate-600">
+                      {isFr
+                        ? "Utilisé pour créer des données de référence par secteur — vous aide à vous comparer à vos pairs."
+                        : "Used to build industry benchmarks — helps you compare against your peers."}
+                    </p>
+                  </div>
+                </>
               )}
               <input
                 type="email"

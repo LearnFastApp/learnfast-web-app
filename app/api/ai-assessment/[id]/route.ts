@@ -101,6 +101,7 @@ export async function GET(
       neutralPercent,
       negativePercent,
       locale,
+      industry: (data.industry as string | undefined) ?? null,
       priorAssessments,
     });
   } catch (err) {
