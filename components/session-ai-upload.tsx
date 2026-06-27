@@ -4,7 +4,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
-import { Brain, UploadCloud, Loader2, AlertCircle, FileVideo } from "lucide-react";
+import { Brain, UploadCloud, Loader2, AlertCircle, FileVideo, ChevronRight, CheckCircle } from "lucide-react";
 
 const ACCEPTED_TYPES = [
   "video/mp4", "video/quicktime", "video/webm", "video/x-matroska",
@@ -18,7 +18,7 @@ type Stage = "idle" | "uploading" | "processing" | "complete" | "failed";
 interface Props {
   sessionId: string;
   existingAssessmentId?: string | null;
-  onComplete: (scores: Record<string, number>) => void;
+  onComplete: (scores: Record<string, number>, assessmentId: string) => void;
 }
 
 export default function SessionAiUpload({ sessionId, existingAssessmentId, onComplete }: Props) {
@@ -46,7 +46,7 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, onCom
       const data = await res.json();
       if (data.status === "complete" && data.scores) {
         setStage("complete");
-        onComplete(data.scores);
+        onComplete(data.scores, assessmentId!);
       } else if (data.status === "failed") {
         setStage("failed");
         setErrorMsg("Analysis failed. Please try with a different file.");
@@ -117,10 +117,7 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, onCom
     );
   }, [user, sessionId]);
 
-  // Once complete the scores are on the radar — no need to show anything
-  if (stage === "complete") return null;
-
-  // CTA banner — not yet expanded
+  // CTA banner — collapsed
   if ((stage === "idle" || stage === "failed") && !showZone) {
     return (
       <div className="mx-6 mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/[0.05] p-4 flex items-center justify-between gap-4">
@@ -141,14 +138,14 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, onCom
     );
   }
 
-  // Upload zone (expanded)
+  // Upload zone — expanded
   if ((stage === "idle" || stage === "failed") && showZone) {
     return (
       <div className="mx-6 mt-4 rounded-2xl border border-amber-500/30 bg-[#111827] p-5">
         <div className="flex items-center gap-2 mb-4">
           <Brain className="h-4 w-4 text-amber-400" />
           <p className="text-sm font-semibold text-white">AI Analysis</p>
-          <button onClick={() => setShowZone(false)} className="ml-auto text-xs text-slate-500 hover:text-slate-300">Cancel</button>
+          <button onClick={() => { setShowZone(false); setStage("idle"); setErrorMsg(""); }} className="ml-auto text-xs text-slate-500 hover:text-slate-300 transition">Cancel</button>
         </div>
 
         {stage === "failed" && errorMsg && (
@@ -189,23 +186,39 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, onCom
           </div>
         </div>
         <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-          <div
-            className="h-full rounded-full bg-amber-400 transition-all duration-300"
-            style={{ width: `${uploadProgress}%` }}
-          />
+          <div className="h-full rounded-full bg-amber-400 transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
         </div>
       </div>
     );
   }
 
   // Processing
-  return (
-    <div className="mx-6 mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/[0.05] p-4 flex items-center gap-3">
-      <Loader2 className="h-5 w-5 text-amber-400 shrink-0 animate-spin" />
-      <div>
-        <p className="text-sm font-semibold text-white">Analysing your recording…</p>
-        <p className="text-xs text-slate-400">AI scores will appear on the chart when ready · usually 1–3 minutes</p>
+  if (stage === "processing") {
+    return (
+      <div className="mx-6 mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/[0.05] p-4 flex items-center gap-3">
+        <Loader2 className="h-5 w-5 text-amber-400 shrink-0 animate-spin" />
+        <div>
+          <p className="text-sm font-semibold text-white">Analysing your recording…</p>
+          <p className="text-xs text-slate-400">AI scores will appear on the chart when ready · 1–3 minutes</p>
+        </div>
       </div>
-    </div>
+    );
+  }
+
+  // Complete — persistent link to full report
+  return (
+    <a
+      href={`/ai-assessment/${assessmentId}`}
+      className="mx-6 mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/[0.05] p-4 flex items-center justify-between gap-4 hover:bg-amber-500/10 transition group"
+    >
+      <div className="flex items-center gap-3">
+        <CheckCircle className="h-5 w-5 text-amber-400 shrink-0" />
+        <div>
+          <p className="text-sm font-semibold text-white">AI Analysis complete</p>
+          <p className="text-xs text-slate-400">View your full report — rationale, highlights, tips and vocal stats</p>
+        </div>
+      </div>
+      <ChevronRight className="h-5 w-5 text-amber-400 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+    </a>
   );
 }

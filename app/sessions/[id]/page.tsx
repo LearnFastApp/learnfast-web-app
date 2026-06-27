@@ -159,7 +159,8 @@ export default function LiveSessionPage() {
   const [commitmentSaved, setCommitmentSaved] = useState(false);
   const [prevAverages, setPrevAverages] = useState<Record<Dimension, number> | null>(null);
   const [aiScores, setAiScores] = useState<Record<Dimension, number> | null>(null);
-  const [pendingAiAssessmentId, setPendingAiAssessmentId] = useState<string | null>(null);
+  const [aiAssessmentId, setAiAssessmentId] = useState<string | null>(null);
+  const [aiAssessmentComplete, setAiAssessmentComplete] = useState(false);
 
   const DIMENSION_LABELS = locale === "fr" ? DIMENSION_LABELS_FR : DIMENSION_LABELS_EN;
   const RECOMMENDATIONS = locale === "fr" ? RECOMMENDATIONS_FR : RECOMMENDATIONS_EN;
@@ -358,10 +359,12 @@ export default function LiveSessionPage() {
       const complete = snap.docs.find((d) => d.data().status === "complete");
       if (complete) {
         setAiScores(complete.data().scores as Record<Dimension, number>);
+        setAiAssessmentId(complete.id);
+        setAiAssessmentComplete(true);
         return;
       }
       const inProgress = snap.docs.find((d) => ["queued", "processing"].includes(d.data().status));
-      if (inProgress) setPendingAiAssessmentId(inProgress.id);
+      if (inProgress) setAiAssessmentId(inProgress.id);
     }).catch(() => {});
   }, [id, user]);
 
@@ -583,12 +586,34 @@ export default function LiveSessionPage() {
         </div>
       )}
 
-      {sessionStatus === "closed" && isPaid && !aiScores && (
-        <SessionAiUpload
-          sessionId={id}
-          existingAssessmentId={pendingAiAssessmentId}
-          onComplete={(scores) => setAiScores(scores as Record<Dimension, number>)}
-        />
+      {sessionStatus === "closed" && isPaid && (
+        aiAssessmentComplete && aiAssessmentId ? (
+          // Persistent link to full report once complete
+          <a
+            href={`/ai-assessment/${aiAssessmentId}`}
+            className="mx-6 mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/[0.05] p-4 flex items-center justify-between gap-4 hover:bg-amber-500/10 transition group"
+          >
+            <div className="flex items-center gap-3">
+              <svg className="h-5 w-5 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <div>
+                <p className="text-sm font-semibold text-white">AI Analysis complete</p>
+                <p className="text-xs text-slate-400">View your full report — rationale, highlights, tips and vocal stats</p>
+              </div>
+            </div>
+            <svg className="h-5 w-5 text-amber-400 shrink-0 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+          </a>
+        ) : (
+          // Upload / processing / not yet uploaded
+          <SessionAiUpload
+            sessionId={id}
+            existingAssessmentId={aiAssessmentId}
+            onComplete={(scores, newAssessmentId) => {
+              setAiScores(scores as Record<Dimension, number>);
+              setAiAssessmentId(newAssessmentId);
+              setAiAssessmentComplete(true);
+            }}
+          />
+        )
       )}
 
       {sessionStatus === "closed" && (
