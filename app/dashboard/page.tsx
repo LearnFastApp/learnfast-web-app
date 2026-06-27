@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import {
   BarChart3,
   BookOpen,
+  Brain,
   Calendar,
   LayoutDashboard,
   LogOut,
@@ -249,6 +250,7 @@ export default function Dashboard() {
     { label: isFr ? "Tableau de bord" : "Dashboard", icon: LayoutDashboard, href: "/dashboard", active: true },
     { label: isFr ? "Calendrier de sessions" : "Session Calendar", icon: Calendar, href: "#", comingSoon: true },
     { label: isFr ? "Analytiques" : "Analytics", icon: BarChart3, href: "/analytics" },
+    { label: isFr ? "Analyse IA" : "AI Analysis", icon: Brain, href: "/ai-assessment" },
     { label: isFr ? "Hub de ressources" : "Premium Resource Hub", icon: BookOpen, href: "#", comingSoon: true },
     { label: isFr ? "Paramètres" : "Settings", icon: Settings, href: "/settings" },
   ];

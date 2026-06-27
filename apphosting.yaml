@@ -77,3 +77,11 @@ env:
     secret: EVENTBRITE_API_KEY
     availability:
       - RUNTIME
+  - variable: ASSEMBLYAI_API_KEY
+    secret: ASSEMBLYAI_API_KEY
+    availability:
+      - RUNTIME
+  - variable: ANTHROPIC_API_KEY
+    secret: ANTHROPIC_API_KEY
+    availability:
+      - RUNTIME
