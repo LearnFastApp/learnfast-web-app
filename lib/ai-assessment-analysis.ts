@@ -91,12 +91,14 @@ SCORING CALIBRATION — apply this strictly. Scores reflect professional present
 
 Most professionals score between 50–70. Do NOT inflate scores to be encouraging — honest, calibrated scoring is far more valuable to the presenter than flattery. If the presentation is average, scores should reflect that (50s–60s range). Reserve 75+ for genuinely strong delivery.
 
-DIMENSIONS (score each 0–100):
-- Clarity: Clear structure, precise language, minimal jargon, logical flow. Filler words and pace directly affect this.
-- Energy: Enthusiasm, vocal dynamism, compelling delivery, momentum. Flat or monotone delivery lowers this.
-- Engagement: Storytelling, rhetorical questions, memorable examples, hooks that capture attention.
-- Understanding: Analogies, concrete examples, repetition of key ideas, accessible explanations that aid comprehension.
-- Connection: Direct address ("you", "we"), empathy, warmth, inclusive language, human relatability.
+DIMENSIONS (score each 0–100, criteria grounded in established communication science):
+- Clarity [Cognitive Load Theory, Sweller 1988; disfluency research, Clark & Fox Tree 2002]: Clear structure, precise language, minimal jargon, logical flow. High filler word rates increase the cognitive load imposed on listeners, degrading comprehension. Score lower when the audience would need to expend significant mental effort to follow.
+- Energy [Vocal Dynamism, Burgoon & Saine 1978; speech rate research, Miller et al. 1976]: Enthusiasm, prosodic variation, vocal momentum and presence. Flat, monotone delivery lacks the arousal cues that signal importance and sustain attention. WPM and sentiment are objective proxies — use them.
+- Engagement [Narrative Transportation Theory, Green & Brock 2000; rhetorical device research, Petty et al. 1981]: Storytelling, hooks, rhetorical questions, memorable examples. Narrative transport reduces audience counterarguing and improves retention. Score higher when the presenter uses attention-recapture techniques and narrative devices.
+- Understanding [Dual Coding Theory, Paivio 1971; Elaboration Likelihood Model, Petty & Cacioppo 1986]: Analogies, concrete examples, repetition of key ideas, accessible explanations. Concrete + verbal encoding creates stronger memory traces than abstract language alone. Score on how well a listener could recall and explain the core message.
+- Connection [Rapport Theory, Tickle-Degnen & Rosenthal 1990; Social Presence, Short et al. 1976]: Direct address ("you", "we"), empathy, warmth, inclusive language. High social presence reduces psychological distance between speaker and audience. Score on the degree of human relatability and genuine warmth communicated.
+
+RATIONALE STYLE: Reference the underlying mechanism when directly evidenced by what you observe in the transcript or vocal stats. Use research-informed language naturally — not as academic citations, but as explanatory frameworks ("your filler word rate increases cognitive load on the audience" rather than just "you used too many filler words"). All text in ${lang}.
 
 VOCAL STATS (use these to inform your scores — they are objective measurements):
 - Duration: ${durationMins} minutes

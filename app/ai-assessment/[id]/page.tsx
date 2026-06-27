@@ -26,6 +26,14 @@ const DIM_COLORS: Record<Dimension, string> = {
   understanding: "#34d399", connection: "#f472b6",
 };
 
+const RESEARCH_BASIS: Record<Dimension, { en: string; fr: string }> = {
+  clarity:       { en: "Cognitive Load Theory · Sweller, 1988",                    fr: "Théorie de la charge cognitive · Sweller, 1988" },
+  energy:        { en: "Vocal Dynamism Research · Burgoon & Saine, 1978",           fr: "Dynamisme vocal · Burgoon & Saine, 1978" },
+  engagement:    { en: "Narrative Transportation Theory · Green & Brock, 2000",     fr: "Transport narratif · Green & Brock, 2000" },
+  understanding: { en: "Dual Coding Theory · Paivio, 1971",                         fr: "Double codage · Paivio, 1971" },
+  connection:    { en: "Rapport Theory · Tickle-Degnen & Rosenthal, 1990",          fr: "Théorie du rapport · Tickle-Degnen & Rosenthal, 1990" },
+};
+
 const STRINGS = {
   en: {
     navBack: "← New analysis",
@@ -370,8 +378,9 @@ export default function AiAssessmentResultsPage() {
                     {dim === lowestDim ? s.priorityLabel : ""}
                   </p>
                   <h3 className="text-base font-bold text-white">{DIM_LABELS[dim]}</h3>
+                  <p className="text-[10px] text-slate-600 mt-0.5 font-mono">{RESEARCH_BASIS[dim][locale]}</p>
                   {assessment.rationale?.[dim] && (
-                    <p className="text-sm text-slate-400 mt-1">{assessment.rationale[dim]}</p>
+                    <p className="text-sm text-slate-400 mt-2">{assessment.rationale[dim]}</p>
                   )}
                 </div>
                 <div className="shrink-0 ml-4 text-right">
@@ -437,6 +446,18 @@ export default function AiAssessmentResultsPage() {
           </div>
           <ChevronRight className="h-5 w-5 text-slate-500 group-hover:text-white transition" />
         </a>
+
+        {/* Methodology note */}
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2">
+            {locale === "fr" ? "Méthodologie de notation" : "Scoring Methodology"}
+          </p>
+          <p className="text-[11px] text-slate-600 leading-relaxed">
+            {locale === "fr"
+              ? "Les scores sont ancrés dans des recherches reconnues en communication : Théorie de la charge cognitive (Sweller, 1988), Dynamisme vocal (Burgoon & Saine, 1978), Transport narratif (Green & Brock, 2000), Double codage (Paivio, 1971) et Théorie du rapport (Tickle-Degnen & Rosenthal, 1990). Les statistiques vocales sont des mesures objectives extraites de votre audio."
+              : "Scores are grounded in established communication science: Cognitive Load Theory (Sweller, 1988), Vocal Dynamism research (Burgoon & Saine, 1978), Narrative Transportation Theory (Green & Brock, 2000), Dual Coding Theory (Paivio, 1971), and Rapport Theory (Tickle-Degnen & Rosenthal, 1990). Vocal statistics are objective measurements extracted from your audio."}
+          </p>
+        </div>
 
         {/* Vocal stats */}
         {(assessment.wordCount || assessment.fillerWordCount !== undefined) && (

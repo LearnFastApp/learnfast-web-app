@@ -7,11 +7,11 @@ import { useRouter } from "next/navigation";
 const RED = "#d13b1a";
 
 const DIMENSIONS = [
-  { name: "Clarity",       color: "#8b5cf6", desc: "How clearly your message and structure came across to the room." },
-  { name: "Energy",        color: "#f59e0b", desc: "The presence, vocal delivery and energy you brought to the room." },
-  { name: "Engagement",    color: "#22d3ee", desc: "How well you held attention and kept the audience invested throughout." },
-  { name: "Understanding", color: "#34d399", desc: "How well the audience grasped the core ideas you shared." },
-  { name: "Connection",    color: "#f472b6", desc: "How personally connected the audience felt to you and your content." },
+  { name: "Clarity",       color: "#8b5cf6", desc: "How clearly your message and structure came across to the room.",        research: "Cognitive Load Theory · Sweller, 1988" },
+  { name: "Energy",        color: "#f59e0b", desc: "The presence, vocal delivery and energy you brought to the room.",        research: "Vocal Dynamism Research · Burgoon & Saine, 1978" },
+  { name: "Engagement",    color: "#22d3ee", desc: "How well you held attention and kept the audience invested throughout.",   research: "Narrative Transportation Theory · Green & Brock, 2000" },
+  { name: "Understanding", color: "#34d399", desc: "How well the audience grasped the core ideas you shared.",                research: "Dual Coding Theory · Paivio, 1971" },
+  { name: "Connection",    color: "#f472b6", desc: "How personally connected the audience felt to you and your content.",     research: "Rapport Theory · Tickle-Degnen & Rosenthal, 1990" },
 ];
 
 const FEATURES = [
@@ -421,7 +421,8 @@ export default function LandingPage() {
                 <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: d.color }} />
                 <div>
                   <p className="font-bold text-sm uppercase tracking-wider mb-1">{d.name}</p>
-                  <p className="text-sm text-slate-400 leading-relaxed">{d.desc}</p>
+                  <p className="text-sm text-slate-400 leading-relaxed mb-2">{d.desc}</p>
+                  <p className="text-[10px] text-slate-600 font-mono">{d.research}</p>
                 </div>
               </div>
             ))}
@@ -431,6 +432,35 @@ export default function LandingPage() {
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ── SCIENCE METHODOLOGY ── */}
+      <section className="py-16 sm:py-20 px-5 lg:px-12 border-t border-white/5">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="h-2 w-2 rounded-full bg-slate-600 shrink-0" />
+            <p className="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">Research Foundation</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { dim: "Clarity",       color: "#8b5cf6", title: "Cognitive Load Theory",          author: "Sweller, 1988",                     body: "Excess filler words and unclear structure impose unnecessary mental effort on listeners, reducing comprehension and retention." },
+              { dim: "Energy",        color: "#f59e0b", title: "Vocal Dynamism Research",         author: "Burgoon & Saine, 1978",              body: "Prosodic variation — pitch, pace, pause — signals importance and maintains audience arousal. Monotone delivery is associated with disengagement." },
+              { dim: "Engagement",    color: "#22d3ee", title: "Narrative Transportation Theory", author: "Green & Brock, 2000",                body: "Stories transport audiences into a narrative world, reducing counterarguing and significantly improving recall of key messages." },
+              { dim: "Understanding", color: "#34d399", title: "Dual Coding Theory",              author: "Paivio, 1971",                       body: "Combining verbal explanation with concrete analogies and examples creates dual memory traces, making content far easier to retain." },
+              { dim: "Connection",    color: "#f472b6", title: "Rapport Theory",                  author: "Tickle-Degnen & Rosenthal, 1990",    body: "Attentiveness, positivity and coordinated interaction build rapport. Inclusive language and direct address reduce perceived distance." },
+              { dim: "Scoring",       color: "#94a3b8", title: "Calibrated Scoring Scale",        author: "Professional standards benchmark",    body: "Scores are calibrated to professional presentation norms — not personal encouragement. Most working professionals score between 50–70." },
+            ].map((r) => (
+              <div key={r.dim} className="rounded-xl border border-white/[0.06] bg-[#0a0b12] p-5">
+                <p className="text-[10px] font-mono mb-2" style={{ color: r.color }}>{r.author}</p>
+                <p className="text-sm font-bold text-white mb-1">{r.title}</p>
+                <p className="text-xs text-slate-500 leading-relaxed">{r.body}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] text-slate-700 mt-6 text-center">
+            LearnFast scoring criteria are derived from peer-reviewed communication science. Results are generated by Claude claude-sonnet-4-6 using research-calibrated rubrics.
+          </p>
         </div>
       </section>
 
