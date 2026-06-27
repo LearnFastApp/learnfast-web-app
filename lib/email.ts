@@ -30,6 +30,13 @@ function scoreBand(score: number) {
   return "Needs attention";
 }
 
+export interface AiEmailInsights {
+  assessmentId: string;
+  summary: string;
+  scores: Record<string, number>;
+  primaryTip?: { dimension: string; tip: string };
+}
+
 export interface SummaryEmailOptions {
   to: string;
   presenterName: string;
@@ -40,6 +47,7 @@ export interface SummaryEmailOptions {
   overallAvg: number;
   gapInsight: string | null;
   sessionUrl: string;
+  aiInsights?: AiEmailInsights | null;
   locale?: string;
 }
 
@@ -57,8 +65,13 @@ function scoreBandFr(score: number) {
   return "À améliorer";
 }
 
+const DIM_LABELS_EN_EMAIL: Record<string, string> = {
+  clarity: "Clarity", engagement: "Engagement", energy: "Energy",
+  understanding: "Understanding", connection: "Connection",
+};
+
 function buildHtml(opts: SummaryEmailOptions): string {
-  const { presenterName, sessionTitle, sessionDate, responseCount, averages, overallAvg, gapInsight, sessionUrl } = opts;
+  const { presenterName, sessionTitle, sessionDate, responseCount, averages, overallAvg, gapInsight, sessionUrl, aiInsights } = opts;
   const isFr = opts.locale === "fr";
 
   const scoreRows = DIMS.map((dim) => {
@@ -91,6 +104,37 @@ function buildHtml(opts: SummaryEmailOptions): string {
         </p>
       </div>
     </div>` : `<p style="color:#ef4444;font-size:13px;margin:0 0 20px;">${isFr ? "Aucune réponse d'audience enregistrée pour cette session." : "No audience responses were recorded for this session."}</p>`;
+
+  let aiBlock = "";
+  if (aiInsights) {
+    const appUrl = process.env.APP_URL ?? "https://learnfastapp.com";
+    const reportUrl = `${appUrl}/ai-assessment/${aiInsights.assessmentId}`;
+    const dimLabels = isFr ? DIM_LABELS_FR_EMAIL : DIM_LABELS_EN_EMAIL;
+    const entries = Object.entries(aiInsights.scores).sort((a, b) => a[1] - b[1]);
+    const [lowestKey, lowestScore] = entries[0] ?? ["", 0];
+    const lowestLabel = dimLabels[lowestKey] ?? lowestKey;
+    const tip = aiInsights.primaryTip?.tip ?? null;
+    aiBlock = `
+    <div style="border-top:1px solid rgba(255,255,255,0.08);margin-top:24px;padding-top:24px;">
+      <p style="color:#f59e0b;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px;">
+        ${isFr ? "Analyse IA" : "AI Analysis"}
+      </p>
+      <p style="color:#cbd5e1;font-size:13px;line-height:1.75;margin:0 0 18px;">${aiInsights.summary}</p>
+      <div style="background:#0f1424;border-left:3px solid #f59e0b;border-radius:8px;padding:14px 18px;margin-bottom:18px;">
+        <p style="color:#f59e0b;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 4px;">
+          ${isFr ? "Axe de développement prioritaire" : "Priority focus area"} &middot; ${lowestLabel}
+        </p>
+        <p style="margin:0 0 ${tip ? "8px" : "0"};">
+          <strong style="color:#f59e0b;font-size:22px;">${lowestScore}</strong>
+          <span style="color:#475569;font-size:12px;">/100</span>
+        </p>
+        ${tip ? `<p style="color:#94a3b8;font-size:13px;line-height:1.65;margin:0;">${tip}</p>` : ""}
+      </div>
+      <a href="${reportUrl}" style="color:#f59e0b;font-size:13px;font-weight:600;text-decoration:none;">
+        ${isFr ? "Voir le rapport IA complet &rarr;" : "View full AI report &rarr;"}
+      </a>
+    </div>`;
+  }
 
   const gapBlock = gapInsight
     ? `<div style="border-top:1px solid rgba(255,255,255,0.08);margin-top:24px;padding-top:24px;">
@@ -137,6 +181,7 @@ function buildHtml(opts: SummaryEmailOptions): string {
 
           ${scoresBlock}
           ${responseCount > 0 ? gapBlock : ""}
+          ${aiBlock}
 
           <!-- CTA -->
           <div style="margin-top:28px;">

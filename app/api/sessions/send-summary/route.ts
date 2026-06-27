@@ -78,14 +78,33 @@ export async function POST(req: NextRequest) {
         ? generateGapInsight(averages, reflection)
         : null;
 
+    const presenterLocale = (presenter.locale as string | undefined) ?? "en";
+    const dateLocaleStr = presenterLocale === "fr" ? "fr-FR" : "en-GB";
     const createdAt: Date | undefined = session.createdAt?.toDate?.();
     const sessionDate = createdAt
-      ? createdAt.toLocaleDateString("en-GB", {
+      ? createdAt.toLocaleDateString(dateLocaleStr, {
           day: "numeric",
           month: "long",
           year: "numeric",
         })
       : "";
+
+    // Fetch AI assessment if this session has one
+    let aiInsights = null;
+    if (session.aiAssessmentId) {
+      const aiSnap = await db.collection("ai_assessments").doc(session.aiAssessmentId as string).get();
+      if (aiSnap.exists) {
+        const ai = aiSnap.data()!;
+        if (ai.status === "complete" && ai.scores && ai.summary) {
+          aiInsights = {
+            assessmentId: aiSnap.id,
+            summary: ai.summary as string,
+            scores: ai.scores as Record<string, number>,
+            primaryTip: (ai.tips as Array<{ dimension: string; tip: string }> | undefined)?.[0] ?? undefined,
+          };
+        }
+      }
+    }
 
     await sendSummaryEmail({
       to: email,
@@ -97,6 +116,8 @@ export async function POST(req: NextRequest) {
       overallAvg,
       gapInsight,
       sessionUrl: `${process.env.APP_URL}/sessions/${sessionId}`,
+      aiInsights,
+      locale: presenterLocale,
     });
 
     await db.collection("sessions").doc(sessionId).update({ summarySent: true });
