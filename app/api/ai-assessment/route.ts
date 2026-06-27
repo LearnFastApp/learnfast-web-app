@@ -6,8 +6,10 @@ export const dynamic = "force-dynamic";
 
 const FREE_LIMIT = 0;
 const LITE_LIMIT = 3;
+const ADMIN_UIDS = new Set(["zuFmYCIaGLViRSc7LXFwej6wql22"]);
 
 async function checkGate(uid: string): Promise<{ allowed: boolean; reason?: string }> {
+  if (ADMIN_UIDS.has(uid)) return { allowed: true };
   const db = getAdminDb();
   const presenterSnap = await db.collection("presenters").doc(uid).get();
   if (!presenterSnap.exists) return { allowed: false, reason: "no_presenter" };
