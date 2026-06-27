@@ -3,6 +3,7 @@ import { Timestamp } from "firebase-admin/firestore";
 import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
 import { getTranscription, countFillerWords } from "@/lib/assemblyai-client";
 import { analyseTranscript, PriorAssessmentContext, AssessmentScores } from "@/lib/ai-assessment-analysis";
+import { dispatchSessionSummary } from "@/lib/session-summary";
 
 export const dynamic = "force-dynamic";
 
@@ -125,5 +126,26 @@ export async function GET(
   };
 
   await docRef.update(update);
+
+  // If this assessment is linked to a session that has a pending or unsent summary,
+  // send it now that we have the AI insights ready.
+  if (data.sessionId) {
+    try {
+      const sessionSnap = await db.collection("sessions").doc(data.sessionId as string).get();
+      const session = sessionSnap.data();
+      if (sessionSnap.exists && (!session?.summarySent || session?.summaryPendingAi)) {
+        await dispatchSessionSummary(data.sessionId as string, {
+          assessmentId: docRef.id,
+          summary: analysis.summary,
+          scores: analysis.scores as Record<string, number>,
+          primaryTip: analysis.tips?.[0],
+        });
+      }
+    } catch (err) {
+      // Non-fatal — email failure shouldn't break the assessment response
+      console.error("[ai-assessment/get] Failed to dispatch pending session summary:", err);
+    }
+  }
+
   return NextResponse.json({ ...update });
 }
