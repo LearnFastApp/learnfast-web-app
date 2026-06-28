@@ -57,6 +57,21 @@ gcloud scheduler jobs create http activation-nudge \
   2>&1 || echo "  (already exists — skipping)"
 
 echo ""
+echo "Creating: guest-nurture (daily at 11:00 UTC)"
+gcloud scheduler jobs create http guest-nurture \
+  --project="$PROJECT" \
+  --location="$REGION" \
+  --schedule="0 11 * * *" \
+  --uri="$APP_URL/api/cron/guest-nurture" \
+  --http-method=POST \
+  --headers="Authorization=Bearer $CRON_SECRET,Content-Type=application/json" \
+  --message-body='{}' \
+  --time-zone="UTC" \
+  --attempt-deadline="5m" \
+  --description="Send Day 2 and Day 5 nurture emails to unconverted guest assessment users" \
+  2>&1 || echo "  (already exists — skipping)"
+
+echo ""
 echo "Done. Current jobs:"
 gcloud scheduler jobs list --project="$PROJECT" --location="$REGION" \
   --format="table(name.basename(),schedule,state,lastAttemptTime)"

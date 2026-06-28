@@ -535,3 +535,211 @@ export async function sendWebinarDigestEmail(opts: WebinarDigestOptions) {
     html: buildWebinarDigestHtml(opts),
   });
 }
+
+// ── Guest AI Assessment Emails ────────────────────────────────────────────────
+
+export async function sendGuestInitiatedEmail(to: string, resultsUrl: string) {
+  const from = `LearnFast <${process.env.GMAIL_USER}>`;
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Your AI coaching is being prepared</title></head>
+<body style="background:#05070d;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center" style="padding:40px 16px;">
+      <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+
+        <tr><td style="padding-bottom:28px;">
+          <p style="color:#ffffff;font-size:18px;font-weight:700;margin:0;letter-spacing:-0.02em;">LearnFast</p>
+          <p style="color:#334155;font-size:11px;margin:3px 0 0;text-transform:uppercase;letter-spacing:0.08em;">AI Presentation Coach</p>
+        </td></tr>
+
+        <tr><td style="background:#111827;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:36px;">
+          <div style="display:inline-block;background:#f59e0b14;border:1px solid #f59e0b33;border-radius:12px;padding:12px;margin-bottom:20px;">
+            <span style="font-size:28px;">🧠</span>
+          </div>
+          <h1 style="color:#ffffff;font-size:22px;font-weight:700;margin:0 0 10px;line-height:1.3;">
+            Your AI coaching is being prepared
+          </h1>
+          <p style="color:#94a3b8;font-size:14px;margin:0 0 28px;line-height:1.6;">
+            We're transcribing your recording and scoring it across five research-backed dimensions. This usually takes <strong style="color:#e2e8f0;">1–3 minutes</strong>.
+          </p>
+
+          <div style="background:#0f1424;border-radius:12px;padding:20px;margin-bottom:28px;">
+            <p style="color:#64748b;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 12px;">You're being scored on</p>
+            <table cellpadding="0" cellspacing="0">
+              <tr><td style="padding:4px 0;color:#8b5cf6;font-size:13px;font-weight:600;width:110px;">Clarity</td><td style="padding:4px 0;color:#64748b;font-size:12px;">Cognitive Load Theory · Sweller, 1988</td></tr>
+              <tr><td style="padding:4px 0;color:#f59e0b;font-size:13px;font-weight:600;">Energy</td><td style="padding:4px 0;color:#64748b;font-size:12px;">Vocal Dynamism Research · Burgoon &amp; Saine, 1978</td></tr>
+              <tr><td style="padding:4px 0;color:#22d3ee;font-size:13px;font-weight:600;">Engagement</td><td style="padding:4px 0;color:#64748b;font-size:12px;">Narrative Transportation Theory · Green &amp; Brock, 2000</td></tr>
+              <tr><td style="padding:4px 0;color:#34d399;font-size:13px;font-weight:600;">Understanding</td><td style="padding:4px 0;color:#64748b;font-size:12px;">Dual Coding Theory · Paivio, 1971</td></tr>
+              <tr><td style="padding:4px 0;color:#f472b6;font-size:13px;font-weight:600;">Connection</td><td style="padding:4px 0;color:#64748b;font-size:12px;">Rapport Theory · Tickle-Degnen &amp; Rosenthal, 1990</td></tr>
+            </table>
+          </div>
+
+          <a href="${resultsUrl}"
+             style="background:#f59e0b;color:#000000;text-decoration:none;font-size:15px;font-weight:700;padding:14px 28px;border-radius:12px;display:inline-block;letter-spacing:-0.01em;">
+            View my results &rarr;
+          </a>
+          <p style="color:#475569;font-size:11px;margin:16px 0 0;">
+            Bookmark this link — it's your permanent results page.
+          </p>
+        </td></tr>
+
+        <tr><td style="padding:24px 0 0;text-align:center;">
+          <p style="color:#1e293b;font-size:11px;margin:0;">
+            LearnFast · AI-powered presentation coaching · <a href="https://learnfastapp.com" style="color:#1e293b;">learnfastapp.com</a>
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+  await getTransporter().sendMail({
+    from,
+    to,
+    subject: "Your AI presentation coaching is ready in 1–3 minutes",
+    html,
+  });
+}
+
+export interface GuestNurtureDay2Options {
+  to: string;
+  resultsUrl: string;
+  archetypeName: string;
+  archetypeEmoji: string;
+  archetypeTagline: string;
+  lowestDimension: string;
+  lowestScore: number;
+}
+
+export async function sendGuestNurtureDay2Email(opts: GuestNurtureDay2Options) {
+  const from = `LearnFast <${process.env.GMAIL_USER}>`;
+  const { to, resultsUrl, archetypeName, archetypeEmoji, archetypeTagline, lowestDimension, lowestScore } = opts;
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Your presenter archetype</title></head>
+<body style="background:#05070d;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center" style="padding:40px 16px;">
+      <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+
+        <tr><td style="padding-bottom:28px;">
+          <p style="color:#ffffff;font-size:18px;font-weight:700;margin:0;">LearnFast</p>
+          <p style="color:#334155;font-size:11px;margin:3px 0 0;text-transform:uppercase;letter-spacing:0.08em;">Your AI Coach</p>
+        </td></tr>
+
+        <tr><td style="background:#111827;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:36px;">
+          <p style="color:#64748b;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;">Based on your AI assessment</p>
+          <h1 style="color:#ffffff;font-size:22px;font-weight:700;margin:0 0 4px;">
+            You are: ${archetypeEmoji} ${archetypeName}
+          </h1>
+          <p style="color:#a78bfa;font-size:13px;margin:0 0 24px;font-style:italic;">"${archetypeTagline}"</p>
+
+          <div style="background:#0f1424;border-radius:12px;padding:20px;margin-bottom:24px;">
+            <p style="color:#64748b;font-size:12px;margin:0 0 8px;">Your biggest growth opportunity right now</p>
+            <p style="color:#f59e0b;font-size:20px;font-weight:700;margin:0 0 4px;">${lowestDimension} · ${lowestScore}/100</p>
+            <p style="color:#64748b;font-size:12px;margin:0;">Sign up free to get a personalised learning path for this dimension.</p>
+          </div>
+
+          <p style="color:#94a3b8;font-size:14px;margin:0 0 28px;line-height:1.6;">
+            Your full report — scores, coaching tips, transcript highlights and vocal statistics — is waiting for you. Create a free account to save it to your dashboard and track your progress over time.
+          </p>
+
+          <table cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+            <tr>
+              <td style="padding-right:12px;">
+                <a href="${resultsUrl}"
+                   style="background:#1e293b;border:1px solid rgba(255,255,255,0.12);color:#e2e8f0;text-decoration:none;font-size:14px;font-weight:600;padding:12px 20px;border-radius:10px;display:inline-block;">
+                  View my results
+                </a>
+              </td>
+              <td>
+                <a href="${resultsUrl}?signup=1"
+                   style="background:#7c3aed;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 20px;border-radius:10px;display:inline-block;">
+                  Save results free &rarr;
+                </a>
+              </td>
+            </tr>
+          </table>
+
+          <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:20px;margin-top:4px;">
+            <p style="color:#334155;font-size:11px;margin:0;">Free accounts get 3 AI assessments per month, full analytics and a personalised learning feed.</p>
+          </div>
+        </td></tr>
+
+        <tr><td style="padding:24px 0 0;text-align:center;">
+          <p style="color:#1e293b;font-size:11px;margin:0;">LearnFast · <a href="https://learnfastapp.com" style="color:#1e293b;">learnfastapp.com</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+  await getTransporter().sendMail({
+    from,
+    to,
+    subject: `You are ${archetypeEmoji} ${archetypeName} — here's what that means for your presenting`,
+    html,
+  });
+}
+
+export async function sendGuestNurtureDay5Email(to: string, resultsUrl: string) {
+  const from = `LearnFast <${process.env.GMAIL_USER}>`;
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Your results are still waiting</title></head>
+<body style="background:#05070d;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center" style="padding:40px 16px;">
+      <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+
+        <tr><td style="padding-bottom:28px;">
+          <p style="color:#ffffff;font-size:18px;font-weight:700;margin:0;">LearnFast</p>
+          <p style="color:#334155;font-size:11px;margin:3px 0 0;text-transform:uppercase;letter-spacing:0.08em;">AI Presentation Coach</p>
+        </td></tr>
+
+        <tr><td style="background:#111827;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:36px;">
+          <h1 style="color:#ffffff;font-size:21px;font-weight:700;margin:0 0 12px;line-height:1.3;">
+            Your AI coaching results are still saved
+          </h1>
+          <p style="color:#94a3b8;font-size:14px;margin:0 0 24px;line-height:1.6;">
+            Most presenters who upload a recording tell us it's the first time they've had <em>honest, objective</em> feedback on how they come across. Not "that was great" — actual scores, actual evidence, actual tips.
+          </p>
+
+          <div style="background:#0f1424;border-radius:12px;padding:20px;margin-bottom:28px;">
+            <p style="color:#64748b;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 12px;">What a free account gives you</p>
+            <table cellpadding="0" cellspacing="0" width="100%">
+              <tr><td style="padding:6px 0;color:#4ade80;font-size:13px;width:20px;">✓</td><td style="padding:6px 0;color:#94a3b8;font-size:13px;">Your full AI report saved permanently</td></tr>
+              <tr><td style="padding:6px 0;color:#4ade80;font-size:13px;">✓</td><td style="padding:6px 0;color:#94a3b8;font-size:13px;">3 AI assessments per month, free</td></tr>
+              <tr><td style="padding:6px 0;color:#4ade80;font-size:13px;">✓</td><td style="padding:6px 0;color:#94a3b8;font-size:13px;">Progress tracking across all your sessions</td></tr>
+              <tr><td style="padding:6px 0;color:#4ade80;font-size:13px;">✓</td><td style="padding:6px 0;color:#94a3b8;font-size:13px;">Live audience feedback for your next presentation</td></tr>
+              <tr><td style="padding:6px 0;color:#4ade80;font-size:13px;">✓</td><td style="padding:6px 0;color:#94a3b8;font-size:13px;">Personalised resources matched to your lowest score</td></tr>
+            </table>
+          </div>
+
+          <a href="${resultsUrl}?signup=1"
+             style="background:#7c3aed;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 28px;border-radius:12px;display:inline-block;letter-spacing:-0.01em;">
+            Create my free account &rarr;
+          </a>
+
+          <p style="color:#475569;font-size:12px;margin:16px 0 0;">
+            Or <a href="${resultsUrl}" style="color:#64748b;">view your results without signing up</a> — they'll be available for 30 days.
+          </p>
+        </td></tr>
+
+        <tr><td style="padding:24px 0 0;text-align:center;">
+          <p style="color:#1e293b;font-size:11px;margin:0;">LearnFast · <a href="https://learnfastapp.com" style="color:#1e293b;">learnfastapp.com</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+  await getTransporter().sendMail({
+    from,
+    to,
+    subject: "Your LearnFast results are still there — and so is the offer",
+    html,
+  });
+}

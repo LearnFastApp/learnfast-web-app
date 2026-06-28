@@ -4,5 +4,9 @@ service firebase.storage {
     match /ai-recordings/{allPaths=**} {
       allow read, write: if request.auth != null;
     }
+    match /guest-recordings/{guestUid}/{allPaths=**} {
+      allow write: if request.auth != null && request.auth.uid == guestUid;
+      allow read: if false;
+    }
   }
 }

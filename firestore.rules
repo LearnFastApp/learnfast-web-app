@@ -45,6 +45,14 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /guest_rate_limits/{emailHash} {
+      allow read, write: if false;
+    }
+
+    match /guest_token_index/{token} {
+      allow read, write: if false;
+    }
+
     match /resource_cache/{dimension} {
       allow read, write: if false;
     }

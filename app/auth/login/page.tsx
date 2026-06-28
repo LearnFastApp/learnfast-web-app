@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Image from "next/image";
 import {
   createUserWithEmailAndPassword,
@@ -10,15 +10,18 @@ import {
   updateProfile,
 } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
 import { INDUSTRIES } from "@/lib/industries";
 
 type Mode = "signin" | "signup" | "reset";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("signin");
+  const searchParams = useSearchParams();
+  const [mode, setMode] = useState<Mode>(
+    searchParams.get("mode") === "signup" ? "signup" : "signin"
+  );
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -115,8 +118,12 @@ export default function LoginPage() {
           },
           { merge: true }
         );
+        const claimToken = searchParams.get("claim");
+        const verifyRedirect = claimToken
+          ? `${window.location.origin}/auth/login?claim=${claimToken}`
+          : `${window.location.origin}/auth/login`;
         await sendEmailVerification(result.user, {
-          url: `${window.location.origin}/auth/login`,
+          url: verifyRedirect,
         });
         setVerificationSent(true);
         return;
@@ -126,6 +133,20 @@ export default function LoginPage() {
           await auth.signOut();
           setVerifyNeeded(true);
           return;
+        }
+        // Claim a guest assessment if ?claim=<token> is in the URL
+        const claimToken = searchParams.get("claim");
+        if (claimToken) {
+          try {
+            const idToken = await result.user.getIdToken();
+            await fetch("/api/guest-claim", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+              body: JSON.stringify({ guestToken: claimToken }),
+            });
+          } catch {
+            // Non-fatal — assessment stays as guest
+          }
         }
       }
       router.replace("/dashboard");
@@ -389,5 +410,13 @@ export default function LoginPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }
