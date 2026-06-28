@@ -9,6 +9,9 @@ export const dynamic = "force-dynamic";
 const APP_URL = process.env.APP_URL ?? "https://learnfastapp.com";
 const MAX_FILE_BYTES = 50 * 1024 * 1024; // 50 MB — well above any 90s audio
 
+// Emails that bypass the one-per-email rate limit (admin / testing)
+const RATE_LIMIT_BYPASS = new Set(["physicalperformance@icloud.com"]);
+
 function hashEmail(email: string): string {
   return createHash("sha256").update(email.toLowerCase().trim()).digest("hex");
 }
@@ -36,12 +39,14 @@ export async function POST(req: NextRequest) {
 
   const db = getAdminDb();
   const emailHash = hashEmail(email);
+  const isAdmin = RATE_LIMIT_BYPASS.has(email);
 
-  // One per email, forever
-  const rateLimitRef = db.collection("guest_rate_limits").doc(emailHash);
-  const rateLimitSnap = await rateLimitRef.get();
-  if (rateLimitSnap.exists) {
-    return NextResponse.json({ error: "already_used" }, { status: 429 });
+  if (!isAdmin) {
+    // One per email, forever
+    const rateLimitSnap = await db.collection("guest_rate_limits").doc(emailHash).get();
+    if (rateLimitSnap.exists) {
+      return NextResponse.json({ error: "already_used" }, { status: 429 });
+    }
   }
 
   const guestToken = crypto.randomUUID();
@@ -71,8 +76,10 @@ export async function POST(req: NextRequest) {
     createdAt: now,
   });
 
-  // Consume rate limit slot before AssemblyAI so failures still use the quota
-  await rateLimitRef.set({ emailHash, createdAt: now });
+  // Consume rate limit slot before AssemblyAI so failures still use the quota (skip for admins)
+  if (!isAdmin) {
+    await db.collection("guest_rate_limits").doc(emailHash).set({ emailHash, createdAt: now });
+  }
 
   // Upload buffer directly to AssemblyAI and submit (no Firebase Storage needed)
   try {
