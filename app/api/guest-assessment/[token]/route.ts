@@ -95,7 +95,7 @@ export async function GET(
       positivePercent,
       neutralPercent,
       negativePercent,
-      locale: "en",
+      locale: transcript.language_code ?? "en",
       industry: null,
       priorAssessments: [],
     });
