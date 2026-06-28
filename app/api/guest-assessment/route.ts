@@ -2,33 +2,37 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { Timestamp } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { submitTranscription } from "@/lib/assemblyai-client";
+import { uploadAndSubmitTranscription } from "@/lib/assemblyai-client";
 import { sendGuestInitiatedEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
 const APP_URL = process.env.APP_URL ?? "https://learnfastapp.com";
+const MAX_FILE_BYTES = 50 * 1024 * 1024; // 50 MB — well above any 90s audio
 
 function hashEmail(email: string): string {
   return createHash("sha256").update(email.toLowerCase().trim()).digest("hex");
 }
 
 export async function POST(req: NextRequest) {
-  let email: string, downloadUrl: string, fileName: string;
+  let email: string;
+  let fileBuffer: Buffer;
+  let fileName: string;
+
   try {
-    const body = await req.json();
-    email = typeof body.email === "string" ? body.email.toLowerCase().trim() : "";
-    downloadUrl = typeof body.downloadUrl === "string" ? body.downloadUrl : "";
-    fileName = typeof body.fileName === "string" ? body.fileName : "recording";
+    const formData = await req.formData();
+    email = ((formData.get("email") as string) ?? "").toLowerCase().trim();
+    const file = formData.get("file") as File | null;
+    if (!file) return NextResponse.json({ error: "missing_file" }, { status: 400 });
+    if (file.size > MAX_FILE_BYTES) return NextResponse.json({ error: "file_too_large" }, { status: 400 });
+    fileName = file.name || "recording";
+    fileBuffer = Buffer.from(await file.arrayBuffer());
   } catch {
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   }
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: "invalid_email" }, { status: 400 });
-  }
-  if (!downloadUrl) {
-    return NextResponse.json({ error: "missing_url" }, { status: 400 });
   }
 
   const db = getAdminDb();
@@ -62,21 +66,21 @@ export async function POST(req: NextRequest) {
     scores: null,
   });
 
-  // Token index for O(1) lookup by token
+  // Token index for O(1) lookup
   await db.collection("guest_token_index").doc(guestToken).set({
     assessmentId: ref.id,
     createdAt: now,
   });
 
-  // Consume rate limit slot before AssemblyAI so failures still count
+  // Consume rate limit slot before AssemblyAI so failures still use the quota
   await rateLimitRef.set({ emailHash, createdAt: now });
 
-  // Submit to AssemblyAI
+  // Upload buffer directly to AssemblyAI and submit (no Firebase Storage needed)
   try {
-    const transcriptId = await submitTranscription(downloadUrl);
+    const transcriptId = await uploadAndSubmitTranscription(fileBuffer);
     await ref.update({ assemblyAiId: transcriptId, status: "processing" });
   } catch (err) {
-    console.error("[guest-assessment] AssemblyAI submit failed:", err);
+    console.error("[guest-assessment] AssemblyAI upload/submit failed:", err);
     await ref.update({ status: "failed", error: String(err) });
     return NextResponse.json({ error: "transcription_failed" }, { status: 500 });
   }

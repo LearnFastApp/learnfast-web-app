@@ -2,9 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { signInWithCustomToken } from "firebase/auth";
-import { auth, storage } from "@/lib/firebase";
 import {
   Brain,
   Mic,
@@ -262,46 +259,25 @@ export default function TryPage() {
     setErrorMsg("");
 
     try {
-      // Get a temporary Firebase identity for the Storage upload
-      const tokenRes = await fetch("/api/guest-token");
-      if (!tokenRes.ok) throw new Error("Failed to get upload token");
-      const { customToken, guestUid } = await tokenRes.json() as { customToken: string; guestUid: string };
-
-      await signInWithCustomToken(auth, customToken);
-
       const fileName =
         tab === "record"
           ? `recording-${Date.now()}.webm`
           : (uploadFile as File).name.replace(/[^a-zA-Z0-9._-]/g, "_");
 
-      const path = `guest-recordings/${guestUid}/${Date.now()}-${fileName}`;
-      const fileRef = storageRef(storage, path);
-      const contentType = blob.type || "audio/webm";
-      const task = uploadBytesResumable(fileRef, blob, { contentType });
+      // Send file directly to the API route — no Firebase Storage or auth needed
+      const formData = new FormData();
+      formData.append("email", trimmedEmail);
+      formData.append("file", blob, fileName);
 
-      await new Promise<void>((resolve, reject) => {
-        task.on(
-          "state_changed",
-          (snap) =>
-            setUploadProgress(
-              Math.round((snap.bytesTransferred / snap.totalBytes) * 100)
-            ),
-          reject,
-          resolve
-        );
-      });
+      // Show indeterminate progress while uploading to our server
+      setUploadProgress(30);
 
-      const downloadUrl = await getDownloadURL(task.snapshot.ref);
-
-      // Sign out the anonymous session — we don't need it anymore
-      await auth.signOut().catch(() => {});
-
-      // Create the guest assessment
       const res = await fetch("/api/guest-assessment", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmedEmail, downloadUrl, fileName }),
+        body: formData,
       });
+
+      setUploadProgress(100);
 
       const data = (await res.json()) as { error?: string };
 
@@ -589,7 +565,7 @@ export default function TryPage() {
             {pageStage === "submitting" ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                {uploadProgress < 100 ? `Uploading ${uploadProgress}%…` : "Submitting…"}
+                Uploading…
               </>
             ) : (
               <>

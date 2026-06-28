@@ -6,6 +6,19 @@ function getClient() {
   return new AssemblyAI({ apiKey: key });
 }
 
+export async function uploadAndSubmitTranscription(buffer: Buffer): Promise<string> {
+  const client = getClient();
+  const uploadUrl = await client.files.upload(buffer);
+  const transcript = await client.transcripts.submit({
+    audio: uploadUrl,
+    speech_models: ["universal-2"],
+    sentiment_analysis: true,
+    auto_highlights: true,
+    disfluencies: true,
+  });
+  return transcript.id;
+}
+
 export async function submitTranscription(audioUrl: string): Promise<string> {
   const client = getClient();
   const transcript = await client.transcripts.submit({
