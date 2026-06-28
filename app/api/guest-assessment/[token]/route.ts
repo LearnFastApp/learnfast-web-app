@@ -63,6 +63,19 @@ export async function GET(
     return NextResponse.json({ status: "processing" });
   }
 
+  // Atomically claim analysis slot — prevents duplicate Claude calls + emails
+  // when multiple poll requests arrive simultaneously
+  const claimed = await db.runTransaction(async (tx) => {
+    const fresh = await tx.get(docRef);
+    const s = fresh.data()?.status;
+    if (s !== "processing") return false;
+    tx.update(docRef, { status: "analyzing" });
+    return true;
+  });
+  if (!claimed) {
+    return NextResponse.json({ status: "processing" });
+  }
+
   // Enforce 90-second limit server-side
   const audioDurationSeconds = transcript.audio_duration ?? 0;
   if (audioDurationSeconds > MAX_DURATION_SECONDS) {
