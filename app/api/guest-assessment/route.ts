@@ -3,7 +3,6 @@ import { createHash } from "crypto";
 import { Timestamp } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { uploadAndSubmitTranscription } from "@/lib/assemblyai-client";
-import { sendGuestInitiatedEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -85,14 +84,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "transcription_failed" }, { status: 500 });
   }
 
-  // Send email with the results link
-  const resultsUrl = `${APP_URL}/try/${guestToken}`;
-  try {
-    await sendGuestInitiatedEmail(email, resultsUrl);
-    await ref.update({ guestEmailSent: true });
-  } catch (err) {
-    console.error("[guest-assessment] Email send failed:", err);
-  }
-
-  return NextResponse.json({ success: true });
+  // Return the token so the client can redirect straight to the results page
+  return NextResponse.json({ success: true, token: guestToken });
 }

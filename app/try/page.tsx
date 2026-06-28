@@ -13,7 +13,6 @@ import {
   AlertCircle,
   Loader2,
   Mail,
-  Check,
 } from "lucide-react";
 
 type Tab = "record" | "upload";
@@ -66,7 +65,6 @@ export default function TryPage() {
   const [tab, setTab] = useState<Tab>("record");
   const [email, setEmail] = useState("");
   const [pageStage, setPageStage] = useState<PageStage>("form");
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const [dragOver, setDragOver] = useState(false);
 
@@ -255,7 +253,6 @@ export default function TryPage() {
     }
 
     setPageStage("submitting");
-    setUploadProgress(0);
     setErrorMsg("");
 
     try {
@@ -269,17 +266,12 @@ export default function TryPage() {
       formData.append("email", trimmedEmail);
       formData.append("file", blob, fileName);
 
-      // Show indeterminate progress while uploading to our server
-      setUploadProgress(30);
-
       const res = await fetch("/api/guest-assessment", {
         method: "POST",
         body: formData,
       });
 
-      setUploadProgress(100);
-
-      const data = (await res.json()) as { error?: string };
+      const data = (await res.json()) as { error?: string; token?: string };
 
       if (!res.ok) {
         if (data.error === "already_used") {
@@ -295,7 +287,10 @@ export default function TryPage() {
         return;
       }
 
-      setPageStage("submitted");
+      // Redirect straight to results page — it shows a processing spinner until Claude finishes
+      if (data.token) {
+        window.location.href = `/try/${data.token}`;
+      }
     } catch (err) {
       console.error("[try] submit error:", err);
       setErrorMsg(
@@ -307,37 +302,6 @@ export default function TryPage() {
 
   const hasContent =
     tab === "record" ? recordStage === "preview" : uploadFile !== null;
-
-  // ── Submitted state ─────────────────────────────────────────────────────────
-  if (pageStage === "submitted") {
-    return (
-      <main className="min-h-screen bg-[#05070d] flex items-center justify-center p-6">
-        <div className="w-full max-w-md text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-green-500/10 border border-green-500/20 mb-6">
-            <Check className="h-8 w-8 text-green-400" />
-          </div>
-          <h1 className="text-2xl font-bold text-white mb-3">Check your inbox</h1>
-          <p className="text-slate-400 text-sm leading-relaxed mb-2">
-            We&apos;ve sent your results link to <strong className="text-white">{email}</strong>.
-          </p>
-          <p className="text-slate-500 text-sm mb-8">
-            Your AI coaching report will be ready in 1–3 minutes.
-          </p>
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 text-left">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">What you&apos;ll receive</p>
-            <ul className="space-y-2">
-              {DIM_NAMES.map((name, i) => (
-                <li key={name} className="flex items-center gap-2 text-sm">
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: DIM_COLORS[i] }} />
-                  <span className="text-slate-400">{name} score with research-backed rationale</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </main>
-    );
-  }
 
   // ── Main form ────────────────────────────────────────────────────────────────
   return (
@@ -509,7 +473,7 @@ export default function TryPage() {
               {uploadFile ? (
                 <>
                   <div className="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center mb-3">
-                    <Check className="h-6 w-6 text-green-400" />
+                    <span className="text-green-400 text-xl font-bold">✓</span>
                   </div>
                   <p className="text-sm font-semibold text-white mb-1 truncate max-w-xs">
                     {uploadFile.name}

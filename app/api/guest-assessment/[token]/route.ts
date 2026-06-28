@@ -3,6 +3,10 @@ import { Timestamp } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getTranscription, countFillerWords } from "@/lib/assemblyai-client";
 import { analyseTranscript } from "@/lib/ai-assessment-analysis";
+import { classifyArchetype, ARCHETYPE_DEFS } from "@/lib/archetypes";
+import { sendGuestResultsEmail } from "@/lib/email";
+
+const APP_URL = process.env.APP_URL ?? "https://learnfastapp.com";
 
 export const dynamic = "force-dynamic";
 
@@ -119,6 +123,37 @@ export async function GET(
   };
 
   await docRef.update(update);
+
+  // Send results email now that we have scores (fire-and-forget)
+  const guestEmail = data.guestEmail as string | undefined;
+  if (guestEmail && !data.guestEmailSent) {
+    try {
+      const scores = analysis.scores as unknown as Record<string, number>;
+      const archetypeKey = classifyArchetype(
+        scores as unknown as Parameters<typeof classifyArchetype>[0],
+        null
+      );
+      const arch = ARCHETYPE_DEFS[archetypeKey];
+      const sortedDims = Object.entries(scores).sort((a, b) => a[1] - b[1]);
+      const [lowestKey, lowestScore] = sortedDims[0];
+      await sendGuestResultsEmail({
+        to: guestEmail,
+        resultsUrl: `${APP_URL}/try/${token}`,
+        archetypeName: arch.name.en,
+        archetypeEmoji: arch.emoji,
+        archetypeTagline: arch.tagline.en,
+        lowestDimension: lowestKey.charAt(0).toUpperCase() + lowestKey.slice(1),
+        lowestScore: Math.round(lowestScore),
+        overallScore: Math.round(
+          Object.values(scores).reduce((a, b) => a + b, 0) /
+            Object.values(scores).length
+        ),
+      });
+      await docRef.update({ guestEmailSent: true });
+    } catch (err) {
+      console.error("[guest-assessment/token] Results email failed:", err);
+    }
+  }
 
   return NextResponse.json({ ...update, assessmentId, guestToken: token });
 }
