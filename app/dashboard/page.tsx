@@ -24,6 +24,7 @@ import {
 import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import CreateSessionModal from "@/components/create-session-modal";
+import CreateRehearsalModal from "@/components/create-rehearsal-modal";
 import UpgradeModal from "@/components/upgrade-modal";
 import MobileNav from "@/components/mobile-nav";
 import OnboardingModal from "@/components/onboarding-modal";
@@ -68,6 +69,7 @@ export default function Dashboard() {
   const router = useRouter();
   const [locale, setLocale] = useState<"en" | "fr">("en");
   const [showModal, setShowModal] = useState(false);
+  const [showRehearsalModal, setShowRehearsalModal] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<"free" | "active" | "pilot">("free");
@@ -346,6 +348,12 @@ export default function Dashboard() {
           locale={locale}
         />
       )}
+      {showRehearsalModal && (
+        <CreateRehearsalModal
+          onClose={() => setShowRehearsalModal(false)}
+          locale={locale}
+        />
+      )}
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} locale={locale} />}
       {showOnboarding && (
         <OnboardingModal
@@ -491,19 +499,31 @@ export default function Dashboard() {
                 </button>
               </div>
 
-              <button
-                onClick={() => {
-                  if (!isPaidOrPilot && sessions.length >= 2) {
-                    setShowUpgrade(true);
-                  } else {
-                    setShowModal(true);
-                  }
-                }}
-                className="flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-400"
-              >
-                <Plus className="h-5 w-5" />
-                <span className="hidden sm:inline">{t.createSession}</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    if (!isPaidOrPilot) { setShowUpgrade(true); } else { setShowRehearsalModal(true); }
+                  }}
+                  className="flex items-center gap-2 rounded-xl border border-violet-500/40 px-4 py-3 text-sm font-semibold text-violet-300 hover:bg-violet-500/10 transition"
+                  title="Rehearsal Mode"
+                >
+                  <span className="hidden sm:inline">{isFr ? "Répétition" : "Rehearse"}</span>
+                  <span className="sm:hidden">🎙️</span>
+                </button>
+                <button
+                  onClick={() => {
+                    if (!isPaidOrPilot && sessions.length >= 2) {
+                      setShowUpgrade(true);
+                    } else {
+                      setShowModal(true);
+                    }
+                  }}
+                  className="flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-400"
+                >
+                  <Plus className="h-5 w-5" />
+                  <span className="hidden sm:inline">{t.createSession}</span>
+                </button>
+              </div>
             </div>
           </header>
 

@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { LANGUAGE_NAMES } from "./language-names";
 
 const DIMENSIONS = ["clarity", "energy", "engagement", "understanding", "connection"] as const;
 type Dimension = (typeof DIMENSIONS)[number];
@@ -63,21 +64,6 @@ export async function analyseTranscript(opts: {
     : "0";
   const durationMins = Math.round(opts.audioDurationSeconds / 60);
 
-  const LANGUAGE_NAMES: Record<string, string> = {
-    en: "English", fr: "French (français)", de: "German (Deutsch)",
-    es: "Spanish (español)", it: "Italian (italiano)", pt: "Portuguese (português)",
-    nl: "Dutch (Nederlands)", sv: "Swedish (svenska)", da: "Danish (dansk)",
-    no: "Norwegian (norsk)", fi: "Finnish (suomi)", pl: "Polish (polski)",
-    cs: "Czech (čeština)", ro: "Romanian (română)", hu: "Hungarian (magyar)",
-    el: "Greek (ελληνικά)", bg: "Bulgarian (български)", hr: "Croatian (hrvatski)",
-    sk: "Slovak (slovenčina)", sl: "Slovenian (slovenščina)", lt: "Lithuanian (lietuvių)",
-    lv: "Latvian (latviešu)", et: "Estonian (eesti)", uk: "Ukrainian (українська)",
-    ru: "Russian (русский)", tr: "Turkish (Türkçe)", ar: "Arabic (العربية)",
-    he: "Hebrew (עברית)", hi: "Hindi (हिन्दी)", ja: "Japanese (日本語)",
-    ko: "Korean (한국어)", zh: "Chinese (中文)", vi: "Vietnamese (tiếng Việt)",
-    id: "Indonesian (Bahasa Indonesia)", ms: "Malay (Bahasa Melayu)", th: "Thai (ภาษาไทย)",
-    ca: "Catalan (català)",
-  };
   const lang = LANGUAGE_NAMES[opts.locale ?? "en"] ?? "English";
 
   const industryCtx = opts.industry

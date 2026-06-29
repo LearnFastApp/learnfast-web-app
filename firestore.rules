@@ -45,6 +45,17 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /rehearsal_sessions/{sessionId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.presenterId;
+      allow write: if false;
+    }
+
+    match /rehearsal_sessions/{sessionId}/takes/{takeId} {
+      allow read: if request.auth != null &&
+        request.auth.uid == get(/databases/$(database)/documents/rehearsal_sessions/$(sessionId)).data.presenterId;
+      allow write: if false;
+    }
+
     match /guest_rate_limits/{emailHash} {
       allow read, write: if false;
     }
