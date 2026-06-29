@@ -343,16 +343,16 @@ export default function LandingPage() {
       </section>
 
       {/* ── INDUSTRY LEADERBOARDS ── */}
-      <section className="py-16 sm:py-20 px-5 lg:px-12 bg-[#0a0b12] border-y border-white/5">
+      <section className="py-16 sm:py-20 px-5 lg:px-12 bg-[#0a0b12] border-y border-white/5 overflow-hidden">
         <div className="max-w-6xl mx-auto">
           <div className="grid gap-10 lg:grid-cols-2 items-start">
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2 mb-4">
                 <span className="h-2 w-2 rounded-full bg-violet-400 shrink-0" />
                 <p className="text-xs font-semibold tracking-[0.25em] text-violet-400 uppercase">Premium Feature</p>
               </div>
-              <h2 className="text-3xl sm:text-5xl font-light text-slate-400 leading-none mb-1">INDUSTRY</h2>
-              <h2 className="text-3xl sm:text-5xl font-black leading-none mb-6">LEADERBOARDS</h2>
+              <h2 className="text-3xl sm:text-4xl font-light text-slate-400 leading-none mb-1">INDUSTRY</h2>
+              <h2 className="text-3xl sm:text-4xl font-black leading-none mb-6">LEADERBOARDS</h2>
               <p className="text-base text-slate-400 leading-relaxed mb-6">
                 See how you rank against peers in your sector. LearnFast builds real normative data from every AI assessment run on the platform — so your score isn't just a number, it's a percentile rank against Sales professionals, Healthcare leaders, Technology engineers and more.
               </p>
@@ -376,7 +376,7 @@ export default function LandingPage() {
             </div>
 
             {/* Leaderboard visual mockup */}
-            <div className="rounded-2xl border border-white/10 bg-[#111827] p-5 font-mono text-xs">
+            <div className="min-w-0 rounded-2xl border border-white/10 bg-[#111827] p-5 font-mono text-xs">
               <div className="flex items-center gap-2 mb-4">
                 <span className="h-2 w-2 rounded-full bg-violet-400" />
                 <span className="text-violet-400 font-sans text-[10px] font-bold tracking-widest uppercase">Sales & Business Development</span>
