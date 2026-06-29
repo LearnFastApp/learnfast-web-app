@@ -2,8 +2,6 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { collection, doc, getDoc, getDocs, orderBy, query } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import {
   ArrowLeft, Mic, UploadCloud, Square, RotateCcw, Loader2,
@@ -96,15 +94,21 @@ function RehearsalPageInner() {
 
   const loadSession = useCallback(async () => {
     if (!user) return;
-    const [sessionSnap, takesSnap] = await Promise.all([
-      getDoc(doc(db, "rehearsal_sessions", sessionId)),
-      getDocs(query(collection(db, "rehearsal_sessions", sessionId, "takes"), orderBy("takeNumber", "asc"))),
-    ]);
-    if (!sessionSnap.exists()) { setPageStage("error"); return; }
-    setSession(sessionSnap.data() as Session);
-    const loadedTakes: Take[] = takesSnap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Take, "id">) }));
-    setTakes(loadedTakes);
-    return loadedTakes;
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/rehearsal/${sessionId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) { setPageStage("error"); return; }
+      const data = await res.json();
+      setSession(data.session as Session);
+      const loadedTakes: Take[] = data.takes as Take[];
+      setTakes(loadedTakes);
+      return loadedTakes;
+    } catch {
+      setPageStage("error");
+      setErrorMsg("Could not load rehearsal. Please check your connection.");
+    }
   }, [user, sessionId]);
 
   useEffect(() => {
