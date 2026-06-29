@@ -129,12 +129,10 @@ export default function LandingPage() {
         <div className="flex items-center gap-2">
           <button onClick={goToLogin} className="text-xs text-slate-400 hover:text-white transition px-3 py-2">Sign in</button>
           <a
-            href="https://ollie-0ffouvku.scoreapp.com"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/try"
             className="hidden md:block text-xs font-bold px-4 py-2.5 text-white rounded-sm transition whitespace-nowrap border border-white/20 hover:border-white/40"
           >
-            FREE LEADERSHIP ASSESSMENT
+            FREE AI ASSESSMENT
           </a>
           <button onClick={goToLogin} className="text-xs font-bold px-4 py-2.5 text-white rounded-sm transition whitespace-nowrap" style={{ backgroundColor: RED }}>
             START FREE →
@@ -164,9 +162,9 @@ export default function LandingPage() {
           <button onClick={goToLogin} className="px-8 py-4 text-sm font-bold tracking-wider text-white rounded-sm transition w-full sm:w-auto" style={{ backgroundColor: RED }}>
             START FREE — 2 SESSIONS ON US
           </button>
-          <button onClick={goToLogin} className="px-8 py-4 text-sm font-semibold text-slate-300 border border-white/20 hover:border-white/40 hover:text-white transition rounded-sm w-full sm:w-auto">
-            SIGN IN →
-          </button>
+          <a href="/try" className="px-8 py-4 text-sm font-semibold text-slate-300 border border-white/20 hover:border-white/40 hover:text-white transition rounded-sm w-full sm:w-auto text-center">
+            TRY FREE — NO ACCOUNT NEEDED →
+          </a>
         </div>
 
         {/* 3-device preview */}
@@ -481,6 +479,43 @@ export default function LandingPage() {
           </button>
         </div>
         <p className="text-xs text-slate-600">2 free sessions · no credit card required</p>
+      </section>
+
+      {/* ── FREE AI ASSESSMENT CTA ── */}
+      <section className="py-20 sm:py-28 px-5 lg:px-12 border-t border-white/5 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(109,40,217,0.12) 0%, transparent 70%)" }} />
+        <div className="max-w-3xl mx-auto text-center relative">
+          <p className="text-xs font-semibold tracking-[0.3em] text-violet-400 uppercase mb-4">No account required</p>
+          <h2 className="text-3xl sm:text-6xl font-light text-slate-400 leading-none mb-1">SEE EXACTLY</h2>
+          <h2 className="text-3xl sm:text-6xl font-black leading-none mb-6">HOW YOU SCORE</h2>
+          <p className="text-base sm:text-lg text-slate-400 leading-relaxed mb-3 max-w-xl mx-auto">
+            Record or upload 90 seconds of any talk, meeting or presentation. Our AI delivers a full coaching report across all five dimensions — free, instant, no signup needed.
+          </p>
+          <p className="text-sm text-slate-500 mb-10">The same AI that powers the full LearnFast platform. No simplified version.</p>
+
+          <div className="grid sm:grid-cols-3 gap-4 mb-10 text-left">
+            {[
+              { emoji: "🎯", title: "Your communication archetype", body: "One of six evidence-based profiles that defines your delivery style and your primary growth lever." },
+              { emoji: "📊", title: "Scores across all 5 dimensions", body: "Clarity, Energy, Engagement, Understanding and Connection — each scored against professional presentation norms." },
+              { emoji: "🧠", title: "Full AI coaching report", body: "Specific rationale for every score, your strongest moments pulled from the transcript, and targeted tips for your lowest dimension." },
+            ].map(({ emoji, title, body }) => (
+              <div key={title} className="rounded-xl border border-white/10 bg-[#0f1118] p-5">
+                <p className="text-2xl mb-3">{emoji}</p>
+                <p className="text-sm font-bold text-white mb-1.5">{title}</p>
+                <p className="text-xs text-slate-500 leading-relaxed">{body}</p>
+              </div>
+            ))}
+          </div>
+
+          <a
+            href="/try"
+            className="inline-block px-10 py-5 text-sm font-bold tracking-wider text-white rounded-sm transition"
+            style={{ backgroundColor: RED }}
+          >
+            GET MY FREE AI SCORE →
+          </a>
+          <p className="mt-4 text-xs text-slate-600">90 seconds · instant results · no credit card</p>
+        </div>
       </section>
 
       {/* ── EDUCATIONAL RESOURCES ── */}
