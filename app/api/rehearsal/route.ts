@@ -5,41 +5,55 @@ import { uploadAndSubmitTranscription } from "@/lib/assemblyai-client";
 
 export const dynamic = "force-dynamic";
 
+const FREE_SESSION_LIMIT = 1;
+const FREE_TAKES_LIMIT = 3;
 const LITE_MONTHLY_LIMIT = 3;
 const LITE_TAKES_LIMIT = 5;
 const ADMIN_UIDS = new Set(["zuFmYCIaGLViRSc7LXFwej6wql22"]);
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
-async function checkGate(uid: string): Promise<{ allowed: boolean; reason?: string }> {
-  if (ADMIN_UIDS.has(uid)) return { allowed: true };
+type Tier = "admin" | "pro" | "lite" | "free";
+
+async function checkGate(uid: string): Promise<{ allowed: boolean; reason?: string; tier: Tier }> {
+  if (ADMIN_UIDS.has(uid)) return { allowed: true, tier: "admin" };
+
   const db = getAdminDb();
   const presenterSnap = await db.collection("presenters").doc(uid).get();
-  if (!presenterSnap.exists) return { allowed: false, reason: "no_presenter" };
+  if (!presenterSnap.exists) return { allowed: false, reason: "no_presenter", tier: "free" };
 
   const data = presenterSnap.data()!;
   const status = data.subscriptionStatus as string;
   const pilotExpiry = data.pilotExpiresAt?.toDate?.() as Date | undefined;
   const isPilot = status === "pilot" && pilotExpiry && pilotExpiry > new Date();
   const isPro = status === "pro";
-  if (isPro || isPilot) return { allowed: true };
-  if (status !== "active") return { allowed: false, reason: "upgrade_required" };
+  if (isPro || isPilot) return { allowed: true, tier: "pro" };
 
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
-
-  const snap = await db.collection("rehearsal_sessions")
-    .where("presenterId", "==", uid)
-    .get();
-  const usedThisMonth = snap.docs.filter((d) => {
-    const createdAt = d.data().createdAt?.toDate?.() as Date | undefined;
-    return createdAt && createdAt >= startOfMonth;
-  }).length;
-
-  if (usedThisMonth >= LITE_MONTHLY_LIMIT) {
-    return { allowed: false, reason: "monthly_limit" };
+  if (status === "active") {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    const snap = await db.collection("rehearsal_sessions")
+      .where("presenterId", "==", uid)
+      .get();
+    const usedThisMonth = snap.docs.filter((d) => {
+      const createdAt = d.data().createdAt?.toDate?.() as Date | undefined;
+      return createdAt && createdAt >= startOfMonth;
+    }).length;
+    if (usedThisMonth >= LITE_MONTHLY_LIMIT) {
+      return { allowed: false, reason: "monthly_limit", tier: "lite" };
+    }
+    return { allowed: true, tier: "lite" };
   }
-  return { allowed: true };
+
+  // Free tier — 1 rehearsal session ever as a taster
+  const freeSnap = await db.collection("rehearsal_sessions")
+    .where("presenterId", "==", uid)
+    .limit(FREE_SESSION_LIMIT + 1)
+    .get();
+  if (freeSnap.size >= FREE_SESSION_LIMIT) {
+    return { allowed: false, reason: "free_limit", tier: "free" };
+  }
+  return { allowed: true, tier: "free" };
 }
 
 export async function GET(req: NextRequest) {
@@ -87,6 +101,10 @@ export async function POST(req: NextRequest) {
   const db = getAdminDb();
   const now = Timestamp.fromDate(new Date());
 
+  const takesLimit = gate.tier === "free" ? FREE_TAKES_LIMIT
+    : gate.tier === "lite" ? LITE_TAKES_LIMIT
+    : null; // null = unlimited
+
   const sessionRef = db.collection("rehearsal_sessions").doc();
   await sessionRef.set({
     presenterId: uid,
@@ -95,6 +113,8 @@ export async function POST(req: NextRequest) {
     createdAt: now,
     status: "active",
     takeCount: 1,
+    takesLimit,
+    tier: gate.tier,
     promotedTakeId: null,
     promotedAssessmentId: null,
   });
@@ -133,6 +153,6 @@ export async function POST(req: NextRequest) {
     sessionId: sessionRef.id,
     takeId: takeRef.id,
     takeNumber: 1,
-    takesLimit: LITE_TAKES_LIMIT,
+    takesLimit,
   });
 }

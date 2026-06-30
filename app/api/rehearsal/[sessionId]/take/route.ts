@@ -5,8 +5,6 @@ import { uploadAndSubmitTranscription } from "@/lib/assemblyai-client";
 
 export const dynamic = "force-dynamic";
 
-const ADMIN_UIDS = new Set(["zuFmYCIaGLViRSc7LXFwej6wql22"]);
-const LITE_TAKES_LIMIT = 5;
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
 export async function POST(
@@ -27,9 +25,9 @@ export async function POST(
 
   const sessionData = sessionSnap.data()!;
   const currentTakeCount = (sessionData.takeCount as number) ?? 1;
+  const takesLimit = sessionData.takesLimit as number | null; // null = unlimited
 
-  const isAdmin = ADMIN_UIDS.has(uid);
-  if (!isAdmin && currentTakeCount >= LITE_TAKES_LIMIT) {
+  if (takesLimit !== null && currentTakeCount >= takesLimit) {
     return NextResponse.json({ error: "takes_limit_reached" }, { status: 403 });
   }
 
@@ -85,6 +83,6 @@ export async function POST(
   return NextResponse.json({
     takeId: takeRef.id,
     takeNumber: newTakeNumber,
-    takesRemaining: isAdmin ? null : LITE_TAKES_LIMIT - newTakeNumber,
+    takesRemaining: takesLimit !== null ? takesLimit - newTakeNumber : null,
   });
 }

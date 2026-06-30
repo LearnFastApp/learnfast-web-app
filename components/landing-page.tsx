@@ -21,6 +21,11 @@ const FEATURES = [
     body: "Upload your recording and receive AI-scored coaching across all five dimensions in 1–3 minutes. Vocal stats, highlight quotes, improvement tips and a full written rationale — all from a single file.",
   },
   {
+    icon: "🎙️",
+    title: "Rehearsal Mode",
+    body: "Practice take by take with Richard Greene-style AI coaching between every attempt. Script improvement suggestions, take-by-take score tracking, and a save-your-best-take flow — built for serious preparation.",
+  },
+  {
     icon: "📡",
     title: "Three-Signal Intelligence",
     body: "Combine AI scores, live audience feedback and your own self-reflection on a single radar. Where the three signals diverge is exactly where your growth lives.",
@@ -39,11 +44,6 @@ const FEATURES = [
     icon: "🎯",
     title: "Dimension-Matched Resources",
     body: "Based on YOUR scores, LearnFast surfaces the most relevant articles, TED Talks, videos and podcasts — matched to your exact development areas, not a generic library.",
-  },
-  {
-    icon: "🔁",
-    title: "Reflective Practice Loop",
-    body: "Self-score alongside your audience, set a focus commitment for your next session, and track progress over time. Continuous improvement, built into every session.",
   },
 ];
 
@@ -189,24 +189,8 @@ export default function LandingPage() {
         </p>
       </div>
 
-      {/* ── WHAT WE DO ── */}
-      <section id="product" className="py-20 sm:py-28 px-5 lg:px-12 max-w-4xl mx-auto text-center">
-        <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4">Feedback Intelligence</p>
-        <h2 className="text-3xl sm:text-6xl font-light text-slate-400 leading-none mb-1">WHAT</h2>
-        <h2 className="text-3xl sm:text-6xl font-black leading-none mb-8">WE DO</h2>
-        <p className="text-base sm:text-lg text-slate-400 leading-relaxed max-w-2xl mx-auto mb-6">
-          LearnFast is an AI-powered presentation coaching platform. Every session generates three independent signals — your AI assessment, your audience's live feedback, and your own self-reflection — combined on a single radar chart to give you the most complete picture of your performance available anywhere.
-        </p>
-        <p className="text-sm text-slate-500 max-w-xl mx-auto mb-10">
-          Then we use your scores to surface curated learning resources, track your progress over time, and benchmark you against professionals in your industry.
-        </p>
-        <button onClick={goToLogin} className="px-8 py-4 text-sm font-bold tracking-wider text-white rounded-sm transition" style={{ backgroundColor: RED }}>
-          START FREE NOW
-        </button>
-      </section>
-
       {/* ── THREE-SIGNAL MODEL ── */}
-      <section className="py-16 sm:py-24 px-5 lg:px-12 bg-[#0a0b12] border-y border-white/5">
+      <section id="product" className="py-16 sm:py-24 px-5 lg:px-12 bg-[#0a0b12] border-y border-white/5">
         <div className="max-w-6xl mx-auto">
           <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4 text-center">Proprietary Methodology</p>
           <h2 className="text-3xl sm:text-5xl font-light text-slate-400 text-center leading-none mb-1">THE THREE-SIGNAL</h2>
@@ -342,6 +326,45 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── REHEARSAL MODE ── */}
+      <section className="py-20 sm:py-28 px-5 lg:px-12 bg-[#0a0b12] border-y border-white/5">
+        <div className="max-w-6xl mx-auto">
+          <div className="rounded-3xl border border-violet-500/20 bg-violet-500/[0.04] p-8 sm:p-12 lg:p-16">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="h-2.5 w-2.5 rounded-full bg-violet-400 shrink-0" />
+              <p className="text-xs font-semibold tracking-[0.25em] text-violet-400 uppercase">Rehearsal Mode</p>
+            </div>
+            <h2 className="text-3xl sm:text-5xl font-light text-slate-300 leading-none mb-1">PRACTICE. GET COACHED.</h2>
+            <h2 className="text-3xl sm:text-5xl font-black leading-none mb-6 text-violet-400">IMPROVE. REPEAT.</h2>
+            <p className="text-base text-slate-400 leading-relaxed max-w-2xl mb-10">
+              Rehearsal Mode turns LearnFast into your personal preparation studio. Record or upload a take, receive specific AI coaching on your weakest dimensions, then go again — with precise direction on exactly what to improve. Take by take, you get better.
+            </p>
+
+            <div className="grid gap-4 sm:grid-cols-2 mb-10">
+              {[
+                ["🎙️", "Take-by-take progression", "Every take is scored and compared directly to your last. Watch your numbers move in real time as your delivery sharpens."],
+                ["🧠", "Coaching between every take", "Not generic tips — specific, high-standard direction. The kind of feedback you'd get from a world-class presentation coach."],
+                ["✏️", "Script improvement suggestions", "Request an AI rewrite of your script targeting your lowest-scoring dimensions. Your voice stays intact — your words get sharper."],
+                ["📌", "Save your best take", "When you've hit your peak, save that take to your assessment history and continue tracking your long-term development."],
+              ].map(([icon, title, desc]) => (
+                <div key={title as string} className="rounded-xl border border-violet-500/10 bg-[#0f1118] p-5">
+                  <p className="text-xl mb-2">{icon}</p>
+                  <p className="text-sm font-bold text-white mb-1">{title as string}</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">{desc as string}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start gap-4">
+              <button onClick={goToLogin} className="px-8 py-4 text-sm font-bold tracking-wider text-white rounded-sm transition" style={{ backgroundColor: RED }}>
+                START REHEARSING FREE →
+              </button>
+              <p className="text-xs text-slate-600 self-center">1 free session · 3 sessions/month on Lite · Unlimited on Pro</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── INDUSTRY LEADERBOARDS ── */}
       <section className="py-16 sm:py-20 px-5 lg:px-12 bg-[#0a0b12] border-y border-white/5 overflow-hidden">
         <div className="max-w-6xl mx-auto">
@@ -433,56 +456,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── SCIENCE METHODOLOGY ── */}
-      <section className="py-16 sm:py-20 px-5 lg:px-12 border-t border-white/5">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center gap-3 mb-6">
-            <span className="h-2 w-2 rounded-full bg-slate-600 shrink-0" />
-            <p className="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">Research Foundation</p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              { dim: "Clarity",       color: "#8b5cf6", title: "Cognitive Load Theory",          author: "Sweller, 1988",                     body: "Excess filler words and unclear structure impose unnecessary mental effort on listeners, reducing comprehension and retention." },
-              { dim: "Energy",        color: "#f59e0b", title: "Vocal Dynamism Research",         author: "Burgoon & Saine, 1978",              body: "Prosodic variation — pitch, pace, pause — signals importance and maintains audience arousal. Monotone delivery is associated with disengagement." },
-              { dim: "Engagement",    color: "#22d3ee", title: "Narrative Transportation Theory", author: "Green & Brock, 2000",                body: "Stories transport audiences into a narrative world, reducing counterarguing and significantly improving recall of key messages." },
-              { dim: "Understanding", color: "#34d399", title: "Dual Coding Theory",              author: "Paivio, 1971",                       body: "Combining verbal explanation with concrete analogies and examples creates dual memory traces, making content far easier to retain." },
-              { dim: "Connection",    color: "#f472b6", title: "Rapport Theory",                  author: "Tickle-Degnen & Rosenthal, 1990",    body: "Attentiveness, positivity and coordinated interaction build rapport. Inclusive language and direct address reduce perceived distance." },
-              { dim: "Scoring",       color: "#94a3b8", title: "Calibrated Scoring Scale",        author: "Professional standards benchmark",    body: "Scores are calibrated to professional presentation norms — not personal encouragement. Most working professionals score between 50–70." },
-            ].map((r) => (
-              <div key={r.dim} className="rounded-xl border border-white/[0.06] bg-[#0a0b12] p-5">
-                <p className="text-[10px] font-mono mb-2" style={{ color: r.color }}>{r.author}</p>
-                <p className="text-sm font-bold text-white mb-1">{r.title}</p>
-                <p className="text-xs text-slate-500 leading-relaxed">{r.body}</p>
-              </div>
-            ))}
-          </div>
-          <p className="text-[11px] text-slate-700 mt-6 text-center">
-            LearnFast scoring criteria are derived from peer-reviewed communication science. Results are generated by Claude claude-sonnet-4-6 using research-calibrated rubrics.
-          </p>
-        </div>
-      </section>
-
-      {/* ── WHY / GET STARTED ── */}
-      <section id="why" className="py-20 sm:py-28 px-5 lg:px-12 text-center bg-[#0a0b12] border-y border-white/5">
-        <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4">Made for Leaders</p>
-        <h2 className="text-3xl sm:text-6xl font-light text-slate-400 leading-none mb-1">GET STARTED WITH</h2>
-        <h2 className="text-3xl sm:text-6xl font-black leading-none mb-8">LEARNFAST TODAY</h2>
-        <p className="max-w-xl mx-auto text-slate-400 leading-relaxed mb-10 text-sm sm:text-base">
-          Whether you are a corporate trainer, team leader, sales professional or university lecturer — every great presenter started somewhere. LearnFast gives you the data, the AI coaching, the industry benchmarks and the resources to improve with every session.
-        </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
-          <button onClick={goToLogin} className="px-10 py-4 text-sm font-bold tracking-wider text-white rounded-sm transition w-full sm:w-auto" style={{ backgroundColor: RED }}>
-            START FREE NOW
-          </button>
-          <button onClick={goToLogin} className="px-10 py-4 text-sm font-semibold border border-white/20 hover:border-white/40 text-slate-300 hover:text-white transition rounded-sm w-full sm:w-auto">
-            SIGN IN →
-          </button>
-        </div>
-        <p className="text-xs text-slate-600">2 free sessions · no credit card required</p>
-      </section>
-
       {/* ── FREE AI ASSESSMENT CTA ── */}
-      <section className="py-20 sm:py-28 px-5 lg:px-12 border-t border-white/5 relative overflow-hidden">
+      <section id="why" className="py-20 sm:py-28 px-5 lg:px-12 border-t border-white/5 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(109,40,217,0.12) 0%, transparent 70%)" }} />
         <div className="max-w-3xl mx-auto text-center relative">
           <p className="text-xs font-semibold tracking-[0.3em] text-violet-400 uppercase mb-4">No account required</p>
@@ -518,33 +493,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── EDUCATIONAL RESOURCES ── */}
-      <section className="py-16 px-5 lg:px-12 border-b border-white/5">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="flex items-start justify-center gap-6 mb-8">
-            <div>
-              <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-3">Learning Resources From</p>
-              <h2 className="text-3xl sm:text-5xl font-light text-slate-400 leading-none mb-1">EDUCATIONAL</h2>
-              <h2 className="text-3xl sm:text-5xl font-black leading-none">PARTNERS</h2>
-            </div>
-            <div className="hidden sm:block">
-              <div
-                className="w-16 pt-3 pb-5 text-white text-[10px] font-bold tracking-widest text-center leading-relaxed"
-                style={{ backgroundColor: RED, clipPath: "polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%)" }}
-              >
-                <p>COMING</p><p>SOON</p>
-              </div>
-            </div>
-          </div>
-          <p className="text-sm text-slate-400 mb-10">Learn and upskill with the best in their field — surfaced automatically based on your dimension scores.</p>
-          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10">
-            {PARTNERS.map((p) => (
-              <span key={p.name} className={`${p.style} opacity-70 hover:opacity-100 transition`}>{p.name}</span>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── PRICING ── */}
       <section id="pricing" className="py-20 sm:py-28 px-5 lg:px-12">
         <div className="max-w-6xl mx-auto">
@@ -568,6 +516,7 @@ export default function LandingPage() {
                   "Three-signal comparison view",
                   "Session notes & tags",
                   "Reflective practice log",
+                  "1 rehearsal session (3 takes)",
                 ].map((f) => (
                   <li key={f} className="flex items-center gap-2.5">
                     <span className="text-green-400 shrink-0">✓</span> {f}
@@ -595,6 +544,7 @@ export default function LandingPage() {
                   "AI coaching — scores, rationale & tips",
                   "Vocal statistics & transcript highlights",
                   "Comparative coaching across sessions",
+                  "3 rehearsal sessions per month (5 takes each)",
                   "Curated articles, TED Talks & podcasts",
                   "Advanced analytics & trends",
                   "Post-session email summary with AI insights",
@@ -622,6 +572,7 @@ export default function LandingPage() {
                 {[
                   "Everything in Lite",
                   "Unlimited AI assessments",
+                  "Unlimited rehearsal sessions & takes",
                   "Industry leaderboard access",
                   "Industry normative benchmarking",
                   "Premium curated content library",

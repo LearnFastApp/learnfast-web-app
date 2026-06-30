@@ -119,6 +119,7 @@ export default function CreateRehearsalModal({ onClose, locale = "en" }: Props) 
       if (!res.ok) {
         const msgs: Record<string, string> = {
           upgrade_required: isFr ? "Passez à Lite pour accéder aux répétitions." : "Upgrade to Lite to access Rehearsal Mode.",
+          free_limit: isFr ? "Vous avez utilisé votre répétition gratuite. Passez à Lite pour continuer." : "You've used your free rehearsal. Upgrade to Lite for 3 sessions per month.",
           monthly_limit: isFr ? "Limite mensuelle atteinte." : "Monthly rehearsal limit reached. Upgrade to Pro for unlimited access.",
           file_too_large: isFr ? "Fichier trop volumineux (max 50 Mo)." : "File too large (max 50 MB).",
         };
