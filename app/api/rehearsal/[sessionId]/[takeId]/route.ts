@@ -138,6 +138,7 @@ export async function GET(
         ? Math.round((wordCount / audioDurationSeconds) * 60)
         : 0,
     languageCode,
+    transcriptText: transcript.text ?? "",
     scores: coaching.scores,
     comparison: coaching.comparison,
     strength: coaching.strength,

@@ -81,6 +81,15 @@ function RehearsalPageInner() {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [inputMode, setInputMode] = useState<"record" | "upload">("record");
 
+  const [scriptStage, setScriptStage] = useState<"idle" | "loading" | "ready">("idle");
+  const [scriptSuggestion, setScriptSuggestion] = useState<{
+    coachNote: string;
+    sections: { original: string; revised: string; reason: string; dimension: string }[];
+    fullRevisedScript: string;
+    deliveryNote: string | null;
+  } | null>(null);
+  const [scriptCopied, setScriptCopied] = useState(false);
+
   const mediaRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -159,6 +168,31 @@ function RehearsalPageInner() {
     pollActiveTake();
     return () => { pollRef.current && clearInterval(pollRef.current); };
   }, [pageStage, pollActiveTake]);
+
+  async function fetchScriptSuggestion() {
+    if (!user || !activeTakeId) return;
+    setScriptStage("loading");
+    setScriptSuggestion(null);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(
+        `/api/rehearsal/${sessionId}/${activeTakeId}/script-suggestion`,
+        { method: "POST", headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) { setScriptStage("idle"); return; }
+      const data = await res.json();
+      setScriptSuggestion(data);
+      setScriptStage("ready");
+    } catch {
+      setScriptStage("idle");
+    }
+  }
+
+  function dismissScriptSuggestion() {
+    setScriptStage("idle");
+    setScriptSuggestion(null);
+    setScriptCopied(false);
+  }
 
   function fmtTime(s: number) {
     return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
@@ -432,7 +466,83 @@ function RehearsalPageInner() {
                   &ldquo;{activeTake.encouragement}&rdquo;
                 </p>
               )}
+
+              {/* Script suggestion trigger */}
+              {scriptStage === "idle" && (
+                <div className="border-t border-white/10 pt-4">
+                  <button
+                    onClick={fetchScriptSuggestion}
+                    className="flex items-center gap-2 text-sm font-medium text-violet-300 hover:text-violet-100 transition"
+                  >
+                    <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                    Suggest script improvements
+                  </button>
+                </div>
+              )}
+
+              {scriptStage === "loading" && (
+                <div className="border-t border-white/10 pt-4 flex items-center gap-2 text-sm text-slate-400">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Reworking your script…
+                </div>
+              )}
             </div>
+
+            {/* Script suggestion panel */}
+            {scriptStage === "ready" && scriptSuggestion && (
+              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6 space-y-5">
+                <div>
+                  <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-1.5">Script improvements</p>
+                  <p className="text-sm text-slate-200 leading-relaxed">{scriptSuggestion.coachNote}</p>
+                </div>
+
+                {scriptSuggestion.deliveryNote && (
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-xs text-slate-400 leading-relaxed">{scriptSuggestion.deliveryNote}</p>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {scriptSuggestion.sections.map((s, i) => (
+                    <div key={i} className="space-y-2">
+                      <p className="text-[10px] font-semibold tracking-widest uppercase text-amber-500/70">{s.dimension}</p>
+                      <div className="rounded-lg bg-white/5 border border-white/10 p-3 space-y-2">
+                        <p className="text-xs text-slate-500 line-through leading-relaxed">{s.original}</p>
+                        <p className="text-sm text-white leading-relaxed">{s.revised}</p>
+                      </div>
+                      <p className="text-xs text-slate-400 leading-relaxed pl-1">{s.reason}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border-t border-white/10 pt-4 space-y-3">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Full revised script</p>
+                  <div className="rounded-xl bg-[#0a0f1e] border border-white/10 p-4 max-h-64 overflow-y-auto">
+                    <p className="text-sm text-slate-200 leading-relaxed whitespace-pre-wrap">{scriptSuggestion.fullRevisedScript}</p>
+                  </div>
+                  <div className="flex gap-3 flex-wrap">
+                    <button
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(scriptSuggestion.fullRevisedScript);
+                        setScriptCopied(true);
+                        setTimeout(() => setScriptCopied(false), 2000);
+                      }}
+                      className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-black transition"
+                    >
+                      {scriptCopied ? <><span className="font-bold">✓</span> Copied!</> : <>Copy full script</>}
+                    </button>
+                    <button
+                      onClick={dismissScriptSuggestion}
+                      className="text-sm font-medium px-4 py-2 rounded-lg border border-white/20 text-slate-300 hover:text-white hover:border-white/40 transition"
+                    >
+                      Keep my script
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Vocal stats */}
             {activeTake.wordsPerMinute && (
