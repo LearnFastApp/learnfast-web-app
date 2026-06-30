@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { collection, query, where, orderBy, limit, startAfter, onSnapshot, doc, deleteDoc, updateDoc, getDoc, getDocs, getCountFromServer, QueryDocumentSnapshot } from "firebase/firestore";
 import { signOut } from "firebase/auth";
@@ -180,7 +180,7 @@ export default function Dashboard() {
     }).catch(() => setReflectionsLoading(false));
   }, [user]);
 
-  useEffect(() => {
+  const fetchRehearsalSessions = useCallback(() => {
     if (!user) return;
     setRehearsalsLoading(true);
     user.getIdToken().then((token) =>
@@ -190,6 +190,10 @@ export default function Dashboard() {
       setRehearsalsLoading(false);
     }).catch(() => setRehearsalsLoading(false));
   }, [user]);
+
+  useEffect(() => {
+    fetchRehearsalSessions();
+  }, [fetchRehearsalSessions]);
 
   useEffect(() => {
     const allSessions = [...sessions, ...extraSessions];
@@ -365,7 +369,7 @@ export default function Dashboard() {
       )}
       {showRehearsalModal && (
         <CreateRehearsalModal
-          onClose={() => setShowRehearsalModal(false)}
+          onClose={() => { setShowRehearsalModal(false); fetchRehearsalSessions(); }}
           locale={locale}
         />
       )}
