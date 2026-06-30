@@ -7,7 +7,7 @@ import type { AssessmentScores } from "@/lib/ai-assessment-analysis";
 
 export const dynamic = "force-dynamic";
 
-const MAX_DURATION_SECONDS = 95;
+const MAX_DURATION_SECONDS = 300; // 5 minutes — matches UI recording cap
 
 export async function GET(
   req: NextRequest,
