@@ -68,7 +68,14 @@ export async function GET(req: NextRequest) {
     .limit(20)
     .get();
 
-  const sessions = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const sessions = snap.docs.map((d) => {
+    const data = d.data();
+    return {
+      id: d.id,
+      ...data,
+      createdAt: data.createdAt?.toDate?.()?.toISOString() ?? null,
+    };
+  });
   return NextResponse.json({ sessions });
 }
 

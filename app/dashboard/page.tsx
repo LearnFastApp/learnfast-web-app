@@ -90,7 +90,7 @@ export default function Dashboard() {
   const [responseCounts, setResponseCounts] = useState<Record<string, number>>({});
   const [rehearsalSessions, setRehearsalSessions] = useState<{
     id: string; title: string; tags: string[]; takeCount: number;
-    createdAt: { toDate: () => Date } | null;
+    createdAt: string | null;
   }[]>([]);
   const [rehearsalsLoading, setRehearsalsLoading] = useState(false);
 
@@ -790,7 +790,7 @@ export default function Dashboard() {
                         </div>
                         {r.createdAt && (
                           <p className="text-xs text-slate-600 mb-3">
-                            {r.createdAt.toDate().toLocaleDateString(isFr ? "fr-FR" : "en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                            {new Date(r.createdAt).toLocaleDateString(isFr ? "fr-FR" : "en-GB", { day: "numeric", month: "short", year: "numeric" })}
                           </p>
                         )}
                         {(r.tags ?? []).length > 0 && (
