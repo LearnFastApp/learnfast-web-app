@@ -42,6 +42,22 @@ async function checkGate(uid: string): Promise<{ allowed: boolean; reason?: stri
   return { allowed: true };
 }
 
+export async function GET(req: NextRequest) {
+  const uid = await verifyAuthToken(req);
+  if (!uid) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const db = getAdminDb();
+  const snap = await db
+    .collection("rehearsal_sessions")
+    .where("presenterId", "==", uid)
+    .orderBy("createdAt", "desc")
+    .limit(20)
+    .get();
+
+  const sessions = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  return NextResponse.json({ sessions });
+}
+
 export async function POST(req: NextRequest) {
   const uid = await verifyAuthToken(req);
   if (!uid) return NextResponse.json({ error: "unauthorized" }, { status: 401 });

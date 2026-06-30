@@ -562,17 +562,20 @@ function RehearsalPageInner() {
 
             {/* Actions */}
             {pageStage === "promoted" ? (
-              <div className="rounded-xl border border-green-500/20 bg-green-500/5 p-4 flex items-center gap-3">
-                <CheckCircle2 className="h-5 w-5 text-green-400 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-white">Saved to your history</p>
-                  <button
-                    onClick={() => session?.promotedAssessmentId && router.push(`/ai-assessment/${session.promotedAssessmentId}`)}
-                    className="text-xs text-violet-400 hover:text-violet-300 transition"
-                  >
-                    View in AI Analysis →
-                  </button>
+              <div className="rounded-xl border border-green-500/20 bg-green-500/5 p-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-green-400 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-white">Best take saved</p>
+                    <p className="text-xs text-slate-400">You can return to this session any time from your dashboard.</p>
+                  </div>
                 </div>
+                <button
+                  onClick={() => router.push("/dashboard")}
+                  className="text-xs font-semibold text-slate-300 hover:text-white border border-white/20 hover:border-white/40 rounded-lg px-3 py-1.5 transition flex-shrink-0"
+                >
+                  Dashboard
+                </button>
               </div>
             ) : (
               <div className="flex gap-3">

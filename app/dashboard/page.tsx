@@ -88,6 +88,11 @@ export default function Dashboard() {
   const [reflections, setReflections] = useState<ReflectionEntry[]>([]);
   const [reflectionsLoading, setReflectionsLoading] = useState(false);
   const [responseCounts, setResponseCounts] = useState<Record<string, number>>({});
+  const [rehearsalSessions, setRehearsalSessions] = useState<{
+    id: string; title: string; tags: string[]; takeCount: number;
+    createdAt: { toDate: () => Date } | null;
+  }[]>([]);
+  const [rehearsalsLoading, setRehearsalsLoading] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -173,6 +178,17 @@ export default function Dashboard() {
       setReflections(entries);
       setReflectionsLoading(false);
     }).catch(() => setReflectionsLoading(false));
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    setRehearsalsLoading(true);
+    user.getIdToken().then((token) =>
+      fetch("/api/rehearsal", { headers: { Authorization: `Bearer ${token}` } })
+    ).then((r) => r.json()).then((data) => {
+      setRehearsalSessions(data.sessions ?? []);
+      setRehearsalsLoading(false);
+    }).catch(() => setRehearsalsLoading(false));
   }, [user]);
 
   useEffect(() => {
@@ -663,6 +679,59 @@ export default function Dashboard() {
                     >
                       {loadingMore ? t.loading : t.loadMore}
                     </button>
+                  </div>
+                )}
+
+                {/* Rehearsal sessions */}
+                {(rehearsalsLoading || rehearsalSessions.length > 0) && (
+                  <div className="mt-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-bold">Rehearsal sessions</h2>
+                      <button
+                        onClick={() => isPaidOrPilot ? setShowRehearsalModal(true) : setShowUpgrade(true)}
+                        className="flex items-center gap-1.5 text-xs font-semibold text-violet-400 hover:text-violet-300 transition"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        New rehearsal
+                      </button>
+                    </div>
+                    {rehearsalsLoading ? (
+                      <p className="text-sm text-slate-500 animate-pulse">Loading…</p>
+                    ) : (
+                      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                        {rehearsalSessions.map((r) => (
+                          <a
+                            key={r.id}
+                            href={`/rehearse/${r.id}`}
+                            className="group rounded-2xl border border-white/10 bg-[#111827] p-5 hover:border-violet-500/40 transition block"
+                          >
+                            <div className="flex items-start justify-between gap-2 mb-1">
+                              <p className="font-semibold leading-snug">{r.title || "Untitled rehearsal"}</p>
+                              <span className="shrink-0 rounded-full bg-violet-500/15 px-2 py-0.5 text-xs font-semibold text-violet-400">
+                                {r.takeCount} {r.takeCount === 1 ? "take" : "takes"}
+                              </span>
+                            </div>
+                            {r.createdAt && (
+                              <p className="text-xs text-slate-600 mb-3">
+                                {r.createdAt.toDate().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                              </p>
+                            )}
+                            {(r.tags ?? []).length > 0 && (
+                              <div className="flex flex-wrap gap-1.5">
+                                {(r.tags ?? []).map((tag) => (
+                                  <span key={tag} className="flex items-center gap-1 rounded-lg bg-violet-500/20 px-2 py-0.5 text-xs text-violet-300">
+                                    <Tag className="h-3 w-3" />{tag}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            <p className="mt-3 text-xs text-slate-600 group-hover:text-violet-400 transition">
+                              Continue rehearsing →
+                            </p>
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </section>
