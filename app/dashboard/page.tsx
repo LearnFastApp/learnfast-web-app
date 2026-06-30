@@ -93,6 +93,8 @@ export default function Dashboard() {
     createdAt: string | null;
   }[]>([]);
   const [rehearsalsLoading, setRehearsalsLoading] = useState(false);
+  const [editingRehearsalTagsId, setEditingRehearsalTagsId] = useState<string | null>(null);
+  const [rehearsalTagInput, setRehearsalTagInput] = useState("");
 
   useEffect(() => {
     if (loading) return;
@@ -228,6 +230,40 @@ export default function Dashboard() {
 
   async function handleRemoveTag(sessionId: string, currentTags: string[], tag: string) {
     await updateDoc(doc(db, "sessions", sessionId), { tags: currentTags.filter((t) => t !== tag) });
+  }
+
+  async function handleDeleteRehearsal(sessionId: string) {
+    if (!confirm("Delete this rehearsal? This cannot be undone.")) return;
+    if (!user) return;
+    const token = await user.getIdToken();
+    await fetch(`/api/rehearsal/${sessionId}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+    setRehearsalSessions((prev) => prev.filter((r) => r.id !== sessionId));
+  }
+
+  async function handleAddRehearsalTag(sessionId: string, currentTags: string[]) {
+    const tag = rehearsalTagInput.trim().toLowerCase();
+    setRehearsalTagInput("");
+    if (!tag || currentTags.includes(tag) || !user) return;
+    const newTags = [...currentTags, tag];
+    const token = await user.getIdToken();
+    await fetch(`/api/rehearsal/${sessionId}`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ tags: newTags }),
+    });
+    setRehearsalSessions((prev) => prev.map((r) => r.id === sessionId ? { ...r, tags: newTags } : r));
+  }
+
+  async function handleRemoveRehearsalTag(sessionId: string, currentTags: string[], tag: string) {
+    if (!user) return;
+    const newTags = currentTags.filter((t) => t !== tag);
+    const token = await user.getIdToken();
+    await fetch(`/api/rehearsal/${sessionId}`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ tags: newTags }),
+    });
+    setRehearsalSessions((prev) => prev.map((r) => r.id === sessionId ? { ...r, tags: newTags } : r));
   }
 
   function handleSignOut() {
@@ -777,35 +813,71 @@ export default function Dashboard() {
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                     {rehearsalSessions.map((r) => (
-                      <a
+                      <div
                         key={r.id}
-                        href={`/rehearse/${r.id}`}
-                        className="group rounded-2xl border border-white/10 bg-[#111827] p-5 hover:border-violet-500/40 transition block"
+                        className="group rounded-2xl border border-white/10 bg-[#111827] p-5 hover:border-violet-500/40 transition"
                       >
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                          <p className="font-semibold leading-snug">{r.title || (isFr ? "Répétition sans titre" : "Untitled rehearsal")}</p>
-                          <span className="shrink-0 rounded-full bg-violet-500/15 px-2 py-0.5 text-xs font-semibold text-violet-400">
-                            {r.takeCount} {isFr ? `prise${r.takeCount !== 1 ? "s" : ""}` : r.takeCount === 1 ? "take" : "takes"}
-                          </span>
-                        </div>
-                        {r.createdAt && (
-                          <p className="text-xs text-slate-600 mb-3">
-                            {new Date(r.createdAt).toLocaleDateString(isFr ? "fr-FR" : "en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                          </p>
-                        )}
-                        {(r.tags ?? []).length > 0 && (
-                          <div className="flex flex-wrap gap-1.5">
-                            {(r.tags ?? []).map((tag) => (
-                              <span key={tag} className="flex items-center gap-1 rounded-lg bg-violet-500/20 px-2 py-0.5 text-xs text-violet-300">
-                                <Tag className="h-3 w-3" />{tag}
-                              </span>
-                            ))}
+                        <a href={`/rehearse/${r.id}`} className="block">
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <p className="font-semibold leading-snug">{r.title || (isFr ? "Répétition sans titre" : "Untitled rehearsal")}</p>
+                            <span className="shrink-0 rounded-full bg-violet-500/15 px-2 py-0.5 text-xs font-semibold text-violet-400">
+                              {r.takeCount} {isFr ? `prise${r.takeCount !== 1 ? "s" : ""}` : r.takeCount === 1 ? "take" : "takes"}
+                            </span>
                           </div>
-                        )}
-                        <p className="mt-3 text-xs text-slate-600 group-hover:text-violet-400 transition">
-                          {isFr ? "Continuer la répétition →" : "Continue rehearsing →"}
-                        </p>
-                      </a>
+                          {r.createdAt && (
+                            <p className="text-xs text-slate-600 mb-2">
+                              {new Date(r.createdAt).toLocaleDateString(isFr ? "fr-FR" : "en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                            </p>
+                          )}
+                          <p className="text-xs text-slate-600 group-hover:text-violet-400 transition mb-3">
+                            {isFr ? "Continuer la répétition →" : "Continue rehearsing →"}
+                          </p>
+                        </a>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(r.tags ?? []).map((tag) => (
+                            <span
+                              key={tag}
+                              className="group/tag flex items-center gap-1 rounded-lg bg-violet-500/20 px-2 py-0.5 text-xs text-violet-300"
+                            >
+                              <Tag className="h-3 w-3" />
+                              {tag}
+                              <button
+                                onClick={() => handleRemoveRehearsalTag(r.id, r.tags ?? [], tag)}
+                                className="ml-0.5 opacity-0 group-hover/tag:opacity-100 hover:text-white transition"
+                              >×</button>
+                            </span>
+                          ))}
+                          {editingRehearsalTagsId === r.id ? (
+                            <input
+                              autoFocus
+                              type="text"
+                              placeholder={isFr ? "ajouter…" : "add tag…"}
+                              value={rehearsalTagInput}
+                              onChange={(e) => setRehearsalTagInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === ",") { e.preventDefault(); handleAddRehearsalTag(r.id, r.tags ?? []); setEditingRehearsalTagsId(null); }
+                                if (e.key === "Escape") { setEditingRehearsalTagsId(null); setRehearsalTagInput(""); }
+                              }}
+                              onBlur={() => { handleAddRehearsalTag(r.id, r.tags ?? []); setEditingRehearsalTagsId(null); }}
+                              className="rounded-lg border border-violet-500/40 bg-[#1a2135] px-2 py-0.5 text-xs text-white outline-none w-24"
+                            />
+                          ) : (
+                            <button
+                              onClick={() => { setEditingRehearsalTagsId(r.id); setRehearsalTagInput(""); }}
+                              className="rounded-lg border border-dashed border-white/20 px-2 py-0.5 text-xs text-slate-600 hover:text-slate-300 hover:border-white/40 transition opacity-0 group-hover:opacity-100"
+                            >
+                              + {isFr ? "tag" : "tag"}
+                            </button>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleDeleteRehearsal(r.id)}
+                          className="mt-3 flex items-center gap-1.5 text-xs text-slate-600 hover:text-red-400 transition opacity-0 group-hover:opacity-100"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          {isFr ? "Supprimer" : "Delete"}
+                        </button>
+                      </div>
                     ))}
                   </div>
                 )}

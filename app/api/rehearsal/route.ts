@@ -14,6 +14,11 @@ const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
 type Tier = "admin" | "pro" | "lite" | "free";
 
+function monthKey(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
 async function checkGate(uid: string): Promise<{ allowed: boolean; reason?: string; tier: Tier }> {
   if (ADMIN_UIDS.has(uid)) return { allowed: true, tier: "admin" };
 
@@ -29,28 +34,17 @@ async function checkGate(uid: string): Promise<{ allowed: boolean; reason?: stri
   if (isPro || isPilot) return { allowed: true, tier: "pro" };
 
   if (status === "active") {
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-    const snap = await db.collection("rehearsal_sessions")
-      .where("presenterId", "==", uid)
-      .get();
-    const usedThisMonth = snap.docs.filter((d) => {
-      const createdAt = d.data().createdAt?.toDate?.() as Date | undefined;
-      return createdAt && createdAt >= startOfMonth;
-    }).length;
+    // Use a persisted monthly counter so deleting sessions can't reset usage
+    const usedThisMonth = (data.rehearsalMonthlyUsage?.[monthKey()] as number) ?? 0;
     if (usedThisMonth >= LITE_MONTHLY_LIMIT) {
       return { allowed: false, reason: "monthly_limit", tier: "lite" };
     }
     return { allowed: true, tier: "lite" };
   }
 
-  // Free tier — 1 rehearsal session ever as a taster
-  const freeSnap = await db.collection("rehearsal_sessions")
-    .where("presenterId", "==", uid)
-    .limit(FREE_SESSION_LIMIT + 1)
-    .get();
-  if (freeSnap.size >= FREE_SESSION_LIMIT) {
+  // Free tier — 1 rehearsal ever as a taster; use a persistent flag so
+  // deleting the session cannot reset the entitlement
+  if (data.freeRehearsalUsed === true) {
     return { allowed: false, reason: "free_limit", tier: "free" };
   }
   return { allowed: true, tier: "free" };
@@ -111,6 +105,16 @@ export async function POST(req: NextRequest) {
   const takesLimit = gate.tier === "free" ? FREE_TAKES_LIMIT
     : gate.tier === "lite" ? LITE_TAKES_LIMIT
     : null; // null = unlimited
+
+  // Persist usage so that deleting a session cannot reset the entitlement
+  const presenterRef = db.collection("presenters").doc(uid);
+  if (gate.tier === "free") {
+    await presenterRef.update({ freeRehearsalUsed: true });
+  } else if (gate.tier === "lite") {
+    const key = `rehearsalMonthlyUsage.${monthKey()}`;
+    const { FieldValue } = await import("firebase-admin/firestore");
+    await presenterRef.update({ [key]: FieldValue.increment(1) });
+  }
 
   const sessionRef = db.collection("rehearsal_sessions").doc();
   await sessionRef.set({
