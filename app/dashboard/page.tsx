@@ -686,17 +686,17 @@ export default function Dashboard() {
                 {(rehearsalsLoading || rehearsalSessions.length > 0) && (
                   <div className="mt-10">
                     <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-lg font-bold">Rehearsal sessions</h2>
+                      <h2 className="text-lg font-bold">{isFr ? "Sessions de répétition" : "Rehearsal sessions"}</h2>
                       <button
                         onClick={() => isPaidOrPilot ? setShowRehearsalModal(true) : setShowUpgrade(true)}
                         className="flex items-center gap-1.5 text-xs font-semibold text-violet-400 hover:text-violet-300 transition"
                       >
                         <Plus className="h-3.5 w-3.5" />
-                        New rehearsal
+                        {isFr ? "Nouvelle répétition" : "New rehearsal"}
                       </button>
                     </div>
                     {rehearsalsLoading ? (
-                      <p className="text-sm text-slate-500 animate-pulse">Loading…</p>
+                      <p className="text-sm text-slate-500 animate-pulse">{t.loading}</p>
                     ) : (
                       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                         {rehearsalSessions.map((r) => (
@@ -706,14 +706,14 @@ export default function Dashboard() {
                             className="group rounded-2xl border border-white/10 bg-[#111827] p-5 hover:border-violet-500/40 transition block"
                           >
                             <div className="flex items-start justify-between gap-2 mb-1">
-                              <p className="font-semibold leading-snug">{r.title || "Untitled rehearsal"}</p>
+                              <p className="font-semibold leading-snug">{r.title || (isFr ? "Répétition sans titre" : "Untitled rehearsal")}</p>
                               <span className="shrink-0 rounded-full bg-violet-500/15 px-2 py-0.5 text-xs font-semibold text-violet-400">
-                                {r.takeCount} {r.takeCount === 1 ? "take" : "takes"}
+                                {r.takeCount} {isFr ? `prise${r.takeCount !== 1 ? "s" : ""}` : r.takeCount === 1 ? "take" : "takes"}
                               </span>
                             </div>
                             {r.createdAt && (
                               <p className="text-xs text-slate-600 mb-3">
-                                {r.createdAt.toDate().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                                {r.createdAt.toDate().toLocaleDateString(isFr ? "fr-FR" : "en-GB", { day: "numeric", month: "short", year: "numeric" })}
                               </p>
                             )}
                             {(r.tags ?? []).length > 0 && (
@@ -726,7 +726,7 @@ export default function Dashboard() {
                               </div>
                             )}
                             <p className="mt-3 text-xs text-slate-600 group-hover:text-violet-400 transition">
-                              Continue rehearsing →
+                              {isFr ? "Continuer la répétition →" : "Continue rehearsing →"}
                             </p>
                           </a>
                         ))}
