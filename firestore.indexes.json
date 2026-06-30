@@ -26,6 +26,14 @@
       ]
     },
     {
+      "collectionGroup": "rehearsal_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "presenterId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "ai_assessments",
       "queryScope": "COLLECTION",
       "fields": [
