@@ -28,6 +28,8 @@ import CreateRehearsalModal from "@/components/create-rehearsal-modal";
 import UpgradeModal from "@/components/upgrade-modal";
 import MobileNav from "@/components/mobile-nav";
 import OnboardingModal from "@/components/onboarding-modal";
+import { ProfileCardCompact, type ProfileData } from "@/components/profile-card";
+import ProfileSetupModal from "@/components/profile-setup-modal";
 
 
 interface Session {
@@ -95,6 +97,8 @@ export default function Dashboard() {
   const [rehearsalsLoading, setRehearsalsLoading] = useState(false);
   const [editingRehearsalTagsId, setEditingRehearsalTagsId] = useState<string | null>(null);
   const [rehearsalTagInput, setRehearsalTagInput] = useState("");
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [showProfileSetup, setShowProfileSetup] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -196,6 +200,20 @@ export default function Dashboard() {
   useEffect(() => {
     fetchRehearsalSessions();
   }, [fetchRehearsalSessions]);
+
+  const fetchProfileData = useCallback(() => {
+    if (!user) return;
+    user.getIdToken().then((token) =>
+      fetch("/api/profile", { headers: { Authorization: `Bearer ${token}` } })
+    ).then((r) => r.json()).then((data: ProfileData) => {
+      setProfileData(data);
+      if (!data.profileComplete) setShowProfileSetup(false); // prompt via card, not auto-modal
+    }).catch(() => {});
+  }, [user]);
+
+  useEffect(() => {
+    fetchProfileData();
+  }, [fetchProfileData]);
 
   useEffect(() => {
     const allSessions = [...sessions, ...extraSessions];
@@ -410,6 +428,16 @@ export default function Dashboard() {
         />
       )}
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} locale={locale} />}
+      {showProfileSetup && (
+        <ProfileSetupModal
+          locale={locale}
+          initialValues={profileData ?? undefined}
+          onClose={(saved) => {
+            setShowProfileSetup(false);
+            if (saved) fetchProfileData();
+          }}
+        />
+      )}
       {showOnboarding && (
         <OnboardingModal
           onClose={markOnboardingSeen}
@@ -506,20 +534,16 @@ export default function Dashboard() {
             </div>
           )}
 
-          <div className="mt-auto border-t border-white/10 pt-6">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-violet-500/30 font-bold">
-                {displayName.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <p className="font-semibold">{displayName}</p>
-                <p className="text-sm text-slate-400">{t.presenter}</p>
-              </div>
-            </div>
+          <div className="mt-auto border-t border-white/10 pt-5 space-y-3">
+            <ProfileCardCompact
+              data={profileData}
+              locale={locale}
+              onSetup={() => setShowProfileSetup(true)}
+            />
 
             <button
               onClick={handleSignOut}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/40 px-4 py-3 text-red-300 hover:bg-red-500/10"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/40 px-4 py-3 text-red-300 hover:bg-red-500/10 transition"
             >
               <LogOut className="h-4 w-4" />
               {t.signOut}
