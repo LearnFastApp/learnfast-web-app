@@ -69,8 +69,6 @@ export async function POST(
     languageCode: null,
     createdAt: now,
     isPromoted: false,
-    _rev: process.env.K_REVISION ?? "unknown",
-    r2Debug: `init:keyLen=${(process.env.R2_ACCESS_KEY_ID ?? "").length}`,
   });
 
   await sessionRef.update({ takeCount: newTakeNumber });
@@ -79,18 +77,13 @@ export async function POST(
   const mimeType = fileName.endsWith(".webm") ? "audio/webm" : "audio/mpeg";
   let audioUrl: string | null = null;
   let r2Error: string | null = null;
-  let r2Debug = `keyLen=${(process.env.R2_ACCESS_KEY_ID ?? "").length} bufLen=${fileBuffer.length} mime=${mimeType}`;
   try {
-    const raw: unknown = await uploadTakeAudio(takeRef.id, fileBuffer, mimeType);
-    r2Debug += ` resultType=${typeof raw} result=${String(raw).slice(0, 120)}`;
-    audioUrl = typeof raw === "string" ? raw : null;
-    if (audioUrl === null) r2Error = `unexpected_return_type:${typeof raw}`;
+    audioUrl = await uploadTakeAudio(takeRef.id, fileBuffer, mimeType);
   } catch (err) {
-    r2Debug += " threw";
     r2Error = err instanceof Error
       ? (err.message || err.name || "r2_error_no_message")
       : (String(err) || "r2_unknown_error");
-    console.error("[rehearsal/take] R2 upload failed:", r2Error, err);
+    console.error("[rehearsal/take] R2 upload failed:", r2Error);
   }
 
   let transcriptId: string;
@@ -102,7 +95,7 @@ export async function POST(
     return NextResponse.json({ error: "transcription_failed" }, { status: 500 });
   }
 
-  await takeRef.update({ assemblyAiId: transcriptId, audioUrl, r2Error, r2Debug, status: "processing" });
+  await takeRef.update({ assemblyAiId: transcriptId, audioUrl, r2Error, status: "processing" });
 
   return NextResponse.json({
     takeId: takeRef.id,
