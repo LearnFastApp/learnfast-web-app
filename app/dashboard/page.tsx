@@ -642,6 +642,9 @@ export default function Dashboard() {
             >
               <LayoutDashboard className="h-4 w-4" />
               {t.tabSessions}
+              {(sessions.length + extraSessions.length) > 0 && (
+                <span className="rounded-full bg-violet-500/20 px-2 py-0.5 text-xs text-violet-400">{sessions.length + extraSessions.length}</span>
+              )}
             </button>
             <button
               onClick={() => setActiveTab("reflections")}
