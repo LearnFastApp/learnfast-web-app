@@ -137,11 +137,10 @@ export default function FeedViewerPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const fetchItem = useCallback(async () => {
-    const res = await fetch(`/api/feed`);
+    const res = await fetch(`/api/feed/${sessionId}`);
     if (!res.ok) return;
     const data = await res.json();
-    const found = (data.items as FeedItem[]).find((i) => i.id === sessionId);
-    if (found) setItem(found);
+    setItem(data as FeedItem);
   }, [sessionId]);
 
   const fetchComments = useCallback(async () => {
@@ -222,7 +221,19 @@ export default function FeedViewerPage() {
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
         {/* Audio */}
-        {take?.audioUrl && <AudioPlayer url={take.audioUrl} />}
+        {take?.audioUrl ? (
+          <AudioPlayer url={take.audioUrl} />
+        ) : take ? (
+          <div className="rounded-xl p-4 flex items-center gap-3" style={{ backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(255,255,255,0.06)" }}>
+              <Play className="h-4 w-4 text-slate-600 ml-0.5" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-400 font-medium">Audio not available</p>
+              <p className="text-xs text-slate-600 mt-0.5">This rehearsal was recorded before audio storage was enabled. New recordings will include playback.</p>
+            </div>
+          </div>
+        ) : null}
 
         {/* Scores */}
         {take?.scores && (
