@@ -85,3 +85,23 @@ env:
     secret: ANTHROPIC_API_KEY
     availability:
       - RUNTIME
+  - variable: R2_BUCKET
+    value: learnfast-rehearsals
+    availability:
+      - RUNTIME
+  - variable: R2_ACCOUNT_ID
+    value: ed18305d85851525e942436029002576
+    availability:
+      - RUNTIME
+  - variable: R2_PUBLIC_URL
+    value: https://pub-9b40c7decb554b449eaa13429de4f828.r2.dev
+    availability:
+      - RUNTIME
+  - variable: R2_ACCESS_KEY_ID
+    secret: R2_ACCESS_KEY_ID
+    availability:
+      - RUNTIME
+  - variable: R2_SECRET_ACCESS_KEY
+    secret: R2_SECRET_ACCESS_KEY
+    availability:
+      - RUNTIME
