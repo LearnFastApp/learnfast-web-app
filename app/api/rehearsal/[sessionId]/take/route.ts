@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Timestamp } from "firebase-admin/firestore";
 import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
 import { uploadAndSubmitTranscription } from "@/lib/assemblyai-client";
+import { uploadTakeAudio } from "@/lib/r2-client";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +54,7 @@ export async function POST(
     takeNumber: newTakeNumber,
     fileName,
     assemblyAiId: null,
+    audioUrl: null,
     status: "queued",
     scores: null,
     comparison: null,
@@ -72,10 +74,14 @@ export async function POST(
   await sessionRef.update({ takeCount: newTakeNumber });
 
   try {
-    const transcriptId = await uploadAndSubmitTranscription(fileBuffer);
-    await takeRef.update({ assemblyAiId: transcriptId, status: "processing" });
+    const mimeType = (fileName.endsWith(".webm") ? "audio/webm" : "audio/mpeg");
+    const [transcriptId, audioUrl] = await Promise.all([
+      uploadAndSubmitTranscription(fileBuffer),
+      uploadTakeAudio(takeRef.id, fileBuffer, mimeType),
+    ]);
+    await takeRef.update({ assemblyAiId: transcriptId, audioUrl, status: "processing" });
   } catch (err) {
-    console.error("[rehearsal/take] AssemblyAI upload failed:", err);
+    console.error("[rehearsal/take] upload failed:", err);
     await takeRef.update({ status: "failed", error: String(err) });
     return NextResponse.json({ error: "transcription_failed" }, { status: 500 });
   }
