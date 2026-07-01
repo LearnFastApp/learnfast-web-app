@@ -125,6 +125,9 @@ function LoginForm() {
         await sendEmailVerification(result.user, {
           url: verifyRedirect,
         });
+        // Sign out immediately — user must verify email before accessing the app.
+        // This clears the auth cookie so unverified users can't reach the dashboard.
+        await auth.signOut();
         setVerificationSent(true);
         return;
       } else {
@@ -209,10 +212,14 @@ function LoginForm() {
                 onClick={async () => {
                   try {
                     const result = await signInWithEmailAndPassword(auth, email, password);
-                    await sendEmailVerification(result.user, {
-                      url: `${window.location.origin}/auth/login`,
-                    });
+                    const claimToken = searchParams.get("claim");
+                    const continueUrl = claimToken
+                      ? `${window.location.origin}/auth/login?claim=${claimToken}`
+                      : `${window.location.origin}/auth/login`;
+                    await sendEmailVerification(result.user, { url: continueUrl });
                     await auth.signOut();
+                    setVerifyNeeded(false);
+                    setVerificationSent(true);
                   } catch { /* ignore */ }
                 }}
                 className="w-full rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-slate-300 hover:text-white transition mb-3"
