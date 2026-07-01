@@ -73,18 +73,25 @@ export async function POST(
 
   await sessionRef.update({ takeCount: newTakeNumber });
 
+  // R2 upload is best-effort — failure must not block the transcription
+  const mimeType = fileName.endsWith(".webm") ? "audio/webm" : "audio/mpeg";
+  const audioUrlPromise = uploadTakeAudio(takeRef.id, fileBuffer, mimeType)
+    .catch((err) => {
+      console.error("[rehearsal/take] R2 upload failed:", err);
+      return null;
+    });
+
+  let transcriptId: string;
   try {
-    const mimeType = (fileName.endsWith(".webm") ? "audio/webm" : "audio/mpeg");
-    const [transcriptId, audioUrl] = await Promise.all([
-      uploadAndSubmitTranscription(fileBuffer),
-      uploadTakeAudio(takeRef.id, fileBuffer, mimeType),
-    ]);
-    await takeRef.update({ assemblyAiId: transcriptId, audioUrl, status: "processing" });
+    transcriptId = await uploadAndSubmitTranscription(fileBuffer);
   } catch (err) {
-    console.error("[rehearsal/take] upload failed:", err);
+    console.error("[rehearsal/take] AssemblyAI upload failed:", err);
     await takeRef.update({ status: "failed", error: String(err) });
     return NextResponse.json({ error: "transcription_failed" }, { status: 500 });
   }
+
+  const audioUrl = await audioUrlPromise;
+  await takeRef.update({ assemblyAiId: transcriptId, audioUrl, status: "processing" });
 
   return NextResponse.json({
     takeId: takeRef.id,
