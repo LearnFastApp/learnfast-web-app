@@ -69,6 +69,8 @@ export async function POST(
     languageCode: null,
     createdAt: now,
     isPromoted: false,
+    _rev: process.env.K_REVISION ?? "unknown",
+    r2Debug: `init:keyLen=${(process.env.R2_ACCESS_KEY_ID ?? "").length}`,
   });
 
   await sessionRef.update({ takeCount: newTakeNumber });
