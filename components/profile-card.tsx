@@ -4,10 +4,12 @@ import { DIMS, DIM_COLOURS, DIM_SHORT, type RankInfo, type Dim } from "@/lib/ran
 import { industryLabel } from "@/lib/industries";
 
 export interface ProfileData {
+  uid?: string;
   displayName: string | null;
   jobTitle: string | null;
   industry: string | null;
   location: string | null;
+  focusDimension?: string | null;
   avgScores: Record<string, number> | null;
   avgOverall: number | null;
   assessmentCount: number;
@@ -218,6 +220,23 @@ export function ProfileCardCompact({
           <p className="text-[10px] text-slate-600 mt-2">
             {isFr ? "Complétez votre première évaluation IA pour voir vos scores." : "Complete your first AI assessment to see your scores."}
           </p>
+        )}
+
+        {data.profileComplete && (
+          <div className="mt-3 pt-2.5 flex items-center justify-between" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+            <a
+              href={`/profile/${data.uid}`}
+              className="text-[10px] text-slate-600 hover:text-slate-400 transition"
+            >
+              {isFr ? "Voir mon profil →" : "View my profile →"}
+            </a>
+            <button
+              onClick={onSetup}
+              className="text-[10px] text-slate-700 hover:text-slate-500 transition"
+            >
+              {isFr ? "Modifier" : "Edit"}
+            </button>
+          </div>
         )}
       </div>
     </div>

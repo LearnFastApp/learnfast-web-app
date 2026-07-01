@@ -52,6 +52,7 @@ export async function GET(req: NextRequest) {
   const top = assessmentCount > 0 ? topDimension(avgScores) : null;
 
   return NextResponse.json({
+    uid,
     displayName:     (presenter.displayName as string)     ?? null,
     jobTitle:        (presenter.jobTitle as string)        ?? null,
     industry:        (presenter.industry as string)        ?? null,

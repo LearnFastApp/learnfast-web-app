@@ -40,6 +40,14 @@
         { "fieldPath": "presenterId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "ai_assessments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "presenterId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
