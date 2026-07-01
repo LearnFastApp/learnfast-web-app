@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Timestamp } from "firebase-admin/firestore";
 import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
 import { uploadAndSubmitTranscription } from "@/lib/assemblyai-client";
+import { uploadTakeAudio } from "@/lib/r2-client";
 
 export const dynamic = "force-dynamic";
 
@@ -130,11 +131,14 @@ export async function POST(req: NextRequest) {
     promotedAssessmentId: null,
   });
 
+  const mimeType = fileName.endsWith(".webm") ? "audio/webm" : "audio/mpeg";
+
   const takeRef = sessionRef.collection("takes").doc();
   await takeRef.set({
     takeNumber: 1,
     fileName,
     assemblyAiId: null,
+    audioUrl: null,
     status: "queued",
     scores: null,
     comparison: null,
@@ -151,14 +155,28 @@ export async function POST(req: NextRequest) {
     isPromoted: false,
   });
 
+  // R2 upload — best-effort, never blocks transcription
+  let audioUrl: string | null = null;
+  let r2Error: string | null = null;
   try {
-    const transcriptId = await uploadAndSubmitTranscription(fileBuffer);
-    await takeRef.update({ assemblyAiId: transcriptId, status: "processing" });
+    audioUrl = await uploadTakeAudio(takeRef.id, fileBuffer, mimeType);
+  } catch (err) {
+    r2Error = err instanceof Error
+      ? (err.message || err.name || "r2_error_no_message")
+      : (String(err) || "r2_unknown_error");
+    console.error("[rehearsal] R2 upload failed:", r2Error);
+  }
+
+  let transcriptId: string;
+  try {
+    transcriptId = await uploadAndSubmitTranscription(fileBuffer);
   } catch (err) {
     console.error("[rehearsal] AssemblyAI upload failed:", err);
     await takeRef.update({ status: "failed", error: String(err) });
     return NextResponse.json({ error: "transcription_failed" }, { status: 500 });
   }
+
+  await takeRef.update({ assemblyAiId: transcriptId, audioUrl, r2Error, status: "processing" });
 
   return NextResponse.json({
     sessionId: sessionRef.id,
