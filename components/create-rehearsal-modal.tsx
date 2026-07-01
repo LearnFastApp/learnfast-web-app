@@ -320,7 +320,7 @@ export default function CreateRehearsalModal({ onClose, locale = "en" }: Props) 
           >
             {stage === "submitting"
               ? (isFr ? "Envoi en cours…" : "Submitting…")
-              : (isFr ? "Démarrer la répétition →" : "Start rehearsal →")}
+              : (isFr ? "Soumettre →" : "Submit →")}
           </button>
         </div>
       </div>
