@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
+import { getAdminDb } from "@/lib/firebase-admin";
+import { uploadTakeAudio } from "@/lib/r2-client";
 
 export const dynamic = "force-dynamic";
 
-// Temporary debug endpoint — returns raw take data to diagnose R2 audioUrl issue
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   if (searchParams.get("secret") !== "lf-debug-2026") {
@@ -11,9 +11,17 @@ export async function GET(req: NextRequest) {
   }
   const uid = "zuFmYCIaGLViRSc7LXFwej6wql22";
 
+  // Direct R2 test — upload a tiny file and report the result
+  let r2TestUrl: string | null = null;
+  let r2TestError: string | null = null;
+  try {
+    r2TestUrl = await uploadTakeAudio("debug-test-file", Buffer.from("learnfast-r2-test"), "text/plain");
+  } catch (err) {
+    r2TestError = err instanceof Error ? err.message : String(err);
+  }
+
   const db = getAdminDb();
 
-  // Get the 3 most recent rehearsal sessions
   const sessionsSnap = await db
     .collection("rehearsal_sessions")
     .where("presenterId", "==", uid)
@@ -41,6 +49,8 @@ export async function GET(req: NextRequest) {
   );
 
   return NextResponse.json({
+    r2TestUrl,
+    r2TestError,
     r2Configured: !!process.env.R2_ACCESS_KEY_ID,
     r2Bucket: process.env.R2_BUCKET ?? null,
     r2PublicUrl: process.env.R2_PUBLIC_URL ?? null,
