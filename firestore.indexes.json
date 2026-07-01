@@ -48,8 +48,7 @@
         { "fieldPath": "presenterId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
-    }
-  ],
+    },
     {
       "collectionGroup": "rehearsal_sessions",
       "queryScope": "COLLECTION",
