@@ -44,6 +44,7 @@ export async function GET(req: NextRequest) {
           status: t.data().status,
           audioUrl: t.data().audioUrl ?? null,
           r2Error: t.data().r2Error ?? null,
+          r2Debug: t.data().r2Debug ?? null,
           isPromoted: t.data().isPromoted ?? false,
           createdAt: t.data().createdAt?.toDate?.()?.toISOString() ?? null,
         })),
