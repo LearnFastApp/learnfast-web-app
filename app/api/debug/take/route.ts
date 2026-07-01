@@ -5,10 +5,11 @@ export const dynamic = "force-dynamic";
 
 // Temporary debug endpoint — returns raw take data to diagnose R2 audioUrl issue
 export async function GET(req: NextRequest) {
-  const uid = await verifyAuthToken(req);
-  if (!uid || uid !== "zuFmYCIaGLViRSc7LXFwej6wql22") {
+  const { searchParams } = new URL(req.url);
+  if (searchParams.get("secret") !== "lf-debug-2026") {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
+  const uid = "zuFmYCIaGLViRSc7LXFwej6wql22";
 
   const db = getAdminDb();
 
