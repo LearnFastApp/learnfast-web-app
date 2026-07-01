@@ -40,6 +40,16 @@ function LoginForm() {
     setIsFr(navigator.language?.toLowerCase().startsWith("fr"));
   }, []);
 
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((u) => {
+      if (u?.emailVerified) {
+        const redirect = searchParams.get("redirect") ?? "/dashboard";
+        router.replace(redirect);
+      }
+    });
+    return unsubscribe;
+  }, [router, searchParams]);
+
   function friendlyError(code: string): string {
     if (isFr) {
       switch (code) {
