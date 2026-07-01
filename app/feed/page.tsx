@@ -212,6 +212,24 @@ export default function FeedPage() {
       </header>
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
+        {/* Welcome note */}
+        <div className="rounded-xl p-5" style={{ backgroundColor: "#0d1117", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <p className="text-xs font-semibold tracking-widest text-slate-500 uppercase mb-2">About this space</p>
+          <p className="text-sm text-slate-300 leading-relaxed mb-3">
+            The Coaching Feed is where LearnFast presenters share their rehearsals and invite real feedback from peers.
+            Each recording has already been assessed by AI across five dimensions — your job is to add the human perspective the AI can&apos;t.
+          </p>
+          <p className="text-sm text-slate-300 leading-relaxed mb-3">
+            The best feedback is <span className="text-white font-semibold">specific</span>, <span className="text-white font-semibold">honest</span>, and <span className="text-white font-semibold">kind</span>.
+            Note what landed, what distracted you, and what one thing you&apos;d change. Avoid vague praise — a presenter can&apos;t act on &ldquo;great job.&rdquo;
+          </p>
+          <div className="flex items-start gap-2 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            <span className="text-xs text-slate-600 leading-relaxed">
+              All comments are moderated. Anything disrespectful, unhelpful, or off-topic will be removed.
+            </span>
+          </div>
+        </div>
+
         {/* Dimension filters */}
         <div className="flex gap-2 overflow-x-auto pb-1">
           <button
