@@ -12,17 +12,22 @@ export async function GET(req: NextRequest) {
 
   const db = getAdminDb();
 
-  let query = db
+  const snap = await db
     .collection("rehearsal_sessions")
     .where("isPublic", "==", true)
-    .orderBy("sharedAt", "desc")
-    .limit(PAGE + 1);
+    .limit(100)
+    .get();
 
-  if (cursor) query = query.startAfter(cursor);
+  // Sort in-memory — avoids requiring a composite index on isPublic+sharedAt
+  const sorted = snap.docs.sort((a, b) => {
+    const aDate = a.data().sharedAt ?? "";
+    const bDate = b.data().sharedAt ?? "";
+    return bDate > aDate ? 1 : bDate < aDate ? -1 : 0;
+  });
 
-  const snap = await query.get();
-  const docs = snap.docs.slice(0, PAGE);
-  const hasMore = snap.docs.length > PAGE;
+  const startIdx = cursor ? sorted.findIndex((d) => d.data().sharedAt === cursor) + 1 : 0;
+  const docs = sorted.slice(startIdx, startIdx + PAGE);
+  const hasMore = startIdx + PAGE < sorted.length;
 
   const presenterIds = [...new Set(docs.map((d) => d.data().presenterId as string))];
   const presenterSnaps = await Promise.all(
