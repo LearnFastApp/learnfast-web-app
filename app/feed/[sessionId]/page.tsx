@@ -155,6 +155,16 @@ export default function FeedViewerPage() {
     Promise.all([fetchItem(), fetchComments()]).finally(() => setLoading(false));
   }, [fetchItem, fetchComments]);
 
+  async function deleteComment(commentId: string) {
+    if (!user) return;
+    const token = await user.getIdToken();
+    const res = await fetch(`/api/feed/${sessionId}/comments/${commentId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) setComments((c) => c.filter((cm) => cm.id !== commentId));
+  }
+
   async function submitComment(reaction?: string) {
     if (!user) return;
     if (!reaction && !commentText.trim()) return;
@@ -333,9 +343,19 @@ export default function FeedViewerPage() {
                   {c.comment && (
                     <p className="text-sm text-slate-300 leading-relaxed">{c.comment}</p>
                   )}
-                  <p className="text-[10px] text-slate-700 mt-1.5">
-                    {new Date(c.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                  </p>
+                  <div className="flex items-center justify-between mt-1.5">
+                    <p className="text-[10px] text-slate-700">
+                      {new Date(c.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                    </p>
+                    {user && (c.authorId === user.uid || item.presenterId === user.uid || user.uid === "zuFmYCIaGLViRSc7LXFwej6wql22") && (
+                      <button
+                        onClick={() => deleteComment(c.id)}
+                        className="text-[10px] text-slate-700 hover:text-red-400 transition"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
