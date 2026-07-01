@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
           takeNumber: t.data().takeNumber,
           status: t.data().status,
           audioUrl: t.data().audioUrl ?? null,
+          r2Error: t.data().r2Error ?? null,
           isPromoted: t.data().isPromoted ?? false,
         })),
       };

@@ -76,8 +76,10 @@ export async function POST(
   // R2 upload is best-effort — failure must not block the transcription
   const mimeType = fileName.endsWith(".webm") ? "audio/webm" : "audio/mpeg";
   const audioUrlPromise = uploadTakeAudio(takeRef.id, fileBuffer, mimeType)
-    .catch((err) => {
-      console.error("[rehearsal/take] R2 upload failed:", err);
+    .catch(async (err) => {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[rehearsal/take] R2 upload failed:", msg);
+      await takeRef.update({ r2Error: msg });
       return null;
     });
 
