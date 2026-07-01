@@ -92,7 +92,7 @@ export default function Dashboard() {
   const [responseCounts, setResponseCounts] = useState<Record<string, number>>({});
   const [rehearsalSessions, setRehearsalSessions] = useState<{
     id: string; title: string; tags: string[]; takeCount: number;
-    createdAt: string | null;
+    createdAt: string | null; isPublic?: boolean;
   }[]>([]);
   const [rehearsalsLoading, setRehearsalsLoading] = useState(false);
   const [editingRehearsalTagsId, setEditingRehearsalTagsId] = useState<string | null>(null);
@@ -284,6 +284,19 @@ export default function Dashboard() {
     setRehearsalSessions((prev) => prev.map((r) => r.id === sessionId ? { ...r, tags: newTags } : r));
   }
 
+  async function handleToggleShare(sessionId: string, currentlyPublic: boolean) {
+    if (!user) return;
+    const token = await user.getIdToken();
+    await fetch(`/api/rehearsal/${sessionId}`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ isPublic: !currentlyPublic }),
+    });
+    setRehearsalSessions((prev) =>
+      prev.map((r) => r.id === sessionId ? { ...r, isPublic: !currentlyPublic } : r)
+    );
+  }
+
   function handleSignOut() {
     signOut(auth).then(() => router.replace("/"));
   }
@@ -331,6 +344,7 @@ export default function Dashboard() {
     { label: isFr ? "Analytiques" : "Analytics", icon: BarChart3, href: "/analytics" },
     { label: isFr ? "Analyse IA" : "AI Analysis", icon: Brain, href: "/ai-assessment" },
     ...(canSeeLeaderboard ? [{ label: isFr ? "Classement" : "Leaderboard", icon: Trophy, href: "/leaderboard" }] : []),
+    { label: isFr ? "Feed coaching" : "Coaching Feed", icon: Users, href: "/feed" },
     { label: isFr ? "Hub de ressources" : "Premium Resource Hub", icon: BookOpen, href: "#", comingSoon: true },
     { label: isFr ? "Paramètres" : "Settings", icon: Settings, href: "/settings" },
   ];
@@ -894,13 +908,25 @@ export default function Dashboard() {
                             </button>
                           )}
                         </div>
-                        <button
-                          onClick={() => handleDeleteRehearsal(r.id)}
-                          className="mt-3 flex items-center gap-1.5 text-xs text-slate-600 hover:text-red-400 transition opacity-0 group-hover:opacity-100"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          {isFr ? "Supprimer" : "Delete"}
-                        </button>
+                        <div className="mt-3 flex items-center gap-4">
+                          <button
+                            onClick={() => handleToggleShare(r.id, r.isPublic ?? false)}
+                            className="flex items-center gap-1.5 text-xs transition"
+                            style={{ color: r.isPublic ? "#22d3ee" : "#475569" }}
+                          >
+                            <span className="text-sm">{r.isPublic ? "●" : "○"}</span>
+                            {r.isPublic
+                              ? (isFr ? "Partagé dans le feed" : "Shared in feed")
+                              : (isFr ? "Partager dans le feed" : "Share to feed")}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteRehearsal(r.id)}
+                            className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-red-400 transition opacity-0 group-hover:opacity-100"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            {isFr ? "Supprimer" : "Delete"}
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>

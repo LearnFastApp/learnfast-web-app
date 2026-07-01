@@ -45,12 +45,21 @@ export async function PATCH(
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  const body = await req.json() as { tags?: string[] };
-  if (!Array.isArray(body.tags)) {
+  const body = await req.json() as { tags?: string[]; isPublic?: boolean; featuredTakeId?: string | null };
+  const update: Record<string, unknown> = {};
+
+  if (Array.isArray(body.tags)) update.tags = body.tags;
+  if (typeof body.isPublic === "boolean") {
+    update.isPublic = body.isPublic;
+    if (body.isPublic) update.sharedAt = new Date().toISOString();
+  }
+  if ("featuredTakeId" in body) update.featuredTakeId = body.featuredTakeId ?? null;
+
+  if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   }
 
-  await sessionRef.update({ tags: body.tags });
+  await sessionRef.update(update);
   return NextResponse.json({ ok: true });
 }
 

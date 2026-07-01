@@ -50,5 +50,22 @@
       ]
     }
   ],
+    {
+      "collectionGroup": "rehearsal_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isPublic", "order": "ASCENDING" },
+        { "fieldPath": "sharedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "coaching_comments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "rehearsalId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }
