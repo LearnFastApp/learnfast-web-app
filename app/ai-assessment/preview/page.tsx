@@ -253,19 +253,19 @@ export default function GapAnalysisPreviewPage() {
           <h2 className="text-sm font-semibold text-white mb-1">Three-Signal Overview</h2>
           <p className="text-xs text-slate-500 mb-5">AI assessment · audience feedback · self-reflection</p>
           <ResponsiveContainer width="100%" height={300}>
-            <RadarChart data={radarData}>
+            <RadarChart data={radarData} margin={{ top: 10, right: 30, bottom: 10, left: 30 }}>
               <PolarGrid stroke="#ffffff15" />
-              <PolarAngleAxis dataKey="dimension" tick={{ fill: "#94a3b8", fontSize: 12 }} />
+              <PolarAngleAxis dataKey="dimension" tick={{ fill: "#94a3b8", fontSize: 10 }} />
               <Radar name="AI Assessment" dataKey="ai" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.2} strokeWidth={2} />
               <Radar name="Audience Feedback" dataKey="audience" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.15} strokeWidth={2} />
               <Radar name="Self-Reflection" dataKey="reflection" stroke="#22d3ee" fill="#22d3ee" fillOpacity={0.1} strokeWidth={2} strokeDasharray="5 3" />
               <Legend formatter={(v) => <span className="text-xs text-slate-400">{v}</span>} wrapperStyle={{ paddingTop: 16 }} />
             </RadarChart>
           </ResponsiveContainer>
-          <div className="mt-4 grid grid-cols-5 gap-3">
+          <div className="mt-4 grid grid-cols-5 gap-1">
             {(Object.keys(DIM_LABELS) as Array<keyof typeof DIM_LABELS>).map((dim) => (
               <div key={dim} className="text-center">
-                <p className="text-xs text-slate-500 mb-1">{DIM_LABELS[dim]}</p>
+                <p className="text-[9px] sm:text-xs text-slate-500 mb-1 leading-tight">{DIM_LABELS[dim]}</p>
                 <p className="text-lg font-bold" style={{ color: DIM_COLORS[dim] }}>{ai[dim]}</p>
                 <p className="text-[10px] text-violet-400">{audience[dim]}</p>
                 <p className="text-[10px] text-cyan-400">{reflection[dim]}</p>

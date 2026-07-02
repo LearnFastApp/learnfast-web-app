@@ -316,11 +316,11 @@ export default function GuestResultsPage() {
             AI assessment across Clarity, Energy, Engagement, Understanding and Connection
           </p>
           <ResponsiveContainer width="100%" height={280}>
-            <RadarChart data={radarData}>
+            <RadarChart data={radarData} margin={{ top: 10, right: 30, bottom: 10, left: 30 }}>
               <PolarGrid stroke="#ffffff15" />
               <PolarAngleAxis
                 dataKey="dimension"
-                tick={{ fill: "#94a3b8", fontSize: 12 }}
+                tick={{ fill: "#94a3b8", fontSize: 10 }}
               />
               <Radar
                 name="AI Assessment"
@@ -338,11 +338,11 @@ export default function GuestResultsPage() {
               />
             </RadarChart>
           </ResponsiveContainer>
-          <div className="mt-4 grid grid-cols-5 gap-3">
+          <div className="mt-4 grid grid-cols-5 gap-1">
             {DIMENSIONS.map((dim) => (
               <div key={dim} className="text-center">
-                <p className="text-xs text-slate-500 mb-1">{DIM_LABELS[dim]}</p>
-                <p className="text-xl font-bold" style={{ color: DIM_COLORS[dim] }}>
+                <p className="text-[9px] sm:text-xs text-slate-500 mb-1 leading-tight">{DIM_LABELS[dim]}</p>
+                <p className="text-lg sm:text-xl font-bold" style={{ color: DIM_COLORS[dim] }}>
                   {scores[dim]}
                 </p>
               </div>

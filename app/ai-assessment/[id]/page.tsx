@@ -332,9 +332,9 @@ export default function AiAssessmentResultsPage() {
           </p>
 
           <ResponsiveContainer width="100%" height={300}>
-            <RadarChart data={radarData}>
+            <RadarChart data={radarData} margin={{ top: 10, right: 30, bottom: 10, left: 30 }}>
               <PolarGrid stroke="#ffffff15" />
-              <PolarAngleAxis dataKey="dimension" tick={{ fill: "#94a3b8", fontSize: 12 }} />
+              <PolarAngleAxis dataKey="dimension" tick={{ fill: "#94a3b8", fontSize: 10 }} />
               <Radar name={s.aiLegend} dataKey="ai" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.2} strokeWidth={2} />
               {audienceScores && (
                 <Radar name={s.audLegend} dataKey="audience" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.15} strokeWidth={2} />
@@ -350,11 +350,11 @@ export default function AiAssessmentResultsPage() {
           </ResponsiveContainer>
 
           {/* Score grid */}
-          <div className="mt-4 grid grid-cols-5 gap-3">
+          <div className="mt-4 grid grid-cols-5 gap-1">
             {DIMENSIONS.map((dim) => (
               <div key={dim} className="text-center">
-                <p className="text-xs text-slate-500 mb-1">{DIM_LABELS[dim]}</p>
-                <p className="text-xl font-bold" style={{ color: DIM_COLORS[dim] }}>{scores[dim]}</p>
+                <p className="text-[9px] sm:text-xs text-slate-500 mb-1 leading-tight">{DIM_LABELS[dim]}</p>
+                <p className="text-lg sm:text-xl font-bold" style={{ color: DIM_COLORS[dim] }}>{scores[dim]}</p>
                 {audienceScores && (
                   <p className="text-[10px] text-slate-600 mt-0.5">{s.audPrefix} {audienceScores[dim]}</p>
                 )}
