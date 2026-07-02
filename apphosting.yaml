@@ -3,6 +3,7 @@ runConfig:
   memoryMiB: 512
   minInstances: 1
   concurrency: 80
+  timeoutSeconds: 300
 
 env:
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY

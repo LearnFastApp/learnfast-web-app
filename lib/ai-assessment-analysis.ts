@@ -109,7 +109,7 @@ VOCAL STATS (use these to inform your scores — they are objective measurements
 - Sentiment: ${opts.positivePercent}% positive, ${opts.neutralPercent}% neutral, ${opts.negativePercent}% negative sentences
 
 TRANSCRIPT:
-${opts.transcript.slice(0, 8000)}
+${opts.transcript.slice(0, 24000)}
 
 Return ONLY valid JSON with no markdown, no explanation, no code fences:
 {
