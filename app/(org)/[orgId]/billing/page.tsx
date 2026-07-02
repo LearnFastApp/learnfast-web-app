@@ -54,6 +54,7 @@ export default function BillingPage() {
   const [orgInfo, setOrgInfo] = useState<OrgInfo | null>(null);
   const [myRole, setMyRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Seat adjustment state
   const [newSeats, setNewSeats] = useState<number>(0);
@@ -79,15 +80,22 @@ export default function BillingPage() {
         fetch(`/api/org/${orgId}/info`, { headers }),
         fetch(`/api/org/${orgId}/members-list`, { headers }),
       ]);
-      if (infoRes.status === 403) { router.replace("/dashboard"); return; }
-      if (infoRes.ok) {
-        const d = await infoRes.json();
-        setOrgInfo(d);
-        setNewSeats(d.seats.purchased);
+      if (infoRes.status === 401) { router.replace("/auth/login"); return; }
+      if (!infoRes.ok) {
+        const errData = await infoRes.json().catch(() => ({}));
+        setError(`Unable to load billing (${errData.error ?? infoRes.status}). Check you are a member of this organisation.`);
+        return;
       }
+
+      const infoData = await infoRes.json();
+      setOrgInfo(infoData);
+      setNewSeats(infoData.seats.purchased);
+      // info route now returns myRole — use as fallback if members-list is restricted
       if (membersRes.ok) {
         const d = await membersRes.json();
         setMyRole(d.myRole);
+      } else {
+        setMyRole(infoData.myRole ?? null);
       }
     } finally {
       setLoading(false);
@@ -190,6 +198,22 @@ export default function BillingPage() {
     return (
       <main className="min-h-screen bg-[#05070d] flex items-center justify-center">
         <Loader2 className="w-6 h-6 text-violet-400 animate-spin" />
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="min-h-screen bg-[#05070d] flex items-center justify-center p-6">
+        <div className="max-w-sm w-full bg-[#0f172a] border border-red-500/20 rounded-2xl p-8 text-center">
+          <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
+          <p className="text-white font-semibold mb-1">Unable to load billing</p>
+          <p className="text-slate-400 text-sm">{error}</p>
+          <button onClick={() => router.replace("/dashboard")}
+            className="mt-6 text-sm text-violet-400 hover:text-violet-300 underline">
+            Back to dashboard
+          </button>
+        </div>
       </main>
     );
   }

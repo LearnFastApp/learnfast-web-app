@@ -32,5 +32,8 @@ export async function GET(
       : null,
     plan: org.plan,
     settings: org.settings,
+    stripeCustomerId: org.stripeCustomerId ?? null,
+    stripeSubscriptionId: org.stripeSubscriptionId ?? null,
+    myRole: ctx.role,
   });
 }
