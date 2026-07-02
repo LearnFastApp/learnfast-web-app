@@ -21,9 +21,13 @@ export default function CallbackPage() {
       window.prompt("Please enter your email to confirm sign-in") ??
       "";
 
+    // Consume pending org invite token stored before login redirect
+    const pendingInviteToken = window.localStorage.getItem("pendingOrgInviteToken");
+
     signInWithEmailLink(auth, email, window.location.href)
       .then(async (result) => {
         window.localStorage.removeItem("emailForSignIn");
+
         // Upsert presenter doc so it exists for dashboard queries
         await setDoc(
           doc(db, "presenters", result.user.uid),
@@ -34,6 +38,27 @@ export default function CallbackPage() {
           },
           { merge: true }
         );
+
+        const idToken = await result.user.getIdToken();
+
+        // Domain auto-join: silently attempt if user has no org yet
+        try {
+          await fetch("/api/org/domain-join", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${idToken}` },
+          });
+        } catch {
+          // Non-fatal — user continues normally without org membership
+        }
+
+        // If a pending invite token was stored, redirect to the join page to complete acceptance
+        if (pendingInviteToken) {
+          window.localStorage.removeItem("pendingOrgInviteToken");
+          // Extract orgId from the token doc is handled server-side — we just redirect to the join URL
+          router.replace(`/org/join/${pendingInviteToken}`);
+          return;
+        }
+
         router.replace("/dashboard");
       })
       .catch((err: unknown) => {

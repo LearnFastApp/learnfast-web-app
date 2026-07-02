@@ -106,3 +106,7 @@ env:
     secret: R2_SECRET_ACCESS_KEY
     availability:
       - RUNTIME
+  - variable: ENTERPRISE_ENABLED
+    value: "true"
+    availability:
+      - RUNTIME

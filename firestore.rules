@@ -208,5 +208,12 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // ── Enterprise: invite token index (server-side only) ───────────────────
+    // Tokens are created and consumed exclusively via admin SDK.
+    // No client should ever read or write this collection directly.
+    match /org_invite_tokens/{token} {
+      allow read, write: if false;
+    }
+
   }
 }
