@@ -89,7 +89,14 @@ export default function MembersPage() {
         fetch(`/api/org/${orgId}/info`, { headers }),
       ]);
 
-      if (membersRes.status === 403 || membersRes.status === 401) {
+      if (membersRes.status === 401) { router.replace("/auth/login"); return; }
+      if (membersRes.status === 403) {
+        // members-list returns wrong_org if URL orgId doesn't match presenter's orgId
+        const errData = await membersRes.json().catch(() => ({}));
+        if (errData.error === "wrong_org" && errData.yourOrgId) {
+          router.replace(`/${errData.yourOrgId}/members`);
+          return;
+        }
         router.replace("/dashboard");
         return;
       }

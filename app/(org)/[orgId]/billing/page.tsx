@@ -83,6 +83,11 @@ export default function BillingPage() {
       if (infoRes.status === 401) { router.replace("/auth/login"); return; }
       if (!infoRes.ok) {
         const errData = await infoRes.json().catch(() => ({}));
+        // If the URL orgId is wrong, redirect to the correct org's billing page
+        if (errData.error === "wrong_org" && errData.yourOrgId) {
+          router.replace(`/${errData.yourOrgId}/billing`);
+          return;
+        }
         setError(`Unable to load billing (${errData.error ?? infoRes.status}). Check you are a member of this organisation.`);
         return;
       }

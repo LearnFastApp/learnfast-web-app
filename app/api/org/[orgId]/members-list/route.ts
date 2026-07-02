@@ -14,8 +14,9 @@ export async function GET(
 
   const { orgId } = await params;
   const ctx = await getOrgContext(uid);
-  if (!ctx || ctx.orgId !== orgId) {
-    return NextResponse.json({ error: "not_in_org" }, { status: 403 });
+  if (!ctx) return NextResponse.json({ error: "not_in_org" }, { status: 403 });
+  if (ctx.orgId !== orgId) {
+    return NextResponse.json({ error: "wrong_org", yourOrgId: ctx.orgId }, { status: 403 });
   }
   if (!hasOrgPermission(ctx.role, "admin")) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
