@@ -11,6 +11,22 @@ import { UploadCloud, FileVideo, Loader2, AlertCircle, Brain } from "lucide-reac
 const ACCEPTED_TYPES = ["video/mp4", "video/quicktime", "video/webm", "video/x-matroska", "audio/mpeg", "audio/wav", "audio/mp4", "audio/x-m4a"];
 const ACCEPTED_EXT = ".mp4,.mov,.webm,.mkv,.mp3,.wav,.m4a";
 const MAX_SIZE_BYTES = 500 * 1024 * 1024;
+const MAX_DURATION_SECONDS = 60 * 60; // 60 minutes
+
+async function checkDuration(blob: Blob): Promise<number> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    const cleanup = (value: number) => {
+      clearTimeout(timer);
+      URL.revokeObjectURL(url);
+      resolve(value);
+    };
+    const timer = setTimeout(() => cleanup(0), 4000);
+    audio.addEventListener("loadedmetadata", () => cleanup(audio.duration));
+    audio.addEventListener("error", () => cleanup(0));
+  });
+}
 
 type Stage = "idle" | "uploading" | "submitted" | "error";
 
@@ -22,7 +38,7 @@ const STRINGS = {
     subheading: "Upload a recording and get AI-powered scores across all five dimensions — Clarity, Energy, Engagement, Understanding and Connection.",
     dropLabel: "Drop your recording here",
     dropSub: "or click to browse",
-    dropFormats: "MP4, MOV, WebM, MP3, WAV · max 500 MB",
+    dropFormats: "MP4, MOV, WebM, MP3, WAV · max 60 min · max 500 MB",
     uploading: "Uploading…",
     analysing: "Analysing your presentation…",
     analysingDesc: "Shorter recordings take 1–3 minutes. Longer files (20+ minutes) may take up to 10 minutes. You can leave this page — your results will be ready in your dashboard.",
@@ -37,7 +53,7 @@ const STRINGS = {
     subheading: "Téléchargez un enregistrement et obtenez des scores IA sur les cinq dimensions — Clarté, Énergie, Engagement, Compréhension et Connexion.",
     dropLabel: "Déposez votre enregistrement ici",
     dropSub: "ou cliquez pour parcourir",
-    dropFormats: "MP4, MOV, WebM, MP3, WAV · max 500 Mo",
+    dropFormats: "MP4, MOV, WebM, MP3, WAV · max 60 min · max 500 Mo",
     uploading: "Téléchargement…",
     analysing: "Analyse de votre présentation…",
     analysingDesc: "Les enregistrements courts prennent 1–3 minutes. Les fichiers longs (20+ minutes) peuvent prendre jusqu'à 10 minutes. Vous pouvez quitter cette page — vos résultats seront disponibles dans votre tableau de bord.",
@@ -94,6 +110,17 @@ export default function AiAssessmentPage() {
     }
     if (file.size > MAX_SIZE_BYTES) {
       setErrorMsg(locale === "fr" ? "Fichier trop volumineux — maximum 500 Mo." : "File is too large. Maximum size is 500 MB.");
+      setStage("error");
+      return;
+    }
+
+    const duration = await checkDuration(file);
+    if (duration > MAX_DURATION_SECONDS) {
+      setErrorMsg(
+        locale === "fr"
+          ? "Enregistrement trop long — maximum 60 minutes. Découpez votre fichier et réessayez."
+          : "Recording is too long — maximum 60 minutes. Please trim your file and try again."
+      );
       setStage("error");
       return;
     }
