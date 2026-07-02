@@ -127,9 +127,9 @@ export const ARCHETYPE_DEFS: Record<ArchetypeKey, ArchetypeDefinition> = {
  * Order of precedence:
  *   1. Imposter (self underestimates vs AI by >14 pts)
  *   2. Blind Spot (self overestimates vs AI by >14 pts)
- *   3. Expert (overall AI ≥76, no dimension <60)
- *   4. Natural (delivery dims dominate structure dims by ≥11 pts)
- *   5. Technician (structure dims dominate delivery dims by ≥11 pts)
+ *   3. Expert (overall AI ≥70, no dimension <55)
+ *   4. Natural (delivery dims dominate structure dims by ≥8 pts)
+ *   5. Technician (structure dims dominate delivery dims by ≥8 pts)
  *   6. Developer (default)
  */
 export function classifyArchetype(
@@ -145,13 +145,13 @@ export function classifyArchetype(
   }
 
   const minDim = Math.min(...DIMS.map((d) => aiScores[d] ?? 0));
-  if (aiAvg >= 76 && minDim >= 60) return "expert";
+  if (aiAvg >= 70 && minDim >= 55) return "expert";
 
   const deliveryAvg = mean(aiScores, DELIVERY_DIMS);
   const structureAvg = mean(aiScores, STRUCTURE_DIMS);
 
-  if (deliveryAvg - structureAvg >= 11) return "natural";
-  if (structureAvg - deliveryAvg >= 11) return "technician";
+  if (deliveryAvg - structureAvg >= 8) return "natural";
+  if (structureAvg - deliveryAvg >= 8) return "technician";
 
   return "developer";
 }
