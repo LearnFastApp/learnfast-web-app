@@ -50,14 +50,14 @@ async function checkDuration(blob: Blob): Promise<number> {
   return new Promise((resolve) => {
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
-    audio.addEventListener("loadedmetadata", () => {
+    const cleanup = (value: number) => {
+      clearTimeout(timer);
       URL.revokeObjectURL(url);
-      resolve(audio.duration);
-    });
-    audio.addEventListener("error", () => {
-      URL.revokeObjectURL(url);
-      resolve(0);
-    });
+      resolve(value);
+    };
+    const timer = setTimeout(() => cleanup(0), 3000);
+    audio.addEventListener("loadedmetadata", () => cleanup(audio.duration));
+    audio.addEventListener("error", () => cleanup(0));
   });
 }
 

@@ -76,12 +76,9 @@ export async function GET(
     return NextResponse.json({ status: "processing" });
   }
 
-  // Enforce 90-second limit server-side
-  const audioDurationSeconds = transcript.audio_duration ?? 0;
-  if (audioDurationSeconds > MAX_DURATION_SECONDS) {
-    await docRef.update({ status: "failed", error: "duration_exceeded" });
-    return NextResponse.json({ status: "failed", error: "duration_exceeded" });
-  }
+  // audio_end_at: 90000 on the submission already limits transcription to 90s —
+  // audio_duration reflects the TOTAL file length, so we no longer check it here.
+  const audioDurationSeconds = Math.min(transcript.audio_duration ?? 0, MAX_DURATION_SECONDS);
 
   // Run Claude analysis
   const words = transcript.words ?? [];
