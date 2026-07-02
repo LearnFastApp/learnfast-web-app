@@ -2,14 +2,39 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ── Shared helpers ──────────────────────────────────────────────────────
+
     function isSessionPresenter(sessionId) {
       return request.auth != null &&
         request.auth.uid == get(/databases/$(database)/documents/sessions/$(sessionId)).data.presenterId;
     }
 
+    // ── Enterprise org helpers ──────────────────────────────────────────────
+    // isOrgMember uses exists() (1 read); isOrgRole uses get() (1 read).
+    // Combined they cost 2 reads per rule evaluation — within the 10-read limit.
+
+    function isOrgMember(orgId) {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid));
+    }
+
+    function getOrgMemberData(orgId) {
+      return get(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid)).data;
+    }
+
+    function isOrgRole(orgId, roles) {
+      return isOrgMember(orgId) &&
+        getOrgMemberData(orgId).role in roles &&
+        getOrgMemberData(orgId).status == 'active';
+    }
+
+    // ── Consumer product: presenters ────────────────────────────────────────
+
     match /presenters/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
+
+    // ── Consumer product: sessions ──────────────────────────────────────────
 
     match /sessions/{sessionId} {
       allow read: if true;
@@ -19,9 +44,48 @@ service cloud.firestore {
         && request.auth.uid == resource.data.presenterId;
     }
 
+    // ── Feedback responses (consumer + enterprise, top-level collection) ────
+    // Consumer writes go through /api/feedback (admin SDK — bypasses rules).
+    // Enterprise writes (Phase 3) come from the authenticated /f/{code} form
+    // via a Server Action (admin SDK) or direct client write.
+    //
+    // The create rule below validates the enterprise nested-scores format.
+    // Consumer admin-SDK writes bypass these rules, so this is defence-in-depth.
+    //
+    // Phase 3 will add session-status window validation (see BACKLOG P3-10).
+
     match /feedback_responses/{responseId} {
-      allow create: if true;
+      allow create: if (
+        request.resource.data.keys().hasAll(['sessionId', 'scores', 'submittedAt']) &&
+        request.resource.data.scores is map &&
+        request.resource.data.scores.keys().hasAll([
+          'clarity', 'energy', 'engagement', 'understanding', 'connection'
+        ]) &&
+        request.resource.data.scores.clarity   is number &&
+        request.resource.data.scores.clarity   >= 1 &&
+        request.resource.data.scores.clarity   <= 10 &&
+        request.resource.data.scores.energy    is number &&
+        request.resource.data.scores.energy    >= 1 &&
+        request.resource.data.scores.energy    <= 10 &&
+        request.resource.data.scores.engagement is number &&
+        request.resource.data.scores.engagement >= 1 &&
+        request.resource.data.scores.engagement <= 10 &&
+        request.resource.data.scores.understanding is number &&
+        request.resource.data.scores.understanding >= 1 &&
+        request.resource.data.scores.understanding <= 10 &&
+        request.resource.data.scores.connection is number &&
+        request.resource.data.scores.connection >= 1 &&
+        request.resource.data.scores.connection <= 10 &&
+        (
+          !('comment' in request.resource.data) ||
+          (
+            request.resource.data.comment is string &&
+            request.resource.data.comment.size() <= 500
+          )
+        )
+      );
       allow read: if isSessionPresenter(resource.data.sessionId);
+      allow update, delete: if false;
     }
 
     match /presenter_reflections/{sessionId} {
@@ -69,6 +133,78 @@ service cloud.firestore {
     }
 
     match /presenter_resource_history/{uid} {
+      allow read, write: if false;
+    }
+
+    // ── Enterprise: organizations ───────────────────────────────────────────
+    // All enterprise paths sit behind orgId checks — consumers are unaffected.
+
+    match /organizations/{orgId} {
+      // Any org member can read the org doc (name, branding, seat count, etc.)
+      allow read: if isOrgMember(orgId);
+
+      // Any authenticated user can create an org (they become the owner via
+      // the /api/org/create route which sets createdBy = auth.uid).
+      allow create: if request.auth != null &&
+        request.resource.data.createdBy == request.auth.uid;
+
+      // Only owners and admins can update org settings/branding.
+      allow update: if isOrgRole(orgId, ['owner', 'admin']);
+
+      // Only owners can delete the org.
+      allow delete: if isOrgRole(orgId, ['owner']);
+
+      // ── Member sub-collection ───────────────────────────────────────────
+      match /members/{userId} {
+        // All org members can read the member list (for team awareness).
+        allow read: if isOrgMember(orgId);
+
+        // Owners and admins manage membership.
+        // (Invite acceptance is handled server-side via admin SDK.)
+        allow create, update, delete: if isOrgRole(orgId, ['owner', 'admin']);
+      }
+
+      // ── Invites sub-collection ──────────────────────────────────────────
+      match /invites/{inviteId} {
+        // Only admins+ can view or manage pending invites.
+        allow read, write: if isOrgRole(orgId, ['owner', 'admin']);
+      }
+
+      // ── Teams sub-collection ────────────────────────────────────────────
+      match /teams/{teamId} {
+        // All org members can see which teams exist.
+        allow read: if isOrgMember(orgId);
+
+        // Coaches can create/manage teams; admins/owners too.
+        allow write: if isOrgRole(orgId, ['owner', 'admin', 'coach']);
+      }
+
+      // ── Enterprise sessions sub-collection ─────────────────────────────
+      match /sessions/{sessionId} {
+        // All org members can read session details (feedback URLs, QRs, etc.)
+        allow read: if isOrgMember(orgId);
+
+        // Any org member can schedule a session.
+        allow create: if isOrgMember(orgId);
+
+        // Admins+ can edit any session; the presenting member can edit their own.
+        allow update: if isOrgRole(orgId, ['owner', 'admin']) ||
+          (isOrgMember(orgId) && resource.data.presenterId == request.auth.uid);
+
+        // Admins+ can cancel/delete sessions.
+        allow delete: if isOrgRole(orgId, ['owner', 'admin']);
+      }
+
+      // ── Analytics sub-collection ────────────────────────────────────────
+      // Written server-side only (Cloud Function / admin SDK). Never from client.
+      match /analytics/{period} {
+        allow read: if isOrgRole(orgId, ['owner', 'admin', 'coach']);
+        allow write: if false;
+      }
+    }
+
+    // ── Enterprise: billing events log (idempotency log, server-side only) ──
+    match /billingEvents/{eventId} {
       allow read, write: if false;
     }
 
