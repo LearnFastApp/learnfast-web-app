@@ -132,7 +132,7 @@ Return ONLY valid JSON with no markdown, no explanation, no code fences:
 Include 3–5 highlights (mix of strengths and opportunities) and exactly 3 tips targeting the lowest-scoring dimensions.`;
 
   const message = await client.messages.create({
-    model: "claude-sonnet-4-6",
+    model: "claude-fable-5",
     max_tokens: 2048,
     messages: [{ role: "user", content: prompt }],
   });

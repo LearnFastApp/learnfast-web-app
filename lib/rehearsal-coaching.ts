@@ -101,7 +101,7 @@ Return ONLY valid JSON — no markdown, no code fences, no explanation:
 }`;
 
   const message = await client.messages.create({
-    model: "claude-sonnet-4-6",
+    model: "claude-fable-5",
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   });
