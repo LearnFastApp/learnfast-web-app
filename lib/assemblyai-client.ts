@@ -6,7 +6,10 @@ function getClient() {
   return new AssemblyAI({ apiKey: key });
 }
 
-export async function uploadAndSubmitTranscription(buffer: Buffer): Promise<string> {
+export async function uploadAndSubmitTranscription(
+  buffer: Buffer,
+  opts?: { audioEndAt?: number }
+): Promise<string> {
   const client = getClient();
   const uploadUrl = await client.files.upload(buffer);
   const transcript = await client.transcripts.submit({
@@ -15,6 +18,7 @@ export async function uploadAndSubmitTranscription(buffer: Buffer): Promise<stri
     sentiment_analysis: true,
     auto_highlights: true,
     disfluencies: true,
+    ...(opts?.audioEndAt != null ? { audio_end_at: opts.audioEndAt } : {}),
   });
   return transcript.id;
 }

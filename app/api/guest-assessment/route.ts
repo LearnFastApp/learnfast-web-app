@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
 
   // Upload buffer directly to AssemblyAI and submit (no Firebase Storage needed)
   try {
-    const transcriptId = await uploadAndSubmitTranscription(fileBuffer);
+    const transcriptId = await uploadAndSubmitTranscription(fileBuffer, { audioEndAt: 90 * 1000 });
     await ref.update({ assemblyAiId: transcriptId, status: "processing" });
   } catch (err) {
     console.error("[guest-assessment] AssemblyAI upload/submit failed:", err);

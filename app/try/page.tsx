@@ -17,7 +17,7 @@ import {
 
 type Tab = "record" | "upload";
 type RecordStage = "idle" | "requesting" | "recording" | "preview";
-type PageStage = "form" | "submitting" | "submitted" | "error";
+type PageStage = "form" | "trimming" | "submitting" | "submitted" | "error";
 
 const MAX_DURATION_SECONDS = 90;
 const ACCEPTED_TYPES = [
@@ -59,6 +59,59 @@ async function checkDuration(blob: Blob): Promise<number> {
       resolve(0);
     });
   });
+}
+
+function audioBufferToWav(buffer: AudioBuffer): Blob {
+  const ch = buffer.numberOfChannels;
+  const sr = buffer.sampleRate;
+  const len = buffer.length;
+  const bps = 2;
+  const dataLen = len * ch * bps;
+  const ab = new ArrayBuffer(44 + dataLen);
+  const dv = new DataView(ab);
+  const str = (off: number, s: string) => {
+    for (let i = 0; i < s.length; i++) dv.setUint8(off + i, s.charCodeAt(i));
+  };
+  str(0, "RIFF"); dv.setUint32(4, 36 + dataLen, true);
+  str(8, "WAVE"); str(12, "fmt ");
+  dv.setUint32(16, 16, true); dv.setUint16(20, 1, true);
+  dv.setUint16(22, ch, true); dv.setUint32(24, sr, true);
+  dv.setUint32(28, sr * ch * bps, true); dv.setUint16(32, ch * bps, true);
+  dv.setUint16(34, 16, true); str(36, "data"); dv.setUint32(40, dataLen, true);
+  let off = 44;
+  for (let i = 0; i < len; i++) {
+    for (let c = 0; c < ch; c++) {
+      const s = Math.max(-1, Math.min(1, buffer.getChannelData(c)[i]));
+      dv.setInt16(off, s * 0x7fff, true);
+      off += 2;
+    }
+  }
+  return new Blob([ab], { type: "audio/wav" });
+}
+
+async function trimAudioTo90s(file: File): Promise<{ blob: Blob; trimmed: boolean }> {
+  try {
+    const ab = await file.arrayBuffer();
+    const ctx = new AudioContext();
+    const audioBuffer = await ctx.decodeAudioData(ab);
+    await ctx.close();
+    if (audioBuffer.duration <= MAX_DURATION_SECONDS + 2) {
+      return { blob: file, trimmed: false };
+    }
+    const sr = audioBuffer.sampleRate;
+    const ch = audioBuffer.numberOfChannels;
+    const samples = Math.floor(MAX_DURATION_SECONDS * sr);
+    const offline = new OfflineAudioContext(ch, samples, sr);
+    const src = offline.createBufferSource();
+    src.buffer = audioBuffer;
+    src.connect(offline.destination);
+    src.start(0);
+    const rendered = await offline.startRendering();
+    return { blob: audioBufferToWav(rendered), trimmed: true };
+  } catch {
+    // OOM or unsupported format — return original; server handles via audio_end_at
+    return { blob: file, trimmed: false };
+  }
 }
 
 export default function TryPage() {
@@ -231,8 +284,8 @@ export default function TryPage() {
       return;
     }
 
-    const blob = tab === "record" ? recordedBlob : uploadFile;
-    if (!blob) {
+    const rawBlob = tab === "record" ? recordedBlob : uploadFile;
+    if (!rawBlob) {
       setErrorMsg(
         tab === "record"
           ? "Please record your presentation first."
@@ -242,29 +295,33 @@ export default function TryPage() {
       return;
     }
 
-    // Duration check client-side
-    const duration = await checkDuration(blob);
-    if (duration > 0 && duration > MAX_DURATION_SECONDS + 5) {
-      setErrorMsg(
-        `Your recording is ${Math.round(duration)} seconds. The free assessment supports recordings up to 90 seconds — perfect for a practice run or intro pitch.`
-      );
-      setPageStage("error");
-      return;
+    // For uploaded files longer than 90s, trim to 90s in-browser before uploading
+    let audioBlob: Blob = rawBlob;
+    let fileName: string;
+
+    if (tab === "upload" && uploadFile) {
+      const duration = await checkDuration(uploadFile);
+      if (duration > MAX_DURATION_SECONDS + 2) {
+        setPageStage("trimming");
+        const result = await trimAudioTo90s(uploadFile);
+        audioBlob = result.blob;
+        fileName = result.trimmed
+          ? `trimmed-${Date.now()}.wav`
+          : uploadFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      } else {
+        fileName = uploadFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      }
+    } else {
+      fileName = `recording-${Date.now()}.webm`;
     }
 
     setPageStage("submitting");
     setErrorMsg("");
 
     try {
-      const fileName =
-        tab === "record"
-          ? `recording-${Date.now()}.webm`
-          : (uploadFile as File).name.replace(/[^a-zA-Z0-9._-]/g, "_");
-
-      // Send file directly to the API route — no Firebase Storage or auth needed
       const formData = new FormData();
       formData.append("email", trimmedEmail);
-      formData.append("file", blob, fileName);
+      formData.append("file", audioBlob, fileName);
 
       const res = await fetch("/api/guest-assessment", {
         method: "POST",
@@ -287,7 +344,6 @@ export default function TryPage() {
         return;
       }
 
-      // Redirect straight to results page — it shows a processing spinner until Claude finishes
       if (data.token) {
         window.location.href = `/try/${data.token}`;
       }
@@ -334,7 +390,7 @@ export default function TryPage() {
             Free AI Presentation Coach
           </h1>
           <p className="text-slate-400 text-sm max-w-md mx-auto leading-relaxed">
-            Upload or record up to 90 seconds of any presentation. Get scored across
+            Upload or record any presentation — any length. Get scored across
             five research-backed dimensions in 1–3 minutes. No account required.
           </p>
         </div>
@@ -487,7 +543,7 @@ export default function TryPage() {
                   <Upload className="h-8 w-8 text-slate-500 mb-3" />
                   <p className="text-sm font-semibold text-white mb-1">Drop your recording here</p>
                   <p className="text-xs text-slate-500">or click to browse</p>
-                  <p className="text-xs text-slate-600 mt-2">MP3, WAV, M4A, MP4, MOV, WebM · max 90 seconds</p>
+                  <p className="text-xs text-slate-600 mt-2">MP3, WAV, M4A, MP4, MOV, WebM · any length · first 90s analysed</p>
                 </>
               )}
             </div>
@@ -523,10 +579,15 @@ export default function TryPage() {
 
           <button
             onClick={handleSubmit}
-            disabled={pageStage === "submitting" || !hasContent || !email.trim()}
+            disabled={pageStage === "trimming" || pageStage === "submitting" || !hasContent || !email.trim()}
             className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold text-sm rounded-xl py-3.5 transition"
           >
-            {pageStage === "submitting" ? (
+            {pageStage === "trimming" ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Preparing your recording…
+              </>
+            ) : pageStage === "submitting" ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Uploading…
@@ -540,7 +601,7 @@ export default function TryPage() {
           </button>
 
           <p className="text-center text-xs text-slate-600">
-            One free assessment per email · No account required · Results in 1–3 minutes
+            One free assessment per email · No account required · Any length · First 90s analysed
           </p>
         </div>
 
