@@ -110,8 +110,9 @@ export async function GET(
       priorAssessments: [],
     });
   } catch (err) {
-    console.error("[guest-assessment/token] Claude analysis failed:", err);
-    await docRef.update({ status: "failed", error: "analysis_failed" });
+    const detail = err instanceof Error ? err.message : String(err);
+    console.error("[guest-assessment/token] Claude analysis failed:", detail);
+    await docRef.update({ status: "failed", error: "analysis_failed", errorDetail: detail });
     return NextResponse.json({ status: "failed", error: "analysis_failed" });
   }
 

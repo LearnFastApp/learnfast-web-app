@@ -1,1 +1,1 @@
-export const AI_MODEL = process.env.AI_MODEL ?? "claude-fable-5";
+export const AI_MODEL = process.env.AI_MODEL ?? "claude-sonnet-4-6";

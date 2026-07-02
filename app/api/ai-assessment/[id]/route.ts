@@ -119,8 +119,9 @@ export async function GET(
       priorAssessments,
     });
   } catch (err) {
-    console.error("[ai-assessment/get] Claude analysis failed:", err);
-    await docRef.update({ status: "failed", error: "Analysis failed" });
+    const detail = err instanceof Error ? err.message : String(err);
+    console.error("[ai-assessment/get] Claude analysis failed:", detail);
+    await docRef.update({ status: "failed", error: "Analysis failed", errorDetail: detail });
     return NextResponse.json({ status: "failed", error: "Analysis failed" });
   }
 
