@@ -390,8 +390,8 @@ export default function TryPage() {
             Free AI Presentation Coach
           </h1>
           <p className="text-slate-400 text-sm max-w-md mx-auto leading-relaxed">
-            Upload or record any presentation — any length. Get scored across
-            five research-backed dimensions in 1–3 minutes. No account required.
+            Upload or record any presentation — any length. We&apos;ll analyse the first
+            90 seconds and score you across five research-backed dimensions. No account required.
           </p>
         </div>
 
