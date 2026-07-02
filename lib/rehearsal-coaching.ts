@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { LANGUAGE_NAMES } from "./language-names";
+import { AI_MODEL } from "./ai-model";
 import type { AssessmentScores } from "./ai-assessment-analysis";
 
 export interface RehearsalCoaching {
@@ -101,7 +102,7 @@ Return ONLY valid JSON — no markdown, no code fences, no explanation:
 }`;
 
   const message = await client.messages.create({
-    model: "claude-fable-5",
+    model: AI_MODEL,
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   });

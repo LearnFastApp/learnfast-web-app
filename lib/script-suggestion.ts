@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { LANGUAGE_NAMES } from "./language-names";
+import { AI_MODEL } from "./ai-model";
 
 // Dimensions that script changes can address vs. delivery-only improvements
 const SCRIPT_ADDRESSABLE = new Set(["clarity", "engagement", "understanding", "connection"]);
@@ -97,7 +98,7 @@ Return ONLY valid JSON — no markdown, no code fences:
 }`;
 
   const message = await client.messages.create({
-    model: "claude-fable-5",
+    model: AI_MODEL,
     max_tokens: 2048,
     messages: [{ role: "user", content: prompt }],
   });

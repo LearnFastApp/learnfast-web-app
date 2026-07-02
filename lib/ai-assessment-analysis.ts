@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { LANGUAGE_NAMES } from "./language-names";
+import { AI_MODEL } from "./ai-model";
 
 const DIMENSIONS = ["clarity", "energy", "engagement", "understanding", "connection"] as const;
 type Dimension = (typeof DIMENSIONS)[number];
@@ -132,7 +133,7 @@ Return ONLY valid JSON with no markdown, no explanation, no code fences:
 Include 3–5 highlights (mix of strengths and opportunities) and exactly 3 tips targeting the lowest-scoring dimensions.`;
 
   const message = await client.messages.create({
-    model: "claude-fable-5",
+    model: AI_MODEL,
     max_tokens: 2048,
     messages: [{ role: "user", content: prompt }],
   });
