@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { collection, doc, getDoc, getDocs, limit, orderBy, query, where } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, Legend } from "recharts";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
@@ -119,6 +119,7 @@ interface AssessmentData {
   audioDurationSeconds?: number;
   wordsPerMinute?: number;
   fileName?: string;
+  sessionId?: string | null;
   error?: string;
 }
 
@@ -162,23 +163,12 @@ export default function AiAssessmentResultsPage() {
     return () => { if (pollRef.current) clearTimeout(pollRef.current); };
   }, [id, user, authLoading, router]);
 
-  // Fetch latest session audience + reflection scores for comparison
+  // Fetch audience + reflection scores — only if this assessment is linked to a session
   useEffect(() => {
-    if (!user) return;
+    if (!user || !assessment?.sessionId) return;
+    const sessionId = assessment.sessionId;
 
     async function fetchComparison() {
-      const sessionSnap = await getDocs(
-        query(
-          collection(db, "sessions"),
-          where("presenterId", "==", user!.uid),
-          where("status", "==", "closed"),
-          orderBy("createdAt", "desc"),
-          limit(1)
-        )
-      );
-      if (sessionSnap.empty) return;
-      const sessionId = sessionSnap.docs[0].id;
-
       const respSnap = await getDocs(
         query(collection(db, "feedback_responses"), where("sessionId", "==", sessionId))
       );
@@ -204,7 +194,7 @@ export default function AiAssessmentResultsPage() {
     }
 
     fetchComparison().catch(console.error);
-  }, [user]);
+  }, [user, assessment?.sessionId]);
 
   if (authLoading) return null;
 
@@ -323,12 +313,15 @@ export default function AiAssessmentResultsPage() {
           );
         })()}
 
-        {/* 3-Signal Radar */}
+        {/* Radar */}
         <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
-          <h2 className="text-sm font-semibold text-white mb-1">{s.radarTitle}</h2>
+          <h2 className="text-sm font-semibold text-white mb-1">
+            {audienceScores || reflectionScores ? s.radarTitle : (locale === "fr" ? "Vos cinq dimensions" : "Your five dimensions")}
+          </h2>
           <p className="text-xs text-slate-500 mb-5">
-            {s.radarSub}
-            {!audienceScores && !reflectionScores && ` ${s.radarNoData}`}
+            {audienceScores || reflectionScores
+              ? s.radarSub
+              : (locale === "fr" ? "Évaluation IA sur les cinq dimensions" : "AI assessment across five dimensions")}
           </p>
 
           <ResponsiveContainer width="100%" height={300}>
