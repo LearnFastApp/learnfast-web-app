@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe-server";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import type Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
 
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET ?? "";
+const PAST_DUE_GRACE_DAYS = 14;
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -31,44 +32,173 @@ export async function POST(req: NextRequest) {
 
   try {
     switch (event.type) {
+
+      // ── checkout.session.completed ────────────────────────────────────────
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        const uid = session.metadata?.firebaseUid;
-        if (!uid) break;
-        await adminDb.doc(`presenters/${uid}`).set(
-          {
+        const orgId = session.metadata?.orgId;
+
+        if (orgId) {
+          // ── Enterprise org checkout ──────────────────────────────────────
+          const seats = parseInt(session.metadata?.seats ?? "5", 10);
+          await adminDb.doc(`organizations/${orgId}`).update({
             subscriptionStatus: "active",
             stripeCustomerId: session.customer as string,
             stripeSubscriptionId: session.subscription as string,
-          },
-          { merge: true }
-        );
-        break;
-      }
+            "seats.purchased": seats,
+            trialEndsAt: null,
+            updatedAt: FieldValue.serverTimestamp(),
+          });
 
-      case "customer.subscription.deleted": {
-        const sub = event.data.object as Stripe.Subscription;
-        const snap = await adminDb
-          .collection("presenters")
-          .where("stripeCustomerId", "==", sub.customer as string)
-          .limit(1)
-          .get();
-        if (!snap.empty) {
-          await snap.docs[0].ref.update({ subscriptionStatus: "free" });
+          // Log to billingEvents for audit trail
+          await adminDb.collection("billingEvents").doc(event.id).set({
+            type: "enterprise_checkout_completed",
+            orgId,
+            seats,
+            stripeEventId: event.id,
+            createdAt: FieldValue.serverTimestamp(),
+          });
+
+          // P2-6: Team→Enterprise upgrade — if the owner had a consumer Pro
+          // subscription, cancel it and tag the presenter doc.
+          const firebaseUid = session.metadata?.firebaseUid;
+          if (firebaseUid) {
+            const presenterSnap = await adminDb.doc(`presenters/${firebaseUid}`).get();
+            const oldSubId = presenterSnap.data()?.stripeSubscriptionId as string | null;
+            if (oldSubId && oldSubId !== (session.subscription as string)) {
+              try {
+                await getStripe().subscriptions.cancel(oldSubId);
+              } catch (cancelErr) {
+                console.warn("[webhook] could not cancel old consumer sub:", cancelErr);
+              }
+            }
+            await adminDb.doc(`presenters/${firebaseUid}`).update({
+              subscriptionStatus: "enterprise",
+              orgId,
+            });
+          }
+        } else {
+          // ── Consumer Pro checkout (existing behaviour) ───────────────────
+          const uid = session.metadata?.firebaseUid;
+          if (!uid) break;
+          await adminDb.doc(`presenters/${uid}`).set(
+            {
+              subscriptionStatus: "active",
+              stripeCustomerId: session.customer as string,
+              stripeSubscriptionId: session.subscription as string,
+            },
+            { merge: true }
+          );
         }
         break;
       }
 
+      // ── customer.subscription.updated ─────────────────────────────────────
       case "customer.subscription.updated": {
         const sub = event.data.object as Stripe.Subscription;
-        const snap = await adminDb
-          .collection("presenters")
-          .where("stripeCustomerId", "==", sub.customer as string)
-          .limit(1)
-          .get();
-        if (!snap.empty) {
-          const status = sub.status === "active" ? "active" : "free";
-          await snap.docs[0].ref.update({ subscriptionStatus: status });
+        const orgId = sub.metadata?.orgId;
+
+        if (orgId) {
+          // Enterprise subscription update
+          const seats = sub.items.data[0]?.quantity ?? null;
+          const updates: Record<string, unknown> = {
+            subscriptionStatus: sub.status === "active" ? "active"
+              : sub.status === "past_due" ? "past_due"
+              : sub.status === "canceled" ? "cancelled"
+              : sub.status,
+            updatedAt: FieldValue.serverTimestamp(),
+          };
+          if (seats !== null) updates["seats.purchased"] = seats;
+          await adminDb.doc(`organizations/${orgId}`).update(updates);
+        } else {
+          // Consumer subscription update
+          const snap = await adminDb
+            .collection("presenters")
+            .where("stripeCustomerId", "==", sub.customer as string)
+            .limit(1)
+            .get();
+          if (!snap.empty) {
+            const status = sub.status === "active" ? "active" : "free";
+            await snap.docs[0].ref.update({ subscriptionStatus: status });
+          }
+        }
+        break;
+      }
+
+      // ── customer.subscription.deleted ─────────────────────────────────────
+      case "customer.subscription.deleted": {
+        const sub = event.data.object as Stripe.Subscription;
+        const orgId = sub.metadata?.orgId;
+
+        if (orgId) {
+          await adminDb.doc(`organizations/${orgId}`).update({
+            subscriptionStatus: "cancelled",
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+          await adminDb.collection("billingEvents").doc(event.id).set({
+            type: "enterprise_subscription_cancelled",
+            orgId,
+            stripeEventId: event.id,
+            createdAt: FieldValue.serverTimestamp(),
+          });
+        } else {
+          // Consumer subscription cancelled
+          const snap = await adminDb
+            .collection("presenters")
+            .where("stripeCustomerId", "==", sub.customer as string)
+            .limit(1)
+            .get();
+          if (!snap.empty) {
+            await snap.docs[0].ref.update({ subscriptionStatus: "free" });
+          }
+        }
+        break;
+      }
+
+      // ── invoice.payment_failed ────────────────────────────────────────────
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as Stripe.Invoice;
+        const subscriptionId = invoice.parent?.subscription_details?.subscription as string | null;
+        const sub = subscriptionId
+          ? await getStripe().subscriptions.retrieve(subscriptionId)
+          : null;
+        const orgId = sub?.metadata?.orgId;
+
+        if (orgId) {
+          const graceEndsAt = Timestamp.fromDate(
+            new Date(Date.now() + PAST_DUE_GRACE_DAYS * 24 * 60 * 60 * 1000)
+          );
+          await adminDb.doc(`organizations/${orgId}`).update({
+            subscriptionStatus: "past_due",
+            pastDueGraceEndsAt: graceEndsAt,
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+          await adminDb.collection("billingEvents").doc(event.id).set({
+            type: "enterprise_payment_failed",
+            orgId,
+            graceEndsAt,
+            stripeEventId: event.id,
+            createdAt: FieldValue.serverTimestamp(),
+          });
+        }
+        break;
+      }
+
+      // ── invoice.paid ──────────────────────────────────────────────────────
+      case "invoice.paid": {
+        const invoice = event.data.object as Stripe.Invoice;
+        const subscriptionId = invoice.parent?.subscription_details?.subscription as string | null;
+        const sub = subscriptionId
+          ? await getStripe().subscriptions.retrieve(subscriptionId)
+          : null;
+        const orgId = sub?.metadata?.orgId;
+
+        if (orgId) {
+          await adminDb.doc(`organizations/${orgId}`).update({
+            subscriptionStatus: "active",
+            pastDueGraceEndsAt: FieldValue.delete(),
+            updatedAt: FieldValue.serverTimestamp(),
+          });
         }
         break;
       }

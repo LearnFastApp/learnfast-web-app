@@ -12,3 +12,8 @@ export function getStripe(): Stripe {
 }
 
 export const STRIPE_PRICE_ID = "price_1TlD2CIeBDkjGPKbvGn4LGLj";
+
+// Enterprise per-seat prices — set via Firebase secrets after creating
+// products in Stripe Dashboard (test mode). See Phase 2 setup notes.
+export const STRIPE_ENTERPRISE_PRICE_MONTHLY = process.env.STRIPE_ENTERPRISE_PRICE_ID_MONTHLY ?? "";
+export const STRIPE_ENTERPRISE_PRICE_ANNUAL  = process.env.STRIPE_ENTERPRISE_PRICE_ID_ANNUAL  ?? "";

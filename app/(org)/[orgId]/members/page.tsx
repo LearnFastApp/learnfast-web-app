@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import MobileNav from "@/components/mobile-nav";
+import OrgPastDueBanner from "@/components/org-past-due-banner";
 import type { OrgRole } from "@/types/enterprise";
 
 interface Member {
@@ -220,6 +221,10 @@ export default function MembersPage() {
               <Users className="w-6 h-6 text-slate-400" />
               Members
             </h1>
+            <div className="flex items-center gap-4 mt-2">
+              <span className="text-sm text-violet-400 font-medium">Members</span>
+              <a href={`/${orgId}/billing`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Billing</a>
+            </div>
           </div>
           <div className="text-right">
             <p className="text-2xl font-bold text-white">{seatUsed}<span className="text-slate-500 text-base font-normal">/{seatPurchased}</span></p>
@@ -232,6 +237,15 @@ export default function MembersPage() {
             </div>
           </div>
         </div>
+
+        {/* Past-due banner */}
+        {orgInfo && (
+          <OrgPastDueBanner
+            subscriptionStatus={orgInfo.subscriptionStatus}
+            orgId={orgId}
+            isOwner={myRole === "owner"}
+          />
+        )}
 
         {/* Trial banner */}
         {orgInfo?.subscriptionStatus === "trialing" && orgInfo.trialEndsAt && (
