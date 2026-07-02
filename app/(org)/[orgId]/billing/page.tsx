@@ -66,6 +66,7 @@ export default function BillingPage() {
   // Checkout state
   const [checkoutInterval, setCheckoutInterval] = useState<"monthly" | "annual">("monthly");
   const [checkingOut, setCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
   const [portalLoading, setPortalLoading] = useState(false);
 
   const successParam = searchParams?.get("success");
@@ -164,6 +165,7 @@ export default function BillingPage() {
   async function startCheckout() {
     if (!user) return;
     setCheckingOut(true);
+    setCheckoutError("");
     try {
       const idToken = await user.getIdToken();
       const res = await fetch("/api/stripe/enterprise-checkout", {
@@ -174,7 +176,11 @@ export default function BillingPage() {
       const data = await res.json();
       if (res.ok && data.url) {
         window.location.href = data.url;
+      } else {
+        setCheckoutError(`Checkout failed: ${data.error ?? res.status}`);
       }
+    } catch {
+      setCheckoutError("Network error. Please try again.");
     } finally {
       setCheckingOut(false);
     }
@@ -334,6 +340,11 @@ export default function BillingPage() {
               >
                 {checkingOut ? "Redirecting to checkout…" : `Subscribe — £${checkoutInterval === "monthly" ? orgInfo.seats.purchased * 15 : orgInfo.seats.purchased * 12 * 12}/` + (checkoutInterval === "monthly" ? "mo" : "yr")}
               </button>
+              {checkoutError && (
+                <p className="mt-2 text-sm text-red-400 flex items-center gap-1.5">
+                  <XCircle className="w-4 h-4 shrink-0" />{checkoutError}
+                </p>
+              )}
             </div>
           )}
 
