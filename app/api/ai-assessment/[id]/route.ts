@@ -79,6 +79,19 @@ export async function GET(
     return NextResponse.json({ status: "processing" });
   }
 
+  // Atomically claim analysis slot — prevents duplicate Claude calls when
+  // multiple poll requests arrive in the same window
+  const claimed = await db.runTransaction(async (tx) => {
+    const fresh = await tx.get(docRef);
+    const s = fresh.data()?.status;
+    if (s !== "processing") return false;
+    tx.update(docRef, { status: "analyzing" });
+    return true;
+  });
+  if (!claimed) {
+    return NextResponse.json({ status: "processing" });
+  }
+
   // AssemblyAI complete — run Claude analysis
   const words = transcript.words ?? [];
   const wordCount = words.length;

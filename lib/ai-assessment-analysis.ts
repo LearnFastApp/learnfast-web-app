@@ -134,11 +134,16 @@ Include 3–5 highlights (mix of strengths and opportunities) and exactly 3 tips
 
   const message = await client.messages.create({
     model: AI_MODEL,
-    max_tokens: 2048,
+    max_tokens: 4096,
     messages: [{ role: "user", content: prompt }],
   });
 
   const raw = (message.content[0] as { type: "text"; text: string }).text.trim();
-  const json = raw.replace(/^```json?\n?/i, "").replace(/\n?```$/i, "").trim();
-  return JSON.parse(json) as AssessmentAnalysis;
+  // Extract the outermost JSON object — handles preamble text and code fences
+  const start = raw.indexOf("{");
+  const end = raw.lastIndexOf("}");
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error(`No JSON object in Claude response: ${raw.slice(0, 200)}`);
+  }
+  return JSON.parse(raw.slice(start, end + 1)) as AssessmentAnalysis;
 }
