@@ -42,18 +42,23 @@ export async function GET(req: NextRequest) {
       const session = doc.data();
       const presenter = presenterMap[session.presenterId as string] ?? {};
 
-      // Fetch the featured take's scores
+      // Fetch the featured take:
+      //   1. featuredTakeId — explicit user override
+      //   2. promotedTakeId — most recently promoted take (always up-to-date)
+      //   3. isPromoted === true (desc by takeNumber) — legacy fallback
       let featuredTake: Record<string, unknown> | null = null;
-      const featuredTakeId = session.featuredTakeId as string | null;
+      const resolvedTakeId = (session.featuredTakeId ?? session.promotedTakeId) as string | null;
 
-      if (featuredTakeId) {
-        const takeSnap = await doc.ref.collection("takes").doc(featuredTakeId).get();
+      if (resolvedTakeId) {
+        const takeSnap = await doc.ref.collection("takes").doc(resolvedTakeId).get();
         if (takeSnap.exists) featuredTake = { id: takeSnap.id, ...takeSnap.data() };
-      } else {
-        // Fall back to the promoted take
+      }
+
+      if (!featuredTake) {
         const promotedSnap = await doc.ref
           .collection("takes")
           .where("isPromoted", "==", true)
+          .orderBy("takeNumber", "desc")
           .limit(1)
           .get();
         if (!promotedSnap.empty) {

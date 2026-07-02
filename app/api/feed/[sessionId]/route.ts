@@ -25,12 +25,16 @@ export async function GET(
 
   const presenter = presenterSnap.data() ?? {};
 
-  // Resolve featured take — explicit override first, then promoted, then latest complete
+  // Resolve featured take:
+  //   1. featuredTakeId — explicit user override
+  //   2. promotedTakeId — most recently promoted take (always up-to-date)
+  //   3. isPromoted === true query — legacy fallback for sessions pre-promotedTakeId
+  //   4. any complete take — last resort
   let featuredTake: Record<string, unknown> | null = null;
-  const featuredTakeId = session.featuredTakeId as string | null;
+  const resolvedTakeId = (session.featuredTakeId ?? session.promotedTakeId) as string | null;
 
-  if (featuredTakeId) {
-    const snap = await sessionSnap.ref.collection("takes").doc(featuredTakeId).get();
+  if (resolvedTakeId) {
+    const snap = await sessionSnap.ref.collection("takes").doc(resolvedTakeId).get();
     if (snap.exists) featuredTake = { id: snap.id, ...snap.data() };
   }
 
@@ -38,6 +42,7 @@ export async function GET(
     const promotedSnap = await sessionSnap.ref
       .collection("takes")
       .where("isPromoted", "==", true)
+      .orderBy("takeNumber", "desc")
       .limit(1)
       .get();
     if (!promotedSnap.empty) {

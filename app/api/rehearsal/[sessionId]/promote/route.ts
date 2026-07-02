@@ -67,7 +67,14 @@ export async function POST(
     completedAt: take.completedAt,
   });
 
+  // Clear isPromoted on any previously promoted take so only one is ever promoted
+  const prevPromotedId = session.promotedTakeId as string | null;
+  const clearPrev = prevPromotedId && prevPromotedId !== takeId
+    ? sessionRef.collection("takes").doc(prevPromotedId).update({ isPromoted: false })
+    : Promise.resolve();
+
   await Promise.all([
+    clearPrev,
     takeRef.update({ isPromoted: true }),
     sessionRef.update({
       promotedTakeId: takeId,
