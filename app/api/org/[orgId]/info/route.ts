@@ -14,8 +14,26 @@ export async function GET(
 
   const { orgId } = await params;
   const ctx = await getOrgContext(uid);
-  if (!ctx || ctx.orgId !== orgId) {
-    return NextResponse.json({ error: "not_in_org" }, { status: 403 });
+
+  // Granular 403 to help diagnose membership issues
+  if (!ctx) {
+    const db = getAdminDb();
+    const presSnap = await db.doc(`presenters/${uid}`).get();
+    const storedOrgId = presSnap.data()?.orgId;
+    if (!storedOrgId) {
+      return NextResponse.json({ error: "no_org_on_account" }, { status: 403 });
+    }
+    const memberSnap = await db.doc(`organizations/${storedOrgId}/members/${uid}`).get();
+    if (!memberSnap.exists) {
+      return NextResponse.json({ error: "not_a_member", storedOrgId }, { status: 403 });
+    }
+    if (memberSnap.data()?.status !== "active") {
+      return NextResponse.json({ error: "member_not_active", status: memberSnap.data()?.status, storedOrgId }, { status: 403 });
+    }
+    return NextResponse.json({ error: "org_not_found", storedOrgId }, { status: 403 });
+  }
+  if (ctx.orgId !== orgId) {
+    return NextResponse.json({ error: "wrong_org", yourOrgId: ctx.orgId, requestedOrgId: orgId }, { status: 403 });
   }
 
   const db = getAdminDb();
