@@ -118,3 +118,7 @@ env:
     value: "true"
     availability:
       - RUNTIME
+  - variable: STRIPE_ENTERPRISE_PRICE_ID_MONTHLY
+    secret: STRIPE_ENTERPRISE_PRICE_ID_MONTHLY
+  - variable: STRIPE_ENTERPRISE_PRICE_ID_ANNUAL
+    secret: STRIPE_ENTERPRISE_PRICE_ID_ANNUAL
