@@ -106,6 +106,14 @@ env:
     secret: R2_SECRET_ACCESS_KEY
     availability:
       - RUNTIME
+  - variable: GMAIL_USER
+    secret: GMAIL_USER
+    availability:
+      - RUNTIME
+  - variable: GMAIL_APP_PASSWORD
+    secret: GMAIL_APP_PASSWORD
+    availability:
+      - RUNTIME
   - variable: ENTERPRISE_ENABLED
     value: "true"
     availability:
