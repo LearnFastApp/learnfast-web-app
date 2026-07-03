@@ -664,6 +664,9 @@ export default function Dashboard() {
                 <a href={`/${orgId}/content`} className="text-xs font-semibold text-violet-300 hover:text-white transition">
                   {isFr ? "Contenu" : "Content"}
                 </a>
+                <a href={`/${orgId}/sessions`} className="text-xs font-semibold text-violet-300 hover:text-white transition">
+                  {isFr ? "Séances" : "Sessions"}
+                </a>
               </div>
             </div>
           )}

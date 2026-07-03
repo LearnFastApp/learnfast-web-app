@@ -261,6 +261,7 @@ export default function BillingPage() {
             <a href={`/${orgId}/members`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Members</a>
             <span className="text-sm text-violet-400 font-medium">Billing</span>
             <a href={`/${orgId}/content`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Content</a>
+            <a href={`/${orgId}/sessions`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Sessions</a>
           </div>
         </div>
 

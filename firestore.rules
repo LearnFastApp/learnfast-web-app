@@ -222,5 +222,47 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // ── Session feedback code index (server-side only) ───────────────────────
+    // Maps 6-char feedbackCode → { orgId, sessionId } for fast /f/{code} lookups.
+    // Created and consumed exclusively via admin SDK.
+    match /session_feedback_codes/{code} {
+      allow read, write: if false;
+    }
+
+    // ── Enterprise feedback responses (top-level, unauthenticated create) ────
+    // feedbackResponses stores enterprise audience feedback from /f/{code}.
+    // Existing consumer feedback uses feedback_responses (separate collection).
+    match /feedbackResponses/{responseId} {
+      allow create: if (
+        request.resource.data.keys().hasAll(['sessionId', 'orgId', 'scores', 'submittedAt']) &&
+        request.resource.data.scores is map &&
+        request.resource.data.scores.keys().hasAll([
+          'clarity', 'energy', 'engagement', 'understanding', 'connection'
+        ]) &&
+        request.resource.data.scores.clarity      is number &&
+        request.resource.data.scores.clarity      >= 1 &&
+        request.resource.data.scores.clarity      <= 10 &&
+        request.resource.data.scores.energy       is number &&
+        request.resource.data.scores.energy       >= 1 &&
+        request.resource.data.scores.energy       <= 10 &&
+        request.resource.data.scores.engagement   is number &&
+        request.resource.data.scores.engagement   >= 1 &&
+        request.resource.data.scores.engagement   <= 10 &&
+        request.resource.data.scores.understanding is number &&
+        request.resource.data.scores.understanding >= 1 &&
+        request.resource.data.scores.understanding <= 10 &&
+        request.resource.data.scores.connection   is number &&
+        request.resource.data.scores.connection   >= 1 &&
+        request.resource.data.scores.connection   <= 10 &&
+        (
+          !('comment' in request.resource.data) ||
+          (request.resource.data.comment is string &&
+           request.resource.data.comment.size() <= 500)
+        )
+      );
+      allow read: if isOrgMember(resource.data.orgId);
+      allow update, delete: if false;
+    }
+
   }
 }

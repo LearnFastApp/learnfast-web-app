@@ -1,0 +1,555 @@
+"use client";
+
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { QRCodeSVG } from "qrcode.react";
+import {
+  Calendar, CalendarPlus, Clock, Download, Loader2, Play,
+  Plus, QrCode, Square, Trash2, Users, X, ChevronDown, Radio,
+} from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import MobileNav from "@/components/mobile-nav";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db as clientDb } from "@/lib/firebase";
+import type { OrgSessionType, OrgSessionStatus, OrgRole } from "@/types/enterprise";
+
+interface OrgSession {
+  id: string;
+  title: string;
+  type: OrgSessionType;
+  presenterId: string;
+  scheduledStart: string;
+  scheduledEnd: string;
+  timezone: string;
+  feedbackCode: string;
+  feedbackUrl: string;
+  status: OrgSessionStatus;
+  orgId: string;
+}
+
+const TYPE_LABELS: Record<OrgSessionType, string> = {
+  presentation: "Presentation",
+  rehearsal: "Rehearsal",
+  meeting: "Meeting",
+};
+
+const STATUS_COLORS: Record<OrgSessionStatus, string> = {
+  scheduled: "text-slate-400 bg-slate-400/10",
+  live: "text-green-400 bg-green-400/10",
+  completed: "text-violet-400 bg-violet-400/10",
+  cancelled: "text-red-400 bg-red-400/10",
+};
+
+function formatDateTime(iso: string, timezone: string) {
+  try {
+    return new Date(iso).toLocaleString("en-GB", {
+      timeZone: timezone,
+      day: "numeric", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit",
+    });
+  } catch {
+    return new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  }
+}
+
+function buildICS(session: OrgSession): string {
+  const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  const start = new Date(session.scheduledStart);
+  const end = new Date(session.scheduledEnd);
+  const now = new Date();
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//LearnFast//EN",
+    "BEGIN:VEVENT",
+    `UID:${session.id}@learnfastapp.com`,
+    `DTSTAMP:${fmt(now)}`,
+    `DTSTART:${fmt(start)}`,
+    `DTEND:${fmt(end)}`,
+    `SUMMARY:${session.title}`,
+    `DESCRIPTION:Audience feedback link: ${session.feedbackUrl}`,
+    `URL:${session.feedbackUrl}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+}
+
+function googleCalendarUrl(session: OrgSession): string {
+  const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  const p = new URLSearchParams({
+    action: "TEMPLATE",
+    text: session.title,
+    dates: `${fmt(new Date(session.scheduledStart))}/${fmt(new Date(session.scheduledEnd))}`,
+    details: `Audience feedback link: ${session.feedbackUrl}`,
+  });
+  return `https://calendar.google.com/calendar/render?${p.toString()}`;
+}
+
+function outlookUrl(session: OrgSession): string {
+  const p = new URLSearchParams({
+    path: "/calendar/action/compose",
+    rru: "addevent",
+    subject: session.title,
+    startdt: session.scheduledStart,
+    enddt: session.scheduledEnd,
+    body: `Audience feedback link: ${session.feedbackUrl}`,
+  });
+  return `https://outlook.live.com/calendar/0/deeplink/compose?${p.toString()}`;
+}
+
+function downloadICS(session: OrgSession) {
+  const blob = new Blob([buildICS(session)], { type: "text/calendar" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${session.title.replace(/[^a-z0-9]/gi, "_")}.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function LiveCounter({ sessionId, orgId }: { sessionId: string; orgId: string }) {
+  const [count, setCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    const q = query(
+      collection(clientDb, "feedbackResponses"),
+      where("sessionId", "==", sessionId),
+      where("orgId", "==", orgId),
+    );
+    const unsub = onSnapshot(q, (snap) => setCount(snap.size));
+    return unsub;
+  }, [sessionId, orgId]);
+
+  if (count === null) return null;
+  return (
+    <span className="flex items-center gap-1 text-xs text-slate-400">
+      <Users className="w-3 h-3" />
+      {count} {count === 1 ? "response" : "responses"}
+    </span>
+  );
+}
+
+export default function SessionsPage() {
+  const router = useRouter();
+  const params = useParams();
+  const orgId = params?.orgId as string;
+  const { user, loading: authLoading } = useAuth();
+
+  const [sessions, setSessions] = useState<OrgSession[]>([]);
+  const [myRole, setMyRole] = useState<OrgRole | null>(null);
+  const [orgName, setOrgName] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const [showForm, setShowForm] = useState(false);
+  const [formTitle, setFormTitle] = useState("");
+  const [formType, setFormType] = useState<OrgSessionType>("presentation");
+  const [formDate, setFormDate] = useState("");
+  const [formStartTime, setFormStartTime] = useState("09:00");
+  const [formEndTime, setFormEndTime] = useState("10:00");
+  const [formTimezone, setFormTimezone] = useState(
+    Intl.DateTimeFormat().resolvedOptions().timeZone
+  );
+  const [creating, setCreating] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const redirectingRef = useRef(false);
+
+  const fetchSessions = useCallback(async () => {
+    if (!user) return;
+    try {
+      const token = await user.getIdToken();
+      const [sessRes, orgRes] = await Promise.all([
+        fetch(`/api/org/${orgId}/sessions`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`/api/org/${orgId}/info`, { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+      if (sessRes.status === 401) { router.replace("/auth/login"); return; }
+      if (sessRes.status === 403) {
+        if (!redirectingRef.current) {
+          redirectingRef.current = true;
+          router.replace("/dashboard");
+        }
+        return;
+      }
+      if (sessRes.ok) {
+        const d = await sessRes.json();
+        setSessions(d.sessions ?? []);
+      }
+      if (orgRes.ok) {
+        const d = await orgRes.json();
+        setOrgName(d.name ?? "");
+        setMyRole(d.myRole ?? null);
+      }
+    } catch { /* ignore */ }
+    finally { setLoading(false); }
+  }, [user, orgId, router]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) { router.replace("/auth/login"); return; }
+    fetchSessions();
+  }, [user, authLoading, fetchSessions]);
+
+  async function createSession(e: React.FormEvent) {
+    e.preventDefault();
+    if (!user || creating) return;
+    setCreating(true);
+    setFormError("");
+    try {
+      const scheduledStart = new Date(`${formDate}T${formStartTime}`).toISOString();
+      const scheduledEnd = new Date(`${formDate}T${formEndTime}`).toISOString();
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/org/${orgId}/sessions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ title: formTitle, type: formType, scheduledStart, scheduledEnd, timezone: formTimezone }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setFormError(data.error ?? "Failed to create session."); return; }
+      setShowForm(false);
+      setFormTitle(""); setFormDate(""); setFormStartTime("09:00"); setFormEndTime("10:00");
+      setExpandedId(data.id);
+      await fetchSessions();
+    } catch {
+      setFormError("Network error. Please try again.");
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  async function updateStatus(session: OrgSession, status: OrgSessionStatus) {
+    if (!user) return;
+    const token = await user.getIdToken();
+    await fetch(`/api/org/${orgId}/sessions/${session.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ status }),
+    });
+    setSessions((prev) => prev.map((s) => s.id === session.id ? { ...s, status } : s));
+  }
+
+  async function deleteSession(session: OrgSession) {
+    if (!user || !confirm(`Delete "${session.title}"?`)) return;
+    const token = await user.getIdToken();
+    await fetch(`/api/org/${orgId}/sessions/${session.id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setSessions((prev) => prev.filter((s) => s.id !== session.id));
+  }
+
+  const isAdmin = myRole === "owner" || myRole === "admin";
+  const upcoming = sessions.filter((s) => s.status === "scheduled" || s.status === "live");
+  const past = sessions.filter((s) => s.status === "completed" || s.status === "cancelled");
+
+  const today = new Date().toISOString().split("T")[0];
+
+  if (authLoading || loading) {
+    return (
+      <main className="min-h-screen bg-[#05070d] flex items-center justify-center">
+        <Loader2 className="w-6 h-6 text-violet-400 animate-spin" />
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-[#05070d]">
+      <MobileNav />
+      <div className="max-w-3xl mx-auto px-6 py-12">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <p className="text-xs font-semibold text-violet-400 uppercase tracking-widest mb-1">
+              {orgName || "Organisation"}
+            </p>
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+              <Calendar className="w-6 h-6 text-slate-400" />
+              Sessions
+            </h1>
+            <div className="flex items-center gap-4 mt-2">
+              <a href={`/${orgId}/members`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Members</a>
+              <a href={`/${orgId}/billing`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Billing</a>
+              <a href={`/${orgId}/content`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Content</a>
+              <span className="text-sm text-violet-400 font-medium">Sessions</span>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            New session
+          </button>
+        </div>
+
+        {/* Create session form */}
+        {showForm && (
+          <div className="mb-8 bg-[#0f172a] border border-[#1e293b] rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-sm font-semibold text-white">Schedule a session</h2>
+              <button onClick={() => setShowForm(false)} className="text-slate-500 hover:text-white transition">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={createSession} className="space-y-4">
+              <input
+                type="text"
+                value={formTitle}
+                onChange={(e) => setFormTitle(e.target.value)}
+                placeholder="Session title *"
+                required
+                className="w-full bg-[#0a0f1a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-violet-500 transition-colors"
+              />
+              <div className="relative">
+                <select
+                  value={formType}
+                  onChange={(e) => setFormType(e.target.value as OrgSessionType)}
+                  className="w-full appearance-none bg-[#0a0f1a] border border-[#1e293b] rounded-xl px-4 py-2.5 pr-8 text-white text-sm focus:outline-none focus:border-violet-500 transition-colors"
+                >
+                  <option value="presentation">Presentation</option>
+                  <option value="rehearsal">Rehearsal</option>
+                  <option value="meeting">Meeting</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
+              <input
+                type="date"
+                value={formDate}
+                min={today}
+                onChange={(e) => setFormDate(e.target.value)}
+                required
+                className="w-full bg-[#0a0f1a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-violet-500 transition-colors"
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Start time</label>
+                  <input
+                    type="time"
+                    value={formStartTime}
+                    onChange={(e) => setFormStartTime(e.target.value)}
+                    required
+                    className="w-full bg-[#0a0f1a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-violet-500 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">End time</label>
+                  <input
+                    type="time"
+                    value={formEndTime}
+                    onChange={(e) => setFormEndTime(e.target.value)}
+                    required
+                    className="w-full bg-[#0a0f1a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-violet-500 transition-colors"
+                  />
+                </div>
+              </div>
+              {formError && <p className="text-sm text-red-400">{formError}</p>}
+              <button
+                type="submit"
+                disabled={creating}
+                className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
+              >
+                {creating ? "Creating…" : "Schedule session"}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* Upcoming */}
+        <div className="mb-8">
+          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">
+            Upcoming & Live
+          </h2>
+          {upcoming.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-slate-500 text-sm">
+              No upcoming sessions — click <strong className="text-slate-300">New session</strong> to schedule one.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {upcoming.map((s) => (
+                <SessionCard
+                  key={s.id}
+                  session={s}
+                  orgId={orgId}
+                  isAdmin={isAdmin}
+                  isOwner={s.presenterId === user?.uid}
+                  expanded={expandedId === s.id}
+                  onToggle={() => setExpandedId(expandedId === s.id ? null : s.id)}
+                  onStatusChange={updateStatus}
+                  onDelete={deleteSession}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Past */}
+        {past.length > 0 && (
+          <div>
+            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Past</h2>
+            <div className="space-y-2">
+              {past.map((s) => (
+                <SessionCard
+                  key={s.id}
+                  session={s}
+                  orgId={orgId}
+                  isAdmin={isAdmin}
+                  isOwner={s.presenterId === user?.uid}
+                  expanded={expandedId === s.id}
+                  onToggle={() => setExpandedId(expandedId === s.id ? null : s.id)}
+                  onStatusChange={updateStatus}
+                  onDelete={deleteSession}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
+
+function SessionCard({
+  session, orgId, isAdmin, isOwner, expanded, onToggle, onStatusChange, onDelete,
+}: {
+  session: OrgSession;
+  orgId: string;
+  isAdmin: boolean;
+  isOwner: boolean;
+  expanded: boolean;
+  onToggle: () => void;
+  onStatusChange: (s: OrgSession, status: OrgSessionStatus) => void;
+  onDelete: (s: OrgSession) => void;
+}) {
+  const canManage = isAdmin || isOwner;
+
+  return (
+    <div className="bg-[#0f172a] border border-[#1e293b] rounded-2xl overflow-hidden">
+      {/* Summary row */}
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-white/[0.02] transition-colors"
+      >
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-semibold text-white truncate">{session.title}</span>
+            {session.status === "live" && (
+              <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full text-green-400 bg-green-400/10">
+                <Radio className="w-2.5 h-2.5" />
+                LIVE
+              </span>
+            )}
+            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLORS[session.status]}`}>
+              {session.status === "live" ? "Live" : session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+            </span>
+          </div>
+          <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+            <span className="text-xs text-slate-500 flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              {formatDateTime(session.scheduledStart, session.timezone)}
+            </span>
+            <span className="text-xs text-slate-600">{TYPE_LABELS[session.type]}</span>
+            {(session.status === "live" || session.status === "scheduled") && (
+              <LiveCounter sessionId={session.id} orgId={orgId} />
+            )}
+          </div>
+        </div>
+        <ChevronDown className={`w-4 h-4 text-slate-500 flex-shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`} />
+      </button>
+
+      {/* Expanded panel */}
+      {expanded && (
+        <div className="border-t border-[#1e293b] px-5 py-5 space-y-5">
+          {/* QR + feedback code */}
+          <div className="flex flex-col sm:flex-row gap-5 items-start">
+            <div className="bg-white p-3 rounded-xl flex-shrink-0">
+              <QRCodeSVG value={session.feedbackUrl} size={120} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-slate-400 mb-1">Audience join code</p>
+              <p className="text-3xl font-bold text-white tracking-[0.2em] mb-2">{session.feedbackCode}</p>
+              <p className="text-xs text-slate-500 break-all mb-3">{session.feedbackUrl}</p>
+              <p className="text-xs text-slate-500">
+                Ask your audience to scan the QR or go to{" "}
+                <strong className="text-slate-300">learnfastapp.com/f/{session.feedbackCode}</strong>
+              </p>
+            </div>
+          </div>
+
+          {/* Calendar actions */}
+          <div>
+            <p className="text-xs text-slate-400 mb-2">Add to calendar</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => downloadICS(session)}
+                className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Download .ics
+              </button>
+              <a
+                href={googleCalendarUrl(session)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
+              >
+                <CalendarPlus className="w-3.5 h-3.5" />
+                Google Calendar
+              </a>
+              <a
+                href={outlookUrl(session)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
+              >
+                <CalendarPlus className="w-3.5 h-3.5" />
+                Outlook
+              </a>
+              <a
+                href={`/api/f/${session.feedbackCode}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
+              >
+                <QrCode className="w-3.5 h-3.5" />
+                Test link
+              </a>
+            </div>
+          </div>
+
+          {/* Status controls */}
+          {canManage && session.status !== "cancelled" && session.status !== "completed" && (
+            <div className="flex flex-wrap gap-2 pt-1">
+              {session.status === "scheduled" && (
+                <button
+                  onClick={() => onStatusChange(session, "live")}
+                  className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-green-600 hover:bg-green-500 text-white transition-colors"
+                >
+                  <Play className="w-3.5 h-3.5" />
+                  Go live
+                </button>
+              )}
+              {session.status === "live" && (
+                <button
+                  onClick={() => onStatusChange(session, "completed")}
+                  className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white transition-colors"
+                >
+                  <Square className="w-3.5 h-3.5" />
+                  End session
+                </button>
+              )}
+              {isAdmin && (
+                <button
+                  onClick={() => onDelete(session)}
+                  className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-white/5 hover:bg-red-500/10 text-red-400 transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

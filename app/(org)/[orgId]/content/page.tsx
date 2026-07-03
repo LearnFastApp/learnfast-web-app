@@ -210,6 +210,7 @@ export default function OrgContentPage() {
               <a href={`/${orgId}/members`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Members</a>
               <a href={`/${orgId}/billing`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Billing</a>
               <span className="text-sm text-violet-400 font-medium">Content</span>
+              <a href={`/${orgId}/sessions`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Sessions</a>
             </div>
           </div>
           {isAdmin && (

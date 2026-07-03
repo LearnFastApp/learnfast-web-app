@@ -815,3 +815,91 @@ export async function sendOrgInviteEmail(
     html,
   });
 }
+
+export interface SessionConfirmationOptions {
+  to: string;
+  presenterName: string;
+  sessionTitle: string;
+  sessionType: string;
+  orgName: string;
+  scheduledStart: Date;
+  scheduledEnd: Date;
+  timezone: string;
+  feedbackCode: string;
+  feedbackUrl: string;
+}
+
+export async function sendSessionConfirmationEmail(opts: SessionConfirmationOptions): Promise<void> {
+  const from = `"LearnFast" <${process.env.GMAIL_USER}>`;
+  const { presenterName, sessionTitle, sessionType, orgName, scheduledStart, scheduledEnd, timezone, feedbackCode, feedbackUrl } = opts;
+
+  const fmtOpts: Intl.DateTimeFormatOptions = {
+    timeZone: timezone,
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  };
+  const startStr = scheduledStart.toLocaleString("en-GB", fmtOpts);
+  const endStr = scheduledEnd.toLocaleString("en-GB", { timeZone: timezone, hour: "2-digit", minute: "2-digit" });
+
+  const gcalUrl = (() => {
+    const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    const p = new URLSearchParams({
+      action: "TEMPLATE", text: sessionTitle,
+      dates: `${fmt(scheduledStart)}/${fmt(scheduledEnd)}`,
+      details: `Audience feedback link: ${feedbackUrl}`,
+    });
+    return `https://calendar.google.com/calendar/render?${p.toString()}`;
+  })();
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#05070d;font-family:'Inter',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#05070d;padding:40px 0;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#0f172a;border-radius:16px;border:1px solid #1e293b;overflow:hidden;max-width:560px;">
+        <tr><td style="background:linear-gradient(135deg,#6d28d9,#7c3aed);padding:32px 40px 28px;">
+          <p style="margin:0;color:#fff;font-size:22px;font-weight:700;">LearnFast</p>
+          <p style="margin:8px 0 0;color:#c4b5fd;font-size:14px;">Session scheduled — ${orgName}</p>
+        </td></tr>
+        <tr><td style="padding:36px 40px 32px;">
+          <p style="margin:0 0 6px;color:#f1f5f9;font-size:20px;font-weight:700;">${sessionTitle}</p>
+          <p style="margin:0 0 24px;color:#94a3b8;font-size:14px;">${sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} · ${startStr} – ${endStr}</p>
+
+          <div style="background:#0a0f1a;border:1px solid #1e293b;border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+            <p style="margin:0 0 6px;color:#64748b;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;">Audience join code</p>
+            <p style="margin:0 0 4px;color:#fff;font-size:32px;font-weight:800;letter-spacing:0.2em;">${feedbackCode}</p>
+            <p style="margin:0;color:#7c3aed;font-size:13px;word-break:break-all;">${feedbackUrl}</p>
+          </div>
+
+          <p style="margin:0 0 16px;color:#94a3b8;font-size:14px;line-height:1.6;">
+            Hi ${presenterName}, your session is scheduled. Share the code or QR with your audience — they can submit feedback with no account or download required.
+          </p>
+
+          <table cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
+            <tr><td style="background:#7c3aed;border-radius:10px;padding:12px 24px;">
+              <a href="${gcalUrl}" style="color:#fff;font-size:14px;font-weight:600;text-decoration:none;">Add to Google Calendar →</a>
+            </td></tr>
+          </table>
+          <p style="margin:0 0 28px;color:#64748b;font-size:13px;">Or download the <a href="${feedbackUrl}" style="color:#7c3aed;">session link</a> and add it to your calendar invite manually.</p>
+
+          <div style="background:#0a0f1a;border:1px solid #1e293b;border-radius:8px;padding:14px 16px;">
+            <p style="margin:0;color:#64748b;font-size:12px;">Manage your session at <a href="https://learnfastapp.com" style="color:#7c3aed;">learnfastapp.com</a> — go live, monitor responses, and end the session from the Sessions page.</p>
+          </div>
+        </td></tr>
+        <tr><td style="padding:0 40px 28px;text-align:center;">
+          <p style="color:#1e293b;font-size:11px;margin:0;">LearnFast · <a href="https://learnfastapp.com" style="color:#1e293b;">learnfastapp.com</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await getTransporter().sendMail({
+    from,
+    to: opts.to,
+    subject: `Session scheduled: ${sessionTitle}`,
+    html,
+  });
+}
