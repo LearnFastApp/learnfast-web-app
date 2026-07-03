@@ -177,7 +177,7 @@ export default function BillingPage() {
       if (res.ok && data.url) {
         window.location.href = data.url;
       } else {
-        setCheckoutError(`Checkout failed: ${data.error ?? res.status}`);
+        setCheckoutError(`Checkout failed: ${data.detail ?? data.error ?? res.status}`);
       }
     } catch (err) {
       setCheckoutError(`Error: ${err instanceof Error ? err.message : "Unknown"}`);
