@@ -225,6 +225,12 @@ export default function AnalyticsPage() {
             >
               Sessions
             </a>
+            <a
+              href={`/${orgId}/rehearse`}
+              className="text-sm text-slate-400 hover:text-slate-200 transition-colors"
+            >
+              Rehearse
+            </a>
             <span className="text-sm text-violet-400 font-medium">Analytics</span>
             <a
               href={`/${orgId}/my-sessions`}

@@ -28,6 +28,16 @@ async function checkGate(uid: string): Promise<{ allowed: boolean; reason?: stri
   if (!presenterSnap.exists) return { allowed: false, reason: "no_presenter", tier: "free" };
 
   const data = presenterSnap.data()!;
+
+  // Active enterprise org members get unlimited rehearsals regardless of consumer tier
+  const orgId = data.orgId as string | undefined;
+  if (orgId) {
+    const memberSnap = await db.doc(`organizations/${orgId}/members/${uid}`).get();
+    if (memberSnap.exists && memberSnap.data()?.status === "active") {
+      return { allowed: true, tier: "pro" };
+    }
+  }
+
   const status = data.subscriptionStatus as string;
   const pilotExpiry = data.pilotExpiresAt?.toDate?.() as Date | undefined;
   const isPilot = status === "pilot" && pilotExpiry && pilotExpiry > new Date();

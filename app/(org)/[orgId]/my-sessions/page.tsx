@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { TrendingUp, Users, Mic, Loader2, Calendar } from "lucide-react";
+import { TrendingUp, Users, Mic, Loader2, Calendar, ChevronRight, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import MobileNav from "@/components/mobile-nav";
 import {
@@ -33,6 +33,14 @@ interface MySessionsResponse {
   overallAvg: Record<Dimension, number> | null;
   totalSessions: number;
   totalResponses: number;
+}
+
+interface RehearsalSession {
+  id: string;
+  title: string;
+  takeCount: number;
+  createdAt: string | null;
+  promotedAssessmentId?: string | null;
 }
 
 const DIMENSION_LABEL: Record<Dimension, string> = {
@@ -88,6 +96,7 @@ export default function MySessionsPage() {
   const { user, loading: authLoading } = useAuth();
 
   const [data, setData] = useState<MySessionsResponse | null>(null);
+  const [rehearsals, setRehearsals] = useState<RehearsalSession[]>([]);
   const [orgName, setOrgName] = useState("");
   const [myRole, setMyRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -96,13 +105,14 @@ export default function MySessionsPage() {
     if (!user) return;
     try {
       const token = await user.getIdToken();
-      const [myRes, orgRes] = await Promise.all([
+      const [myRes, orgRes, rehRes] = await Promise.all([
         fetch(`/api/org/${orgId}/my-sessions`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
         fetch(`/api/org/${orgId}/info`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
+        fetch("/api/rehearsal", { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       if (myRes.status === 401) {
         router.replace("/auth/login");
@@ -120,6 +130,10 @@ export default function MySessionsPage() {
         const d = await orgRes.json();
         setOrgName(d.name ?? "");
         setMyRole(d.myRole ?? null);
+      }
+      if (rehRes.ok) {
+        const d = await rehRes.json();
+        setRehearsals(d.sessions ?? []);
       }
     } catch {
       /* ignore */
@@ -204,6 +218,12 @@ export default function MySessionsPage() {
               className="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
             >
               Sessions
+            </a>
+            <a
+              href={`/${orgId}/rehearse`}
+              className="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+            >
+              Rehearse
             </a>
             {isPrivileged && (
               <a
@@ -345,6 +365,39 @@ export default function MySessionsPage() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Rehearsal history */}
+        {rehearsals.length > 0 && (
+          <div className="mt-10">
+            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Rehearsals</h2>
+            <div className="space-y-2">
+              {rehearsals.map((r) => (
+                <a
+                  key={r.id}
+                  href={`/rehearse/${r.id}`}
+                  className="flex items-center justify-between bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-3 hover:border-violet-500/30 hover:bg-white/[0.02] transition-all group"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-medium text-white truncate">{r.title}</span>
+                      {r.promotedAssessmentId && (
+                        <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
+                          <CheckCircle2 className="w-3 h-3" />
+                          Promoted
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {r.takeCount} {r.takeCount === 1 ? "take" : "takes"}
+                      {r.createdAt ? ` · ${formatDate(r.createdAt)}` : ""}
+                    </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors shrink-0 ml-4" />
+                </a>
+              ))}
+            </div>
           </div>
         )}
       </div>
