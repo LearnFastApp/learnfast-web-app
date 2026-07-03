@@ -4,7 +4,7 @@ let _stripe: Stripe | null = null;
 let _stripeKey: string | undefined;
 
 export function getStripe(): Stripe {
-  const key = process.env.STRIPE_SECRET_KEY!;
+  const key = (process.env.STRIPE_LIVE_KEY ?? process.env.STRIPE_SECRET_KEY)!;
   if (!_stripe || _stripeKey !== key) {
     _stripe = new Stripe(key, { apiVersion: "2026-05-27.dahlia" as const });
     _stripeKey = key;
