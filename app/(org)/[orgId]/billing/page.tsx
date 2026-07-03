@@ -173,14 +173,14 @@ export default function BillingPage() {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
         body: JSON.stringify({ orgId, interval: checkoutInterval }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({ error: `server_error_${res.status}` }));
       if (res.ok && data.url) {
         window.location.href = data.url;
       } else {
         setCheckoutError(`Checkout failed: ${data.error ?? res.status}`);
       }
-    } catch {
-      setCheckoutError("Network error. Please try again.");
+    } catch (err) {
+      setCheckoutError(`Error: ${err instanceof Error ? err.message : "Unknown"}`);
     } finally {
       setCheckingOut(false);
     }

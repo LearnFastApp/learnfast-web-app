@@ -41,19 +41,25 @@ export async function POST(req: NextRequest) {
   const presenterSnap = await db.doc(`presenters/${uid}`).get();
   const email = presenterSnap.data()?.email as string | undefined;
 
-  const session = await getStripe().checkout.sessions.create({
-    mode: "subscription",
-    payment_method_types: ["card"],
-    line_items: [{ price: priceId, quantity: org.seats.purchased }],
-    success_url: `${APP_URL}/${orgId}/billing?success=true`,
-    cancel_url: `${APP_URL}/${orgId}/billing?cancelled=true`,
-    customer: org.stripeCustomerId ?? undefined,
-    customer_email: !org.stripeCustomerId ? email : undefined,
-    metadata: { orgId, seats: String(org.seats.purchased), interval },
-    subscription_data: {
-      metadata: { orgId, seats: String(org.seats.purchased) },
-    },
-  });
+  let session;
+  try {
+    session = await getStripe().checkout.sessions.create({
+      mode: "subscription",
+      line_items: [{ price: priceId, quantity: org.seats.purchased }],
+      success_url: `${APP_URL}/${orgId}/billing?success=true`,
+      cancel_url: `${APP_URL}/${orgId}/billing?cancelled=true`,
+      customer: org.stripeCustomerId ?? undefined,
+      customer_email: !org.stripeCustomerId ? email : undefined,
+      metadata: { orgId, seats: String(org.seats.purchased), interval },
+      subscription_data: {
+        metadata: { orgId, seats: String(org.seats.purchased) },
+      },
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[enterprise-checkout] Stripe error:", msg);
+    return NextResponse.json({ error: "stripe_error", detail: msg }, { status: 502 });
+  }
 
   return NextResponse.json({ url: session.url });
 }
