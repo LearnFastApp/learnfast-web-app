@@ -58,6 +58,14 @@
       ]
     },
     {
+      "collectionGroup": "rehearsal_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "orgId", "order": "ASCENDING" },
+        { "fieldPath": "isPublic", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "coaching_comments",
       "queryScope": "COLLECTION",
       "fields": [

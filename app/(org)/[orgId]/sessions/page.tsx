@@ -302,6 +302,7 @@ export default function SessionsPage() {
               <a href={`/${orgId}/rehearse`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Rehearse</a>
               {isAdmin && <a href={`/${orgId}/analytics`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Analytics</a>}
               <a href={`/${orgId}/my-sessions`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">My sessions</a>
+              <a href={`/${orgId}/community`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Community</a>
             </div>
           </div>
           <button

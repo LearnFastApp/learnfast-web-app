@@ -20,7 +20,7 @@ function monthKey(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-async function checkGate(uid: string): Promise<{ allowed: boolean; reason?: string; tier: Tier }> {
+async function checkGate(uid: string): Promise<{ allowed: boolean; reason?: string; tier: Tier; orgId?: string }> {
   if (ADMIN_UIDS.has(uid)) return { allowed: true, tier: "admin" };
 
   const db = getAdminDb();
@@ -34,7 +34,7 @@ async function checkGate(uid: string): Promise<{ allowed: boolean; reason?: stri
   if (orgId) {
     const memberSnap = await db.doc(`organizations/${orgId}/members/${uid}`).get();
     if (memberSnap.exists && memberSnap.data()?.status === "active") {
-      return { allowed: true, tier: "pro" };
+      return { allowed: true, tier: "pro", orgId };
     }
   }
 
@@ -137,6 +137,7 @@ export async function POST(req: NextRequest) {
     takeCount: 1,
     takesLimit,
     tier: gate.tier,
+    orgId: gate.orgId ?? null,
     promotedTakeId: null,
     promotedAssessmentId: null,
   });

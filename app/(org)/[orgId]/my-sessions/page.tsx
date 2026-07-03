@@ -236,6 +236,12 @@ export default function MySessionsPage() {
             <span className="px-3 py-1.5 rounded-lg text-sm text-violet-400 bg-violet-400/10 font-medium">
               My sessions
             </span>
+            <a
+              href={`/${orgId}/community`}
+              className="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+            >
+              Community
+            </a>
           </nav>
         </div>
 
