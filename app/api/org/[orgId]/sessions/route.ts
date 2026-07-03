@@ -41,6 +41,39 @@ export async function GET(req: NextRequest, { params }: Params) {
     .limit(100)
     .get();
 
+  // Sync: for any "live" org session whose consumer session has since closed,
+  // auto-complete it so the UI stays accurate without manual intervention.
+  const liveDocs = snap.docs.filter(
+    (d) => d.data().status === "live" && d.data().linkedConsumerSessionId,
+  );
+  if (liveDocs.length > 0) {
+    const { FieldValue } = await import("firebase-admin/firestore");
+    await Promise.all(
+      liveDocs.map(async (d) => {
+        const consumerSnap = await db.doc(`sessions/${d.data().linkedConsumerSessionId}`).get();
+        if (consumerSnap.data()?.status === "closed") {
+          await d.ref.update({ status: "completed", updatedAt: FieldValue.serverTimestamp() });
+        }
+      }),
+    );
+    // Re-fetch after potential updates
+    const refreshed = await db
+      .collection(`organizations/${orgId}/sessions`)
+      .orderBy("scheduledStart", "desc")
+      .limit(100)
+      .get();
+    const sessions = refreshed.docs.map((d) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        ...data,
+        scheduledStart: data.scheduledStart?.toDate?.()?.toISOString() ?? null,
+        scheduledEnd: data.scheduledEnd?.toDate?.()?.toISOString() ?? null,
+      };
+    });
+    return NextResponse.json({ sessions });
+  }
+
   const sessions = snap.docs.map((d) => {
     const data = d.data();
     return {
