@@ -505,13 +505,22 @@ export default function Dashboard() {
               );
             })}
             {user?.email === "physicalperformance@icloud.com" && (
-              <a
-                href="/admin/pilot"
-                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 hover:bg-white/5 hover:text-white transition"
-              >
-                <ShieldCheck className="h-5 w-5" />
-                <span className="flex-1">Pilot Admin</span>
-              </a>
+              <>
+                <a
+                  href="/admin/pilot"
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 hover:bg-white/5 hover:text-white transition"
+                >
+                  <ShieldCheck className="h-5 w-5" />
+                  <span className="flex-1">Pilot Admin</span>
+                </a>
+                <a
+                  href="/admin/content"
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 hover:bg-white/5 hover:text-white transition"
+                >
+                  <BookOpen className="h-5 w-5" />
+                  <span className="flex-1">Premium Content</span>
+                </a>
+              </>
             )}
           </nav>
 
@@ -646,17 +655,14 @@ export default function Dashboard() {
                 <p className="text-sm text-violet-300">{isFr ? "Vous êtes membre d'une organisation." : "You're part of an organisation."}</p>
               </div>
               <div className="flex items-center gap-3 shrink-0">
-                <a
-                  href={`/${orgId}/members`}
-                  className="text-xs font-semibold text-violet-300 hover:text-white transition"
-                >
+                <a href={`/${orgId}/members`} className="text-xs font-semibold text-violet-300 hover:text-white transition">
                   {isFr ? "Membres" : "Members"}
                 </a>
-                <a
-                  href={`/${orgId}/billing`}
-                  className="text-xs font-semibold text-violet-300 hover:text-white transition"
-                >
+                <a href={`/${orgId}/billing`} className="text-xs font-semibold text-violet-300 hover:text-white transition">
                   {isFr ? "Facturation" : "Billing"}
+                </a>
+                <a href={`/${orgId}/content`} className="text-xs font-semibold text-violet-300 hover:text-white transition">
+                  {isFr ? "Contenu" : "Content"}
                 </a>
               </div>
             </div>

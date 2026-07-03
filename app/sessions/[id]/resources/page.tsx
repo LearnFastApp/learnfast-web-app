@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { doc, getDoc, getDocs, collection, query, where } from "firebase/firestore";
 import Image from "next/image";
-import { ExternalLink, Play, Mic, BookOpen, CalendarDays } from "lucide-react";
+import { ExternalLink, Play, Mic, BookOpen, CalendarDays, FileText, Link2, Video, Star } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 
@@ -55,7 +55,8 @@ interface Video { videoId: string; title: string; channelTitle: string; thumbnai
 interface Article { title: string; url: string; source: string; }
 interface Podcast { title: string; author: string; description: string; image: string; link: string; }
 interface Webinar { id: string; title: string; url: string; source: string; date: string; isCurated: boolean; }
-interface DimResources { videos: Video[]; tedTalks: Video[]; articles: Article[]; podcasts: Podcast[]; webinars: Webinar[]; }
+interface LibraryItem { id: string; title: string; description?: string; type: "video" | "pdf" | "link"; url?: string; fileUrl?: string; fileName?: string; orgId: string | null; isPremium: boolean; }
+interface DimResources { videos: Video[]; tedTalks: Video[]; articles: Article[]; podcasts: Podcast[]; webinars: Webinar[]; library: LibraryItem[]; }
 
 function average(values: number[]): number {
   if (!values.length) return 0;
@@ -145,6 +146,29 @@ function PodcastCard({ podcast }: { podcast: Podcast }) {
   );
 }
 
+function LibraryCard({ item }: { item: LibraryItem }) {
+  const href = item.type === "pdf" ? (item.fileUrl ?? "#") : (item.url ?? "#");
+  const Icon = item.type === "pdf" ? FileText : item.type === "video" ? Video : Link2;
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-start gap-3 rounded-xl border border-violet-500/20 bg-violet-500/5 p-3 hover:bg-violet-500/10 transition group"
+    >
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-violet-400" />
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-semibold text-white leading-snug">{item.title}</p>
+        {item.description && <p className="mt-0.5 text-[11px] text-slate-500 line-clamp-2">{item.description}</p>}
+        <p className="mt-1 text-[10px] font-semibold text-violet-400 uppercase tracking-wider">
+          {item.isPremium ? "LearnFast Premium" : "From your organisation"}
+        </p>
+      </div>
+      <ExternalLink className="mt-0.5 h-3 w-3 shrink-0 text-slate-600 group-hover:text-violet-400 transition" />
+    </a>
+  );
+}
+
 function WebinarCard({ webinar }: { webinar: Webinar }) {
   const date = new Date(webinar.date);
   const dateLabel = date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
@@ -187,6 +211,7 @@ function ResourceSection({
   descriptions: Record<Dimension, string>;
   isFr: boolean;
 }) {
+  const libraryItems = resources?.library ?? [];
   const color = DIM_COLORS[dimension];
 
   return (
@@ -214,6 +239,23 @@ function ResourceSection({
           </div>
         ) : resources ? (
           <div className="grid gap-6 sm:grid-cols-2">
+            {/* Library content — org or premium, shown first */}
+            {libraryItems.length > 0 && (
+              <div className="sm:col-span-2">
+                <div className="flex items-center gap-2 mb-3">
+                  <Star className="h-4 w-4 text-violet-400" />
+                  <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+                    {isFr ? "Contenu exclusif" : "Exclusive content"}
+                  </h3>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {libraryItems.map((item) => (
+                    <LibraryCard key={item.id} item={item} />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* YouTube Videos */}
             {resources.videos.length > 0 && (
               <div>
@@ -361,13 +403,14 @@ export default function ResourcesPage() {
     user.getIdToken().then((token) => {
       const headers = { Authorization: `Bearer ${token}` };
 
-      // Primary dimension: videos + articles + podcasts + webinars
+      // Primary dimension: videos + articles + podcasts + webinars + library
       Promise.all([
         fetch(`/api/resources?dimension=${primary}${localeParam}`, { headers }).then((r) => r.json()),
         fetch(`/api/resources/podcasts?dimension=${primary}`, { headers }).then((r) => r.json()),
         fetch(`/api/webinars?dimension=${primary}`, { headers }).then((r) => r.json()),
-      ]).then(([res, pod, web]) => {
-        setPrimaryResources({ videos: res.videos ?? [], tedTalks: res.tedTalks ?? [], articles: res.articles ?? [], podcasts: pod.podcasts ?? [], webinars: web.webinars ?? [] });
+        fetch(`/api/library?dimension=${primary}`, { headers }).then((r) => r.json()),
+      ]).then(([res, pod, web, lib]) => {
+        setPrimaryResources({ videos: res.videos ?? [], tedTalks: res.tedTalks ?? [], articles: res.articles ?? [], podcasts: pod.podcasts ?? [], webinars: web.webinars ?? [], library: lib.items ?? [] });
         setPrimaryLoading(false);
       }).catch(() => setPrimaryLoading(false));
 
@@ -377,8 +420,9 @@ export default function ResourcesPage() {
         fetch(`/api/resources?dimension=${secondary}${localeParam}`, { headers }).then((r) => r.json()),
         fetch(`/api/resources/podcasts?dimension=${secondary}`, { headers }).then((r) => r.json()),
         fetch(`/api/webinars?dimension=${secondary}`, { headers }).then((r) => r.json()),
-      ]).then(([res, pod, web]) => {
-        setSecondaryResources({ videos: res.videos ?? [], tedTalks: res.tedTalks ?? [], articles: res.articles ?? [], podcasts: pod.podcasts ?? [], webinars: web.webinars ?? [] });
+        fetch(`/api/library?dimension=${secondary}`, { headers }).then((r) => r.json()),
+      ]).then(([res, pod, web, lib]) => {
+        setSecondaryResources({ videos: res.videos ?? [], tedTalks: res.tedTalks ?? [], articles: res.articles ?? [], podcasts: pod.podcasts ?? [], webinars: web.webinars ?? [], library: lib.items ?? [] });
         setSecondaryLoading(false);
       }).catch(() => setSecondaryLoading(false));
     });

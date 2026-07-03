@@ -215,5 +215,12 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // ── Content library ─────────────────────────────────────────────────────
+    // All reads and writes go through admin SDK API routes.
+    // Client-side access is locked out entirely.
+    match /library_content/{contentId} {
+      allow read, write: if false;
+    }
+
   }
 }

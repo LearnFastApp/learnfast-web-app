@@ -235,6 +235,7 @@ export default function MembersPage() {
             <div className="flex items-center gap-4 mt-2">
               <span className="text-sm text-violet-400 font-medium">Members</span>
               <a href={`/${orgId}/billing`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Billing</a>
+              <a href={`/${orgId}/content`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Content</a>
             </div>
           </div>
           <div className="text-right">

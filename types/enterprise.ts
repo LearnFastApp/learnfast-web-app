@@ -170,3 +170,32 @@ export interface OrgContext {
   org: Organization;
   member: OrgMember;
 }
+
+// ── library_content (top-level collection) ────────────────────────────────────
+
+export type LibraryContentType = "video" | "pdf" | "link";
+
+export type LibraryDimension =
+  | "clarity"
+  | "engagement"
+  | "energy"
+  | "understanding"
+  | "connection"
+  | "general";
+
+export interface LibraryContent {
+  id: string;
+  title: string;
+  description?: string;
+  type: LibraryContentType;
+  url?: string;          // video/link
+  storageRef?: string;   // Firebase Storage path for PDFs
+  fileUrl?: string;      // public download URL for PDFs
+  fileName?: string;     // original filename
+  dimension: LibraryDimension;
+  orgId: string | null;  // null = platform-wide premium
+  isPremium: boolean;
+  isVisible: boolean;
+  createdAt: Timestamp;
+  createdBy: string;
+}

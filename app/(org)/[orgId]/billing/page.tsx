@@ -257,6 +257,11 @@ export default function BillingPage() {
             <CreditCard className="w-6 h-6 text-slate-400" />
             Billing
           </h1>
+          <div className="flex items-center gap-4 mt-2">
+            <a href={`/${orgId}/members`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Members</a>
+            <span className="text-sm text-violet-400 font-medium">Billing</span>
+            <a href={`/${orgId}/content`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Content</a>
+          </div>
         </div>
 
         {/* Success / cancelled banners */}
