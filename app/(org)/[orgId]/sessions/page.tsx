@@ -13,6 +13,13 @@ import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db as clientDb } from "@/lib/firebase";
 import type { OrgSessionType, OrgSessionStatus, OrgRole } from "@/types/enterprise";
 
+interface OnboardingStatus {
+  teamInvited: boolean;
+  brandingSet: boolean;
+  sessionScheduled: boolean;
+  feedbackCollected: boolean;
+}
+
 interface OrgSession {
   id: string;
   title: string;
@@ -160,6 +167,7 @@ export default function SessionsPage() {
   const [membersLoading, setMembersLoading] = useState(false);
   const [formCoPresenters, setFormCoPresenters] = useState<string[]>([]);
 
+  const [onboarding, setOnboarding] = useState<OnboardingStatus | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const redirectingRef = useRef(false);
 
@@ -167,9 +175,10 @@ export default function SessionsPage() {
     if (!user) return;
     try {
       const token = await user.getIdToken();
-      const [sessRes, orgRes] = await Promise.all([
+      const [sessRes, orgRes, onboardingRes] = await Promise.all([
         fetch(`/api/org/${orgId}/sessions`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`/api/org/${orgId}/info`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`/api/org/${orgId}/onboarding`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       if (sessRes.status === 401) { router.replace("/auth/login"); return; }
       if (sessRes.status === 403) {
@@ -187,6 +196,10 @@ export default function SessionsPage() {
         const d = await orgRes.json();
         setOrgName(d.name ?? "");
         setMyRole(d.myRole ?? null);
+      }
+      if (onboardingRes.ok) {
+        const d = await onboardingRes.json();
+        setOnboarding(d);
       }
     } catch { /* ignore */ }
     finally { setLoading(false); }
@@ -324,6 +337,62 @@ export default function SessionsPage() {
             New session
           </button>
         </div>
+
+        {/* Onboarding checklist — shown to admins until all steps complete */}
+        {isAdmin && onboarding && !(onboarding.teamInvited && onboarding.brandingSet && onboarding.sessionScheduled && onboarding.feedbackCollected) && (
+          <div className="mb-8 bg-[#0f172a] border border-violet-500/20 rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-xs font-semibold text-violet-400 uppercase tracking-widest mb-0.5">Getting started</p>
+                <p className="text-sm text-slate-300">Complete these steps to get the most out of LearnFast Enterprise.</p>
+              </div>
+              <span className="text-xs text-slate-500">
+                {[onboarding.teamInvited, onboarding.brandingSet, onboarding.sessionScheduled, onboarding.feedbackCollected].filter(Boolean).length} / 4
+              </span>
+            </div>
+            <div className="space-y-2">
+              {[
+                { done: onboarding.teamInvited, label: "Invite your team", sub: "Add at least one colleague", href: `/${orgId}/members` },
+                { done: onboarding.brandingSet, label: "Set your branding", sub: "Add your logo", href: `/${orgId}/settings` },
+                { done: onboarding.sessionScheduled, label: "Schedule a session", sub: "Create your first session with a feedback link", href: "#" },
+                { done: onboarding.feedbackCollected, label: "Collect first feedback", sub: "Run a live session and collect audience responses", href: "#" },
+              ].map((step) => (
+                <a
+                  key={step.label}
+                  href={step.done ? undefined : step.href}
+                  className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
+                    step.done
+                      ? "opacity-50 cursor-default"
+                      : step.href === "#"
+                      ? "bg-white/[0.03] cursor-default"
+                      : "bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer"
+                  }`}
+                >
+                  <span className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center border ${
+                    step.done
+                      ? "border-emerald-500 bg-emerald-500/20"
+                      : "border-slate-600"
+                  }`}>
+                    {step.done && (
+                      <svg className="w-3 h-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium ${step.done ? "line-through text-slate-500" : "text-white"}`}>{step.label}</p>
+                    <p className="text-xs text-slate-600">{step.sub}</p>
+                  </div>
+                  {!step.done && step.href !== "#" && (
+                    <svg className="w-4 h-4 text-slate-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  )}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Create session form */}
         {showForm && (
