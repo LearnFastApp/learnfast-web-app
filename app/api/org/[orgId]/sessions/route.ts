@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
-import { getOrgContext, hasOrgPermission } from "@/lib/org-context";
+import { getOrgContext } from "@/lib/org-context";
 import { generateUniqueFeedbackCode } from "@/lib/feedback-code";
 import { sendSessionConfirmationEmail } from "@/lib/email";
 import type { OrgSessionType } from "@/types/enterprise";
@@ -9,6 +9,20 @@ export const dynamic = "force-dynamic";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.learnfastapp.com";
 const VALID_TYPES: OrgSessionType[] = ["presentation", "rehearsal", "meeting"];
+
+// Consumer session code: same charset as feedback-code.ts but generated inline
+// to avoid an extra round-trip — collision checked against `sessions` collection.
+const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+async function generateConsumerCode(db: FirebaseFirestore.Firestore): Promise<string> {
+  for (let i = 0; i < 10; i++) {
+    const bytes = new Uint8Array(6);
+    crypto.getRandomValues(bytes);
+    const code = Array.from(bytes).map((b) => CODE_CHARS[b % CODE_CHARS.length]).join("");
+    const existing = await db.collection("sessions").where("code", "==", code).limit(1).get();
+    if (existing.empty) return code;
+  }
+  throw new Error("Failed to generate unique consumer session code");
+}
 
 type Params = { params: Promise<{ orgId: string }> };
 
@@ -67,14 +81,41 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "end_before_start" }, { status: 400 });
   }
 
-  const feedbackCode = await generateUniqueFeedbackCode();
-  const feedbackUrl = `${BASE_URL}/f/${feedbackCode}`;
-
   const { FieldValue, Timestamp } = await import("firebase-admin/firestore");
   const db = getAdminDb();
 
-  const sessionRef = db.collection(`organizations/${orgId}/sessions`).doc();
-  const sessionData = {
+  // Generate both codes
+  const [feedbackCode, consumerCode] = await Promise.all([
+    generateUniqueFeedbackCode(),
+    generateConsumerCode(db),
+  ]);
+
+  // feedbackUrl points to /f/{code} which does window check then redirects to /session/{consumerCode}
+  const feedbackUrl = `${BASE_URL}/f/${feedbackCode}`;
+
+  const orgSessionRef = db.collection(`organizations/${orgId}/sessions`).doc();
+  const consumerSessionRef = db.collection("sessions").doc();
+
+  const batch = db.batch();
+
+  // Consumer session — enterprise org members bypass free-tier session limit
+  batch.set(consumerSessionRef, {
+    presenterId: uid,
+    title: title.trim(),
+    code: consumerCode,
+    tags: [],
+    status: "active",
+    orgSessionId: orgSessionRef.id,
+    orgId,
+    scheduledStart: Timestamp.fromDate(start),
+    scheduledEnd: Timestamp.fromDate(end),
+    createdAt: FieldValue.serverTimestamp(),
+    expiresAt: null,
+    summarySent: false,
+  });
+
+  // Org session
+  batch.set(orgSessionRef, {
     title: title.trim(),
     type,
     presenterId: uid,
@@ -83,27 +124,31 @@ export async function POST(req: NextRequest, { params }: Params) {
     timezone: timezone.trim(),
     feedbackCode,
     feedbackUrl,
+    linkedConsumerSessionId: consumerSessionRef.id,
+    linkedConsumerCode: consumerCode,
     qrGenerated: false,
     status: "scheduled",
     linkedRecordingId: null,
     calendarEventCreated: false,
     orgId,
     createdAt: FieldValue.serverTimestamp(),
-  };
+  });
 
-  // Write session doc + feedback code index atomically
-  const batch = db.batch();
-  batch.set(sessionRef, sessionData);
+  // Feedback code index for /f/{code} lookup
   batch.set(db.collection("session_feedback_codes").doc(feedbackCode), {
     orgId,
-    sessionId: sessionRef.id,
+    sessionId: orgSessionRef.id,
+    consumerSessionId: consumerSessionRef.id,
+    consumerCode,
     createdAt: FieldValue.serverTimestamp(),
   });
+
   await batch.commit();
 
-  // Send confirmation email (non-blocking — don't fail the request if email fails)
+  // Confirmation email (non-blocking)
   try {
-    const userRecord = await (await import("@/lib/firebase-admin")).getAdminAuth().getUser(uid);
+    const { getAdminAuth } = await import("@/lib/firebase-admin");
+    const userRecord = await getAdminAuth().getUser(uid);
     const presSnap = await db.doc(`presenters/${uid}`).get();
     const displayName = presSnap.data()?.displayName ?? userRecord.displayName ?? "Presenter";
     const orgSnap = await db.doc(`organizations/${orgId}`).get();
@@ -120,14 +165,16 @@ export async function POST(req: NextRequest, { params }: Params) {
         timezone: timezone.trim(),
         feedbackCode,
         feedbackUrl,
-      }).catch(() => { /* email failure is non-fatal */ });
+      }).catch(() => {});
     }
-  } catch { /* non-fatal */ }
+  } catch {}
 
   return NextResponse.json({
-    id: sessionRef.id,
+    id: orgSessionRef.id,
     feedbackCode,
     feedbackUrl,
+    linkedConsumerSessionId: consumerSessionRef.id,
+    linkedConsumerCode: consumerCode,
     scheduledStart: start.toISOString(),
     scheduledEnd: end.toISOString(),
   }, { status: 201 });

@@ -46,6 +46,18 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (!Object.keys(updates).length) return NextResponse.json({ error: "no_changes" }, { status: 400 });
 
   await doc.ref.update({ ...updates, updatedAt: FieldValue.serverTimestamp() });
+
+  // When org session ends, close the linked consumer session so the feedback form closes
+  if (updates.status === "completed" || updates.status === "cancelled") {
+    const linkedId = doc.data()?.linkedConsumerSessionId as string | undefined;
+    if (linkedId) {
+      await getAdminDb().doc(`sessions/${linkedId}`).update({
+        status: "closed",
+        endedAt: FieldValue.serverTimestamp(),
+      }).catch(() => {});
+    }
+  }
+
   return NextResponse.json({ ok: true });
 }
 

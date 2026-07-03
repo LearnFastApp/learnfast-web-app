@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import {
   Calendar, CalendarPlus, Clock, Download, Loader2, Play,
-  Plus, QrCode, Square, Trash2, Users, X, ChevronDown, Radio,
+  Plus, QrCode, Trash2, Users, X, ChevronDown, Radio,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import MobileNav from "@/components/mobile-nav";
@@ -23,6 +23,8 @@ interface OrgSession {
   timezone: string;
   feedbackCode: string;
   feedbackUrl: string;
+  linkedConsumerSessionId?: string | null;
+  linkedConsumerCode?: string | null;
   status: OrgSessionStatus;
   orgId: string;
 }
@@ -107,18 +109,18 @@ function downloadICS(session: OrgSession) {
   URL.revokeObjectURL(url);
 }
 
-function LiveCounter({ sessionId, orgId }: { sessionId: string; orgId: string }) {
+// Counts audience responses from the consumer session's feedback_responses collection
+function LiveCounter({ consumerSessionId }: { consumerSessionId: string }) {
   const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
     const q = query(
-      collection(clientDb, "feedbackResponses"),
-      where("sessionId", "==", sessionId),
-      where("orgId", "==", orgId),
+      collection(clientDb, "feedback_responses"),
+      where("sessionId", "==", consumerSessionId),
     );
     const unsub = onSnapshot(q, (snap) => setCount(snap.size));
     return unsub;
-  }, [sessionId, orgId]);
+  }, [consumerSessionId]);
 
   if (count === null) return null;
   return (
@@ -217,15 +219,20 @@ export default function SessionsPage() {
     }
   }
 
-  async function updateStatus(session: OrgSession, status: OrgSessionStatus) {
+  async function goLive(session: OrgSession) {
     if (!user) return;
     const token = await user.getIdToken();
     await fetch(`/api/org/${orgId}/sessions/${session.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status: "live" }),
     });
-    setSessions((prev) => prev.map((s) => s.id === session.id ? { ...s, status } : s));
+    // Redirect presenter to the full consumer session page (reflection, AI upload, analysis all there)
+    if (session.linkedConsumerSessionId) {
+      router.push(`/sessions/${session.linkedConsumerSessionId}`);
+    } else {
+      setSessions((prev) => prev.map((s) => s.id === session.id ? { ...s, status: "live" } : s));
+    }
   }
 
   async function deleteSession(session: OrgSession) {
@@ -374,7 +381,7 @@ export default function SessionsPage() {
                   isOwner={s.presenterId === user?.uid}
                   expanded={expandedId === s.id}
                   onToggle={() => setExpandedId(expandedId === s.id ? null : s.id)}
-                  onStatusChange={updateStatus}
+                  onGoLive={goLive}
                   onDelete={deleteSession}
                 />
               ))}
@@ -396,7 +403,7 @@ export default function SessionsPage() {
                   isOwner={s.presenterId === user?.uid}
                   expanded={expandedId === s.id}
                   onToggle={() => setExpandedId(expandedId === s.id ? null : s.id)}
-                  onStatusChange={updateStatus}
+                  onGoLive={goLive}
                   onDelete={deleteSession}
                 />
               ))}
@@ -409,7 +416,7 @@ export default function SessionsPage() {
 }
 
 function SessionCard({
-  session, orgId, isAdmin, isOwner, expanded, onToggle, onStatusChange, onDelete,
+  session, orgId, isAdmin, isOwner, expanded, onToggle, onGoLive, onDelete,
 }: {
   session: OrgSession;
   orgId: string;
@@ -417,7 +424,7 @@ function SessionCard({
   isOwner: boolean;
   expanded: boolean;
   onToggle: () => void;
-  onStatusChange: (s: OrgSession, status: OrgSessionStatus) => void;
+  onGoLive: (s: OrgSession) => void;
   onDelete: (s: OrgSession) => void;
 }) {
   const canManage = isAdmin || isOwner;
@@ -448,8 +455,8 @@ function SessionCard({
               {formatDateTime(session.scheduledStart, session.timezone)}
             </span>
             <span className="text-xs text-slate-600">{TYPE_LABELS[session.type]}</span>
-            {(session.status === "live" || session.status === "scheduled") && (
-              <LiveCounter sessionId={session.id} orgId={orgId} />
+            {session.linkedConsumerSessionId && (session.status === "live" || session.status === "scheduled") && (
+              <LiveCounter consumerSessionId={session.linkedConsumerSessionId} />
             )}
           </div>
         </div>
@@ -517,37 +524,37 @@ function SessionCard({
           </div>
 
           {/* Status controls */}
-          {canManage && session.status !== "cancelled" && session.status !== "completed" && (
-            <div className="flex flex-wrap gap-2 pt-1">
-              {session.status === "scheduled" && (
-                <button
-                  onClick={() => onStatusChange(session, "live")}
-                  className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-green-600 hover:bg-green-500 text-white transition-colors"
-                >
-                  <Play className="w-3.5 h-3.5" />
-                  Go live
-                </button>
-              )}
-              {session.status === "live" && (
-                <button
-                  onClick={() => onStatusChange(session, "completed")}
-                  className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white transition-colors"
-                >
-                  <Square className="w-3.5 h-3.5" />
-                  End session
-                </button>
-              )}
-              {isAdmin && (
-                <button
-                  onClick={() => onDelete(session)}
-                  className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-white/5 hover:bg-red-500/10 text-red-400 transition-colors"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Delete
-                </button>
-              )}
-            </div>
-          )}
+          <div className="flex flex-wrap gap-2 pt-1">
+            {/* Go live — opens the full consumer session page with feedback, reflection, AI upload */}
+            {canManage && session.status === "scheduled" && session.linkedConsumerSessionId && (
+              <button
+                onClick={() => onGoLive(session)}
+                className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-green-600 hover:bg-green-500 text-white transition-colors"
+              >
+                <Play className="w-3.5 h-3.5" />
+                Go live
+              </button>
+            )}
+            {/* View session — links to full analysis page */}
+            {session.linkedConsumerSessionId && (
+              <a
+                href={`/sessions/${session.linkedConsumerSessionId}`}
+                className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-violet-600/20 hover:bg-violet-600/30 text-violet-300 transition-colors"
+              >
+                <Radio className="w-3.5 h-3.5" />
+                {session.status === "live" ? "Manage session" : "View results"}
+              </a>
+            )}
+            {isAdmin && session.status !== "cancelled" && session.status !== "completed" && (
+              <button
+                onClick={() => onDelete(session)}
+                className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-white/5 hover:bg-red-500/10 text-red-400 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
