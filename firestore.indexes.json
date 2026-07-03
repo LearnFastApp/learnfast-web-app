@@ -75,6 +75,14 @@
     },
     {
       "collectionGroup": "sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "presenterId", "order": "ASCENDING" },
+        { "fieldPath": "scheduledStart", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sessions",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
         { "fieldPath": "orgId", "order": "ASCENDING" },
