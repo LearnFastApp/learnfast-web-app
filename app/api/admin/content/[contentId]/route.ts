@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
+import { getAdminDb, getAdminAuth, verifyAuthToken } from "@/lib/firebase-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -8,9 +8,8 @@ const PLATFORM_ADMIN = "physicalperformance@icloud.com";
 async function assertAdmin(req: NextRequest) {
   const uid = await verifyAuthToken(req);
   if (!uid) return null;
-  const db = getAdminDb();
-  const snap = await db.doc(`presenters/${uid}`).get();
-  if (snap.data()?.email !== PLATFORM_ADMIN) return null;
+  const userRecord = await getAdminAuth().getUser(uid);
+  if (userRecord.email !== PLATFORM_ADMIN) return null;
   return uid;
 }
 

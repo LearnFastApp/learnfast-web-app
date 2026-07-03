@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
+import { getAdminDb, getAdminAuth, verifyAuthToken } from "@/lib/firebase-admin";
 import type { LibraryDimension, LibraryContentType } from "@/types/enterprise";
 
 export const dynamic = "force-dynamic";
@@ -13,9 +13,8 @@ const VALID_TYPES: LibraryContentType[] = ["video", "pdf", "link"];
 async function assertAdmin(req: NextRequest) {
   const uid = await verifyAuthToken(req);
   if (!uid) return null;
-  const db = getAdminDb();
-  const snap = await db.doc(`presenters/${uid}`).get();
-  if (snap.data()?.email !== PLATFORM_ADMIN) return null;
+  const userRecord = await getAdminAuth().getUser(uid);
+  if (userRecord.email !== PLATFORM_ADMIN) return null;
   return uid;
 }
 
