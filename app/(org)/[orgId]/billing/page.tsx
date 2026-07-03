@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import {
   CreditCard,
@@ -55,6 +55,7 @@ export default function BillingPage() {
   const [myRole, setMyRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const redirectingRef = useRef(false);
 
   // Seat adjustment state
   const [newSeats, setNewSeats] = useState<number>(0);
@@ -85,7 +86,8 @@ export default function BillingPage() {
       if (!infoRes.ok) {
         const errData = await infoRes.json().catch(() => ({}));
         // If the URL orgId is wrong, redirect to the correct org's billing page
-        if (errData.error === "wrong_org" && errData.yourOrgId) {
+        if (errData.error === "wrong_org" && errData.yourOrgId && !redirectingRef.current) {
+          redirectingRef.current = true;
           router.replace(`/${errData.yourOrgId}/billing`);
           return;
         }

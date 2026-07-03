@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import {
   Users,
@@ -66,6 +66,7 @@ export default function MembersPage() {
   const [myRole, setMyRole] = useState<OrgRole | null>(null);
   const [orgInfo, setOrgInfo] = useState<OrgInfo | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
+  const redirectingRef = useRef(false);
   const [invites, setInvites] = useState<PendingInvite[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -93,7 +94,8 @@ export default function MembersPage() {
       if (membersRes.status === 403) {
         // members-list returns wrong_org if URL orgId doesn't match presenter's orgId
         const errData = await membersRes.json().catch(() => ({}));
-        if (errData.error === "wrong_org" && errData.yourOrgId) {
+        if (errData.error === "wrong_org" && errData.yourOrgId && !redirectingRef.current) {
+          redirectingRef.current = true;
           router.replace(`/${errData.yourOrgId}/members`);
           return;
         }
