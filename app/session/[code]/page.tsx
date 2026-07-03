@@ -138,6 +138,9 @@ export default function FeedbackPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionTitle, setSessionTitle] = useState("");
   const [notFound, setNotFound] = useState(false);
+  const [leadPresenterId, setLeadPresenterId] = useState<string | null>(null);
+  const [copresenters, setCopresenters] = useState<Array<{ uid: string; displayName: string }>>([]);
+  const [selectedPresenterId, setSelectedPresenterId] = useState<string | null>(null);
   const [scores, setScores] = useState<Record<Dimension, number>>({
     clarity: 50,
     engagement: 50,
@@ -162,6 +165,10 @@ export default function FeedbackPage() {
       if (data.status === "closed") { setSessionEnded(true); return; }
       setSessionId(docSnap.id);
       setSessionTitle(data.title ?? "");
+      setLeadPresenterId(data.presenterId ?? null);
+      const coPs: Array<{ uid: string; displayName: string }> = data.copresenters ?? [];
+      setCopresenters(coPs);
+      setSelectedPresenterId(data.presenterId ?? null);
     }
     loadSession();
   }, [code]);
@@ -176,6 +183,7 @@ export default function FeedbackPage() {
       body: JSON.stringify({
         sessionId,
         scores,
+        selectedPresenterId: selectedPresenterId ?? leadPresenterId,
         ...(comment.trim() && { comment: comment.trim(), anonymous, commenterName }),
       }),
     });
@@ -265,6 +273,25 @@ export default function FeedbackPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {copresenters.length > 0 && (
+            <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
+              <label className="block text-sm font-semibold text-white mb-3">
+                {isFr ? "Qui évaluez-vous ?" : "Who are you rating?"}
+              </label>
+              <select
+                value={selectedPresenterId ?? ""}
+                onChange={(e) => setSelectedPresenterId(e.target.value || null)}
+                className="w-full bg-[#1a2135] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-violet-500"
+              >
+                {[{ uid: leadPresenterId ?? "", displayName: isFr ? "Présentateur principal" : "Lead presenter" }, ...copresenters].map((p) => (
+                  <option key={p.uid} value={p.uid}>
+                    {p.displayName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="rounded-2xl border border-white/10 bg-[#111827] p-6 space-y-8">
             {DIMENSIONS.map((dim) => {
               const score = scores[dim];
@@ -348,9 +375,15 @@ export default function FeedbackPage() {
             )}
           </div>
 
+          {copresenters.length > 0 && !selectedPresenterId && (
+            <p className="text-center text-sm text-amber-400">
+              {isFr ? "Veuillez sélectionner un présentateur à évaluer." : "Please select a presenter to rate."}
+            </p>
+          )}
+
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || (copresenters.length > 0 && !selectedPresenterId)}
             className="w-full rounded-xl bg-violet-500 px-4 py-4 font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-400 disabled:opacity-50"
           >
             {submitting ? (isFr ? "Envoi en cours…" : "Submitting…") : (isFr ? "Envoyer mes retours" : "Submit feedback")}

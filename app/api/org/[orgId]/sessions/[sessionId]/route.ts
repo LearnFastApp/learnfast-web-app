@@ -57,24 +57,64 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     if (newEnd) updates.scheduledEnd = Timestamp.fromDate(newEnd);
   }
 
+  // Handle co-presenter updates
+  type CoPres = { uid: string; displayName: string };
+  let copresUpdates: { copresenters: CoPres[]; copresenterIds: string[] } | null = null;
+  if (Array.isArray(body.copresenterUids)) {
+    const db = getAdminDb();
+    const uniqueUids = [...new Set(body.copresenterUids as string[])].filter(
+      (u) => u !== doc.data()?.presenterId,
+    );
+    const coPresenterList: CoPres[] = [];
+    const coPresenterIds: string[] = [];
+
+    if (uniqueUids.length > 0) {
+      const [memberSnaps, presenterSnaps] = await Promise.all([
+        Promise.all(uniqueUids.map((u) => db.doc(`organizations/${orgId}/members/${u}`).get())),
+        Promise.all(uniqueUids.map((u) => db.doc(`presenters/${u}`).get())),
+      ]);
+      for (let i = 0; i < uniqueUids.length; i++) {
+        const memberDoc = memberSnaps[i];
+        if (!memberDoc.exists || memberDoc.data()?.status !== "active") continue;
+        const displayName =
+          presenterSnaps[i].data()?.displayName ??
+          memberDoc.data()?.displayName ??
+          memberDoc.data()?.email ??
+          uniqueUids[i];
+        coPresenterList.push({ uid: uniqueUids[i], displayName });
+        coPresenterIds.push(uniqueUids[i]);
+      }
+    }
+
+    updates.copresenters = coPresenterList;
+    updates.copresenterIds = coPresenterIds;
+    copresUpdates = { copresenters: coPresenterList, copresenterIds: coPresenterIds };
+  }
+
   if (!Object.keys(updates).length) return NextResponse.json({ error: "no_changes" }, { status: 400 });
 
   await doc.ref.update({ ...updates, updatedAt: FieldValue.serverTimestamp() });
 
   const linkedId = doc.data()?.linkedConsumerSessionId as string | undefined;
+  const db2 = getAdminDb();
 
   // Sync date changes to consumer session
   if (linkedId && (newStart || newEnd)) {
     const consumerUpdates: Record<string, unknown> = {};
     if (newStart) consumerUpdates.scheduledStart = Timestamp.fromDate(newStart);
     if (newEnd) consumerUpdates.scheduledEnd = Timestamp.fromDate(newEnd);
-    await getAdminDb().doc(`sessions/${linkedId}`).update(consumerUpdates).catch(() => {});
+    await db2.doc(`sessions/${linkedId}`).update(consumerUpdates).catch(() => {});
+  }
+
+  // Sync co-presenter changes to consumer session
+  if (linkedId && copresUpdates) {
+    await db2.doc(`sessions/${linkedId}`).update(copresUpdates).catch(() => {});
   }
 
   // When org session ends, close the linked consumer session so the feedback form closes
   if (updates.status === "completed" || updates.status === "cancelled") {
     if (linkedId) {
-      await getAdminDb().doc(`sessions/${linkedId}`).update({
+      await db2.doc(`sessions/${linkedId}`).update({
         status: "closed",
         endedAt: FieldValue.serverTimestamp(),
       }).catch(() => {});

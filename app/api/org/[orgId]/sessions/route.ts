@@ -98,7 +98,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "invalid_body" }, { status: 400 });
 
-  const { title, type, scheduledStart, scheduledEnd, timezone } = body;
+  const { title, type, scheduledStart, scheduledEnd, timezone, copresenterUids } = body;
 
   if (!title?.trim()) return NextResponse.json({ error: "title_required" }, { status: 400 });
   if (!VALID_TYPES.includes(type)) return NextResponse.json({ error: "invalid_type" }, { status: 400 });
@@ -116,6 +116,36 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const { FieldValue, Timestamp } = await import("firebase-admin/firestore");
   const db = getAdminDb();
+
+  // Resolve co-presenter UIDs → { uid, displayName }
+  type CoPres = { uid: string; displayName: string };
+  let copresenters: CoPres[] = [];
+  let copresenterIds: string[] = [];
+
+  if (Array.isArray(copresenterUids) && copresenterUids.length > 0) {
+    // Deduplicate and exclude the lead presenter
+    const uniqueUids = [...new Set(copresenterUids as string[])].filter((u) => u !== uid);
+    if (uniqueUids.length > 0) {
+      // Validate each is an active org member and get display name
+      const memberSnaps = await Promise.all(
+        uniqueUids.map((u) => db.doc(`organizations/${orgId}/members/${u}`).get()),
+      );
+      const presenterSnaps = await Promise.all(
+        uniqueUids.map((u) => db.doc(`presenters/${u}`).get()),
+      );
+      for (let i = 0; i < uniqueUids.length; i++) {
+        const memberDoc = memberSnaps[i];
+        if (!memberDoc.exists || memberDoc.data()?.status !== "active") continue;
+        const displayName =
+          presenterSnaps[i].data()?.displayName ??
+          memberDoc.data()?.displayName ??
+          memberDoc.data()?.email ??
+          uniqueUids[i];
+        copresenters.push({ uid: uniqueUids[i], displayName });
+        copresenterIds.push(uniqueUids[i]);
+      }
+    }
+  }
 
   // Generate both codes
   const [feedbackCode, consumerCode] = await Promise.all([
@@ -142,6 +172,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     orgId,
     scheduledStart: Timestamp.fromDate(start),
     scheduledEnd: Timestamp.fromDate(end),
+    copresenters,
+    copresenterIds,
     createdAt: FieldValue.serverTimestamp(),
     expiresAt: null,
     summarySent: false,
@@ -159,6 +191,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     feedbackUrl,
     linkedConsumerSessionId: consumerSessionRef.id,
     linkedConsumerCode: consumerCode,
+    copresenters,
+    copresenterIds,
     qrGenerated: false,
     status: "scheduled",
     linkedRecordingId: null,

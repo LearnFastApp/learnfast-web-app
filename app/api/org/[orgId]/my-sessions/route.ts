@@ -65,13 +65,37 @@ export async function GET(req: NextRequest, { params }: Params) {
 
   const db = getAdminDb();
 
-  const sessionsSnap = await db
-    .collection(`organizations/${orgId}/sessions`)
-    .where("presenterId", "==", uid)
-    .orderBy("scheduledStart", "desc")
-    .get();
+  // Fetch sessions where uid is lead presenter OR a co-presenter
+  const [leadSnap, coPresSnap] = await Promise.all([
+    db
+      .collection(`organizations/${orgId}/sessions`)
+      .where("presenterId", "==", uid)
+      .orderBy("scheduledStart", "desc")
+      .get(),
+    db
+      .collection(`organizations/${orgId}/sessions`)
+      .where("copresenterIds", "array-contains", uid)
+      .orderBy("scheduledStart", "desc")
+      .get(),
+  ]);
 
-  if (sessionsSnap.empty) {
+  // Merge and deduplicate (a user cannot be both lead and co-presenter, but guard anyway)
+  const seen = new Set<string>();
+  const allDocs: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+  for (const doc of [...leadSnap.docs, ...coPresSnap.docs]) {
+    if (!seen.has(doc.id)) {
+      seen.add(doc.id);
+      allDocs.push(doc);
+    }
+  }
+  // Sort merged list by scheduledStart descending
+  allDocs.sort((a, b) => {
+    const aTime = a.data().scheduledStart?.toDate?.()?.getTime() ?? 0;
+    const bTime = b.data().scheduledStart?.toDate?.()?.getTime() ?? 0;
+    return bTime - aTime;
+  });
+
+  if (allDocs.length === 0) {
     return NextResponse.json({
       sessions: [],
       overallAvg: null,
@@ -80,13 +104,12 @@ export async function GET(req: NextRequest, { params }: Params) {
     });
   }
 
-  const sessionDocs = sessionsSnap.docs;
-
-  // feedback_responses are keyed by the CONSUMER session ID, not the org session ID
-  const consumerIds = sessionDocs
+  // Collect consumer session IDs
+  const consumerIds = allDocs
     .map((d) => d.data().linkedConsumerSessionId as string | undefined)
     .filter((id): id is string => !!id);
 
+  // Fetch all feedback_responses for these consumer sessions
   const responsesByConsumerId = new Map<string, FirebaseFirestore.QueryDocumentSnapshot[]>();
   if (consumerIds.length > 0) {
     const idChunks = chunkArray(consumerIds, 30);
@@ -104,10 +127,27 @@ export async function GET(req: NextRequest, { params }: Params) {
     }
   }
 
-  const sessions = sessionDocs.map((d) => {
+  const sessions = allDocs.map((d) => {
     const data = d.data();
     const cid = data.linkedConsumerSessionId as string | undefined;
-    const sessionResponses = cid ? (responsesByConsumerId.get(cid) ?? []) : [];
+    const hasCoPresenters =
+      Array.isArray(data.copresenterIds) && data.copresenterIds.length > 0;
+    const isCoPresenter = Array.isArray(data.copresenterIds) && data.copresenterIds.includes(uid);
+
+    let sessionResponses = cid ? (responsesByConsumerId.get(cid) ?? []) : [];
+
+    // If session has co-presenters, filter responses to only those directed at this user
+    if (hasCoPresenters) {
+      sessionResponses = sessionResponses.filter(
+        (r) => r.data().selectedPresenterId === uid,
+      );
+    } else if (isCoPresenter) {
+      // Fallback: if somehow marked as co-presenter but no copresenterIds array
+      sessionResponses = sessionResponses.filter(
+        (r) => r.data().selectedPresenterId === uid,
+      );
+    }
+
     return {
       id: d.id,
       title: data.title as string,
@@ -117,17 +157,27 @@ export async function GET(req: NextRequest, { params }: Params) {
       scheduledEnd: data.scheduledEnd?.toDate?.()?.toISOString() ?? null,
       linkedConsumerSessionId: cid ?? null,
       feedbackCode: data.feedbackCode as string,
+      isCoPresenter,
+      copresenters: (data.copresenters ?? []) as Array<{ uid: string; displayName: string }>,
       responsesCount: sessionResponses.length,
       avgScores: avgScoresFromResponses(sessionResponses),
     };
   });
 
-  const allResponses = [...responsesByConsumerId.values()].flat();
+  const allMyResponses = sessions.flatMap((s) => {
+    const cid = s.linkedConsumerSessionId;
+    if (!cid) return [];
+    const all = responsesByConsumerId.get(cid) ?? [];
+    if (s.copresenters.length > 0) {
+      return all.filter((r) => r.data().selectedPresenterId === uid);
+    }
+    return all;
+  });
 
   return NextResponse.json({
     sessions,
-    overallAvg: avgScoresFromResponses(allResponses),
+    overallAvg: avgScoresFromResponses(allMyResponses),
     totalSessions: sessions.length,
-    totalResponses: allResponses.length,
+    totalResponses: allMyResponses.length,
   });
 }

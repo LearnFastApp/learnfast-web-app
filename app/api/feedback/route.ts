@@ -20,12 +20,13 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { sessionId, scores, comment, anonymous, commenterName } = body as {
+    const { sessionId, scores, comment, anonymous, commenterName, selectedPresenterId } = body as {
       sessionId: string;
       scores: Record<string, number>;
       comment?: string;
       anonymous?: boolean;
       commenterName?: string;
+      selectedPresenterId?: string;
     };
 
     if (!sessionId || !scores) {
@@ -51,11 +52,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Session is closed" }, { status: 410 });
     }
 
+    // Resolve presenter: use provided value, fall back to session's own presenterId
+    const resolvedPresenterId =
+      selectedPresenterId?.trim() || (sessionDoc.data()?.presenterId as string | undefined) || null;
+
     const anonId = crypto.randomUUID();
 
     await db.collection("feedback_responses").add({
       sessionId,
       ...scores,
+      selectedPresenterId: resolvedPresenterId,
       submittedAt: FieldValue.serverTimestamp(),
       anonId,
       ...(comment?.trim()

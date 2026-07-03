@@ -18,7 +18,7 @@ export async function GET(
   if (ctx.orgId !== orgId) {
     return NextResponse.json({ error: "wrong_org", yourOrgId: ctx.orgId }, { status: 403 });
   }
-  if (!hasOrgPermission(ctx.role, "admin")) {
+  if (!hasOrgPermission(ctx.role, "coach")) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

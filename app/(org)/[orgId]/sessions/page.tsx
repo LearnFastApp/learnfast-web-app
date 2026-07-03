@@ -27,6 +27,8 @@ interface OrgSession {
   linkedConsumerCode?: string | null;
   status: OrgSessionStatus;
   orgId: string;
+  copresenterIds?: string[];
+  copresenters?: Array<{ uid: string; displayName: string }>;
 }
 
 const TYPE_LABELS: Record<OrgSessionType, string> = {
@@ -154,6 +156,10 @@ export default function SessionsPage() {
   const [creating, setCreating] = useState(false);
   const [formError, setFormError] = useState("");
 
+  const [orgMembers, setOrgMembers] = useState<Array<{ id: string; displayName: string; email: string }>>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [formCoPresenters, setFormCoPresenters] = useState<string[]>([]);
+
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const redirectingRef = useRef(false);
 
@@ -204,12 +210,12 @@ export default function SessionsPage() {
       const res = await fetch(`/api/org/${orgId}/sessions`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: formTitle, type: formType, scheduledStart, scheduledEnd, timezone: formTimezone }),
+        body: JSON.stringify({ title: formTitle, type: formType, scheduledStart, scheduledEnd, timezone: formTimezone, copresenterUids: formCoPresenters }),
       });
       const data = await res.json();
       if (!res.ok) { setFormError(data.error ?? "Failed to create session."); return; }
       setShowForm(false);
-      setFormTitle(""); setFormDate(""); setFormStartTime("09:00"); setFormEndTime("10:00");
+      setFormTitle(""); setFormDate(""); setFormStartTime("09:00"); setFormEndTime("10:00"); setFormCoPresenters([]);
       setExpandedId(data.id);
       await fetchSessions();
     } catch {
@@ -237,7 +243,7 @@ export default function SessionsPage() {
 
   async function editSession(
     session: OrgSession,
-    patch: { title?: string; type?: OrgSessionType; scheduledStart?: string; scheduledEnd?: string },
+    patch: { title?: string; type?: OrgSessionType; scheduledStart?: string; scheduledEnd?: string; copresenterUids?: string[] },
   ): Promise<boolean> {
     if (!user) return false;
     const token = await user.getIdToken();
@@ -299,7 +305,18 @@ export default function SessionsPage() {
             </div>
           </div>
           <button
-            onClick={() => setShowForm(true)}
+            onClick={() => {
+              setShowForm(true);
+              if (orgMembers.length === 0) {
+                setMembersLoading(true);
+                user!.getIdToken().then(token =>
+                  fetch(`/api/org/${orgId}/members-list`, { headers: { Authorization: `Bearer ${token}` } })
+                    .then(r => r.ok ? r.json() : null)
+                    .then(d => { if (d?.members) setOrgMembers(d.members.filter((m: { status: string }) => m.status === "active")); })
+                    .finally(() => setMembersLoading(false))
+                );
+              }
+            }}
             className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -336,6 +353,39 @@ export default function SessionsPage() {
                   <option value="meeting">Meeting</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
+              {/* Co-presenters */}
+              <div>
+                <label className="block text-xs text-slate-400 mb-2">Co-presenters <span className="text-slate-600">(optional)</span></label>
+                {membersLoading ? (
+                  <p className="text-xs text-slate-500">Loading members…</p>
+                ) : orgMembers.length === 0 ? (
+                  <p className="text-xs text-slate-500">No other members to add.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {orgMembers.map((m) => {
+                      const selected = formCoPresenters.includes(m.id);
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() =>
+                            setFormCoPresenters((prev) =>
+                              selected ? prev.filter((id) => id !== m.id) : [...prev, m.id]
+                            )
+                          }
+                          className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                            selected
+                              ? "border-violet-500 bg-violet-500/20 text-violet-300"
+                              : "border-white/10 bg-[#0a0f1a] text-slate-400 hover:text-white"
+                          }`}
+                        >
+                          {m.displayName || m.email}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               <input
                 type="date"
@@ -445,7 +495,7 @@ function SessionCard({
   expanded: boolean;
   onToggle: () => void;
   onGoLive: (s: OrgSession) => void;
-  onEdit: (s: OrgSession, patch: { title?: string; type?: OrgSessionType; scheduledStart?: string; scheduledEnd?: string }) => Promise<boolean>;
+  onEdit: (s: OrgSession, patch: { title?: string; type?: OrgSessionType; scheduledStart?: string; scheduledEnd?: string; copresenterUids?: string[] }) => Promise<boolean>;
   onDelete: (s: OrgSession) => void;
 }) {
   const canManage = isAdmin || isOwner;
@@ -498,6 +548,12 @@ function SessionCard({
             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLORS[session.status]}`}>
               {session.status === "live" ? "Live" : session.status.charAt(0).toUpperCase() + session.status.slice(1)}
             </span>
+            {session.copresenters && session.copresenters.length > 0 && (
+              <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                <Users className="w-3 h-3" />
+                +{session.copresenters.length} co-presenter{session.copresenters.length > 1 ? "s" : ""}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-3 mt-0.5 flex-wrap">
             <span className="text-xs text-slate-500 flex items-center gap-1">
