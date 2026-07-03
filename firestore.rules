@@ -201,6 +201,22 @@ service cloud.firestore {
         allow read: if isOrgRole(orgId, ['owner', 'admin', 'coach']);
         allow write: if false;
       }
+
+      // ── Assignments sub-collection ───────────────────────────────────────
+      match /assignments/{assignmentId} {
+        // Coaches+ see all; members see only their own
+        allow read: if isOrgRole(orgId, ['owner', 'admin', 'coach']) ||
+          (isOrgMember(orgId) && resource.data.assignedTo == request.auth.uid);
+        // Only coaches+ can create or delete
+        allow create: if isOrgRole(orgId, ['owner', 'admin', 'coach']);
+        allow delete: if isOrgRole(orgId, ['owner', 'admin', 'coach']);
+        // Coaches can update anything; members can only mark their own complete
+        allow update: if isOrgRole(orgId, ['owner', 'admin', 'coach']) ||
+          (isOrgMember(orgId) &&
+           resource.data.assignedTo == request.auth.uid &&
+           request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status', 'completedAt']));
+      }
     }
 
     // ── Enterprise: billing events log (idempotency log, server-side only) ──

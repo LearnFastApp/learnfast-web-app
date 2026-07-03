@@ -10,6 +10,7 @@ import {
   Calendar,
   AlertCircle,
   Loader2,
+  ClipboardList,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -76,6 +77,17 @@ interface OrgInfo {
   name: string;
 }
 
+interface Assignment {
+  id: string;
+  assignedTo: string;
+  assignedToName: string | null;
+  title: string;
+  prompt: string | null;
+  dueDate: string | null;
+  status: "pending" | "completed";
+  completedAt: string | null;
+}
+
 function avgOfScores(scores: Record<Dimension, number> | null): string {
   if (!scores) return "—";
   const vals = DIMENSIONS.map((d) => scores[d]);
@@ -92,6 +104,25 @@ function formatDate(iso: string | null): string {
   });
 }
 
+function formatDueDate(iso: string | null): { label: string; colorClass: string } {
+  if (!iso) return { label: "", colorClass: "text-slate-400" };
+  const due = new Date(iso);
+  const now = new Date();
+  // Compare calendar days only
+  const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+  const diffMs = dueDay.getTime() - nowDay.getTime();
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+  const label = `Due ${due.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`;
+
+  let colorClass = "text-slate-400";
+  if (diffDays < 0) colorClass = "text-red-400";
+  else if (diffDays <= 3) colorClass = "text-amber-400";
+
+  return { label, colorClass };
+}
+
 export default function AnalyticsPage() {
   const router = useRouter();
   const params = useParams();
@@ -101,6 +132,7 @@ export default function AnalyticsPage() {
 
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [orgInfo, setOrgInfo] = useState<OrgInfo | null>(null);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -110,9 +142,10 @@ export default function AnalyticsPage() {
       const idToken = await user.getIdToken();
       const headers = { Authorization: `Bearer ${idToken}` };
 
-      const [analyticsRes, orgRes] = await Promise.all([
+      const [analyticsRes, orgRes, assignmentsRes] = await Promise.all([
         fetch(`/api/org/${orgId}/analytics`, { headers }),
         fetch(`/api/org/${orgId}/info`, { headers }),
+        fetch(`/api/org/${orgId}/assignments`, { headers }),
       ]);
 
       if (analyticsRes.status === 401) {
@@ -137,6 +170,11 @@ export default function AnalyticsPage() {
       if (orgRes.ok) {
         const d = await orgRes.json();
         setOrgInfo(d);
+      }
+
+      if (assignmentsRes.ok) {
+        const d = await assignmentsRes.json();
+        setAssignments(d.assignments ?? []);
       }
     } catch {
       setError("Failed to load analytics.");
@@ -186,6 +224,17 @@ export default function AnalyticsPage() {
     dimension: DIM_LABELS[d],
     value: orgAvgScores ? Number(orgAvgScores[d].toFixed(2)) : 0,
   }));
+
+  const sortedAssignments = assignments.slice().sort((a, b) => {
+    if (!a.dueDate && !b.dueDate) return 0;
+    if (!a.dueDate) return 1;
+    if (!b.dueDate) return -1;
+    return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+  });
+  const visibleAssignments = sortedAssignments.slice(0, 10);
+  const hasMore = sortedAssignments.length > 10;
+  const pendingCount = assignments.filter((a) => a.status === "pending").length;
+  const completedCount = assignments.filter((a) => a.status === "completed").length;
 
   return (
     <main className="min-h-screen bg-[#05070d]">
@@ -324,6 +373,79 @@ export default function AnalyticsPage() {
                 No completed sessions with feedback yet
               </p>
             </div>
+          )}
+        </div>
+
+        {/* Assignments section */}
+        <div className="bg-[#0f172a] border border-[#1e293b] rounded-2xl p-6 mb-8">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+              <ClipboardList className="w-4 h-4 text-slate-400" />
+              Assignments
+            </h2>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium px-2.5 py-1 rounded-lg text-amber-400 bg-amber-400/10">
+                {pendingCount} pending
+              </span>
+              <span className="text-xs font-medium px-2.5 py-1 rounded-lg text-emerald-400 bg-emerald-400/10">
+                {completedCount} completed
+              </span>
+            </div>
+          </div>
+
+          {assignments.length === 0 ? (
+            <p className="text-slate-500 text-sm">
+              No assignments yet — use the Rehearse page to assign practice tasks to members.
+            </p>
+          ) : (
+            <>
+              <div className="divide-y divide-[#1e293b]">
+                {visibleAssignments.map((a) => {
+                  const { label: dueDateLabel, colorClass: dueDateColor } = formatDueDate(a.dueDate);
+                  return (
+                    <div key={a.id} className="py-3 flex items-center justify-between gap-4">
+                      {/* Title + assignee */}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-white truncate">
+                          {a.title}
+                          {a.assignedToName && (
+                            <span className="text-slate-400 font-normal">
+                              {" "}→ {a.assignedToName}
+                            </span>
+                          )}
+                        </p>
+                        {a.dueDate && (
+                          <p className={`text-xs mt-0.5 ${dueDateColor}`}>{dueDateLabel}</p>
+                        )}
+                      </div>
+
+                      {/* Status badge */}
+                      {a.status === "completed" ? (
+                        <span className="flex-shrink-0 flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-lg text-emerald-400 bg-emerald-400/10">
+                          <CheckCircle className="w-3 h-3" />
+                          completed
+                        </span>
+                      ) : (
+                        <span className="flex-shrink-0 text-xs font-medium px-2.5 py-1 rounded-lg text-amber-400 bg-amber-400/10">
+                          pending
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {hasMore && (
+                <div className="mt-4 pt-4 border-t border-[#1e293b]">
+                  <a
+                    href={`/${orgId}/rehearse`}
+                    className="text-xs text-slate-400 hover:text-slate-200 transition-colors"
+                  >
+                    View all on Rehearse page
+                  </a>
+                </div>
+              )}
+            </>
           )}
         </div>
 
