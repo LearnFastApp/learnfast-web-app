@@ -204,7 +204,7 @@ export default function FeedbackPage() {
           <h1 className="text-xl font-bold text-white mb-2">{isFr ? "Cette session est terminée" : "This session has ended"}</h1>
           <p className="text-slate-400 mb-6">{isFr ? "Le présentateur a clôturé les retours pour cette session. Merci d'avoir participé !" : "The presenter has closed feedback for this session. Thanks for attending!"}</p>
           <a
-            href="https://app.learnfastapp.com"
+            href="/try?ref=feedback"
             className="inline-block rounded-xl bg-violet-500 px-6 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition"
           >
             {isFr ? "Essayer LearnFast vous-même →" : "Try LearnFast yourself →"}
@@ -242,7 +242,7 @@ export default function FeedbackPage() {
                 : "LearnFast helps presenters collect real-time audience feedback and get matched learning resources — so every session makes you better."}
             </p>
             <a
-              href="https://app.learnfastapp.com"
+              href="/try?ref=feedback"
               className="inline-block rounded-xl bg-violet-500 px-6 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition"
             >
               {isFr ? "Essayer gratuitement →" : "Try it for free →"}

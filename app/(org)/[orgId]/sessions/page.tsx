@@ -4,8 +4,8 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import {
-  Calendar, CalendarPlus, Clock, Download, Loader2, Play,
-  Plus, QrCode, Trash2, Users, X, ChevronDown, Radio,
+  Calendar, CalendarPlus, Clock, Download, Loader2, Pencil, Play,
+  Plus, QrCode, Save, Trash2, Users, X, ChevronDown, Radio,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import MobileNav from "@/components/mobile-nav";
@@ -235,6 +235,21 @@ export default function SessionsPage() {
     }
   }
 
+  async function editSession(
+    session: OrgSession,
+    patch: { title?: string; type?: OrgSessionType; scheduledStart?: string; scheduledEnd?: string },
+  ): Promise<boolean> {
+    if (!user) return false;
+    const token = await user.getIdToken();
+    const res = await fetch(`/api/org/${orgId}/sessions/${session.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(patch),
+    });
+    if (res.ok) await fetchSessions();
+    return res.ok;
+  }
+
   async function deleteSession(session: OrgSession) {
     if (!user || !confirm(`Delete "${session.title}"?`)) return;
     const token = await user.getIdToken();
@@ -382,6 +397,7 @@ export default function SessionsPage() {
                   expanded={expandedId === s.id}
                   onToggle={() => setExpandedId(expandedId === s.id ? null : s.id)}
                   onGoLive={goLive}
+                  onEdit={editSession}
                   onDelete={deleteSession}
                 />
               ))}
@@ -404,6 +420,7 @@ export default function SessionsPage() {
                   expanded={expandedId === s.id}
                   onToggle={() => setExpandedId(expandedId === s.id ? null : s.id)}
                   onGoLive={goLive}
+                  onEdit={editSession}
                   onDelete={deleteSession}
                 />
               ))}
@@ -416,7 +433,7 @@ export default function SessionsPage() {
 }
 
 function SessionCard({
-  session, orgId, isAdmin, isOwner, expanded, onToggle, onGoLive, onDelete,
+  session, orgId, isAdmin, isOwner, expanded, onToggle, onGoLive, onEdit, onDelete,
 }: {
   session: OrgSession;
   orgId: string;
@@ -425,9 +442,39 @@ function SessionCard({
   expanded: boolean;
   onToggle: () => void;
   onGoLive: (s: OrgSession) => void;
+  onEdit: (s: OrgSession, patch: { title?: string; type?: OrgSessionType; scheduledStart?: string; scheduledEnd?: string }) => Promise<boolean>;
   onDelete: (s: OrgSession) => void;
 }) {
   const canManage = isAdmin || isOwner;
+  const [editing, setEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(session.title);
+  const [editType, setEditType] = useState<OrgSessionType>(session.type);
+  const [editDate, setEditDate] = useState(session.scheduledStart.split("T")[0]);
+  const [editStartTime, setEditStartTime] = useState(
+    new Date(session.scheduledStart).toTimeString().slice(0, 5),
+  );
+  const [editEndTime, setEditEndTime] = useState(
+    new Date(session.scheduledEnd).toTimeString().slice(0, 5),
+  );
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState("");
+
+  async function saveEdit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setEditError("");
+    const scheduledStart = new Date(`${editDate}T${editStartTime}`).toISOString();
+    const scheduledEnd = new Date(`${editDate}T${editEndTime}`).toISOString();
+    if (new Date(scheduledEnd) <= new Date(scheduledStart)) {
+      setEditError("End time must be after start time.");
+      setSaving(false);
+      return;
+    }
+    const ok = await onEdit(session, { title: editTitle.trim(), type: editType, scheduledStart, scheduledEnd });
+    setSaving(false);
+    if (ok) setEditing(false);
+    else setEditError("Failed to save. Please try again.");
+  }
 
   return (
     <div className="bg-[#0f172a] border border-[#1e293b] rounded-2xl overflow-hidden">
@@ -466,95 +513,178 @@ function SessionCard({
       {/* Expanded panel */}
       {expanded && (
         <div className="border-t border-[#1e293b] px-5 py-5 space-y-5">
-          {/* QR + feedback code */}
-          <div className="flex flex-col sm:flex-row gap-5 items-start">
-            <div className="bg-white p-3 rounded-xl flex-shrink-0">
-              <QRCodeSVG value={session.feedbackUrl} size={120} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-slate-400 mb-1">Audience join code</p>
-              <p className="text-3xl font-bold text-white tracking-[0.2em] mb-2">{session.feedbackCode}</p>
-              <p className="text-xs text-slate-500 break-all mb-3">{session.feedbackUrl}</p>
-              <p className="text-xs text-slate-500">
-                Ask your audience to scan the QR or go to{" "}
-                <strong className="text-slate-300">learnfastapp.com/f/{session.feedbackCode}</strong>
-              </p>
-            </div>
-          </div>
 
-          {/* Calendar actions */}
-          <div>
-            <p className="text-xs text-slate-400 mb-2">Add to calendar</p>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => downloadICS(session)}
-                className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
-              >
-                <Download className="w-3.5 h-3.5" />
-                Download .ics
-              </button>
-              <a
-                href={googleCalendarUrl(session)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
-              >
-                <CalendarPlus className="w-3.5 h-3.5" />
-                Google Calendar
-              </a>
-              <a
-                href={outlookUrl(session)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
-              >
-                <CalendarPlus className="w-3.5 h-3.5" />
-                Outlook
-              </a>
-              <a
-                href={`/api/f/${session.feedbackCode}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
-              >
-                <QrCode className="w-3.5 h-3.5" />
-                Test link
-              </a>
-            </div>
-          </div>
+          {/* Inline edit form */}
+          {editing ? (
+            <form onSubmit={saveEdit} className="space-y-3">
+              <input
+                type="text"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                required
+                className="w-full bg-[#0a0f1a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-violet-500 transition-colors"
+              />
+              <div className="relative">
+                <select
+                  value={editType}
+                  onChange={(e) => setEditType(e.target.value as OrgSessionType)}
+                  className="w-full appearance-none bg-[#0a0f1a] border border-[#1e293b] rounded-xl px-4 py-2.5 pr-8 text-white text-sm focus:outline-none focus:border-violet-500 transition-colors"
+                >
+                  <option value="presentation">Presentation</option>
+                  <option value="rehearsal">Rehearsal</option>
+                  <option value="meeting">Meeting</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
+              <input
+                type="date"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+                required
+                className="w-full bg-[#0a0f1a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-violet-500 transition-colors"
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Start time</label>
+                  <input
+                    type="time"
+                    value={editStartTime}
+                    onChange={(e) => setEditStartTime(e.target.value)}
+                    required
+                    className="w-full bg-[#0a0f1a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-violet-500 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">End time</label>
+                  <input
+                    type="time"
+                    value={editEndTime}
+                    onChange={(e) => setEditEndTime(e.target.value)}
+                    required
+                    className="w-full bg-[#0a0f1a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-violet-500 transition-colors"
+                  />
+                </div>
+              </div>
+              {editError && <p className="text-xs text-red-400">{editError}</p>}
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={saving || !editTitle.trim()}
+                  className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white transition-colors"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  {saving ? "Saving…" : "Save changes"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEditing(false); setEditError(""); }}
+                  className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <>
+              {/* QR + feedback code */}
+              <div className="flex flex-col sm:flex-row gap-5 items-start">
+                <div className="bg-white p-3 rounded-xl flex-shrink-0">
+                  <QRCodeSVG value={session.feedbackUrl} size={120} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-slate-400 mb-1">Audience join code</p>
+                  <p className="text-3xl font-bold text-white tracking-[0.2em] mb-2">{session.feedbackCode}</p>
+                  <p className="text-xs text-slate-500 break-all mb-3">{session.feedbackUrl}</p>
+                  <p className="text-xs text-slate-500">
+                    Ask your audience to scan the QR or go to{" "}
+                    <strong className="text-slate-300">learnfastapp.com/f/{session.feedbackCode}</strong>
+                  </p>
+                </div>
+              </div>
 
-          {/* Status controls */}
-          <div className="flex flex-wrap gap-2 pt-1">
-            {/* Go live — opens the full consumer session page with feedback, reflection, AI upload */}
-            {canManage && session.status === "scheduled" && session.linkedConsumerSessionId && (
-              <button
-                onClick={() => onGoLive(session)}
-                className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-green-600 hover:bg-green-500 text-white transition-colors"
-              >
-                <Play className="w-3.5 h-3.5" />
-                Go live
-              </button>
-            )}
-            {/* View session — links to full analysis page */}
-            {session.linkedConsumerSessionId && (
-              <a
-                href={`/sessions/${session.linkedConsumerSessionId}`}
-                className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-violet-600/20 hover:bg-violet-600/30 text-violet-300 transition-colors"
-              >
-                <Radio className="w-3.5 h-3.5" />
-                {session.status === "live" ? "Manage session" : "View results"}
-              </a>
-            )}
-            {isAdmin && session.status !== "cancelled" && session.status !== "completed" && (
-              <button
-                onClick={() => onDelete(session)}
-                className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-white/5 hover:bg-red-500/10 text-red-400 transition-colors"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </button>
-            )}
-          </div>
+              {/* Calendar actions */}
+              <div>
+                <p className="text-xs text-slate-400 mb-2">Add to calendar</p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => downloadICS(session)}
+                    className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    Download .ics
+                  </button>
+                  <a
+                    href={googleCalendarUrl(session)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
+                  >
+                    <CalendarPlus className="w-3.5 h-3.5" />
+                    Google Calendar
+                  </a>
+                  <a
+                    href={outlookUrl(session)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
+                  >
+                    <CalendarPlus className="w-3.5 h-3.5" />
+                    Outlook
+                  </a>
+                  <a
+                    href={`/f/${session.feedbackCode}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
+                  >
+                    <QrCode className="w-3.5 h-3.5" />
+                    Test link
+                  </a>
+                </div>
+              </div>
+
+              {/* Status controls */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {canManage && session.status === "scheduled" && session.linkedConsumerSessionId && (
+                  <button
+                    onClick={() => onGoLive(session)}
+                    className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-green-600 hover:bg-green-500 text-white transition-colors"
+                  >
+                    <Play className="w-3.5 h-3.5" />
+                    Go live
+                  </button>
+                )}
+                {session.linkedConsumerSessionId && (
+                  <a
+                    href={`/sessions/${session.linkedConsumerSessionId}`}
+                    className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-violet-600/20 hover:bg-violet-600/30 text-violet-300 transition-colors"
+                  >
+                    <Radio className="w-3.5 h-3.5" />
+                    {session.status === "live" ? "Manage session" : "View results"}
+                  </a>
+                )}
+                {canManage && session.status === "scheduled" && (
+                  <button
+                    onClick={() => { setEditing(true); setEditError(""); }}
+                    className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    Edit
+                  </button>
+                )}
+                {isAdmin && session.status !== "cancelled" && session.status !== "completed" && (
+                  <button
+                    onClick={() => onDelete(session)}
+                    className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-white/5 hover:bg-red-500/10 text-red-400 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Delete
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

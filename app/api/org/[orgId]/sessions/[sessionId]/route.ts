@@ -32,7 +32,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (!isAdmin && !isOwner) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const body = await req.json().catch(() => ({}));
-  const { FieldValue } = await import("firebase-admin/firestore");
+  const { FieldValue, Timestamp } = await import("firebase-admin/firestore");
 
   const allowed = ["title", "type", "timezone", "status"];
   const updates: Record<string, unknown> = {};
@@ -43,13 +43,36 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (updates.status && !VALID_STATUSES.includes(updates.status as OrgSessionStatus)) {
     return NextResponse.json({ error: "invalid_status" }, { status: 400 });
   }
+
+  // Handle scheduledStart/scheduledEnd edits
+  let newStart: Date | null = null;
+  let newEnd: Date | null = null;
+  if (body.scheduledStart || body.scheduledEnd) {
+    newStart = body.scheduledStart ? new Date(body.scheduledStart) : null;
+    newEnd = body.scheduledEnd ? new Date(body.scheduledEnd) : null;
+    if (newStart && isNaN(newStart.getTime())) return NextResponse.json({ error: "invalid_start" }, { status: 400 });
+    if (newEnd && isNaN(newEnd.getTime())) return NextResponse.json({ error: "invalid_end" }, { status: 400 });
+    if (newStart && newEnd && newEnd <= newStart) return NextResponse.json({ error: "end_before_start" }, { status: 400 });
+    if (newStart) updates.scheduledStart = Timestamp.fromDate(newStart);
+    if (newEnd) updates.scheduledEnd = Timestamp.fromDate(newEnd);
+  }
+
   if (!Object.keys(updates).length) return NextResponse.json({ error: "no_changes" }, { status: 400 });
 
   await doc.ref.update({ ...updates, updatedAt: FieldValue.serverTimestamp() });
 
+  const linkedId = doc.data()?.linkedConsumerSessionId as string | undefined;
+
+  // Sync date changes to consumer session
+  if (linkedId && (newStart || newEnd)) {
+    const consumerUpdates: Record<string, unknown> = {};
+    if (newStart) consumerUpdates.scheduledStart = Timestamp.fromDate(newStart);
+    if (newEnd) consumerUpdates.scheduledEnd = Timestamp.fromDate(newEnd);
+    await getAdminDb().doc(`sessions/${linkedId}`).update(consumerUpdates).catch(() => {});
+  }
+
   // When org session ends, close the linked consumer session so the feedback form closes
   if (updates.status === "completed" || updates.status === "cancelled") {
-    const linkedId = doc.data()?.linkedConsumerSessionId as string | undefined;
     if (linkedId) {
       await getAdminDb().doc(`sessions/${linkedId}`).update({
         status: "closed",
