@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
 import { getOrgContext } from "@/lib/org-context";
-import { hasOrgPermission } from "@/lib/org-permissions";
+import { hasOrgPermission } from "@/lib/org-context";
 import type { LibraryDimension, LibraryContentType } from "@/types/enterprise";
 
 export const dynamic = "force-dynamic";
