@@ -64,6 +64,60 @@
         { "fieldPath": "rehearsalId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "library_content",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isPremium", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "library_content",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "orgId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "library_content",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isPremium", "order": "ASCENDING" },
+        { "fieldPath": "isVisible", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "library_content",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "orgId", "order": "ASCENDING" },
+        { "fieldPath": "isVisible", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "library_content",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isPremium", "order": "ASCENDING" },
+        { "fieldPath": "isVisible", "order": "ASCENDING" },
+        { "fieldPath": "dimension", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "library_content",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "orgId", "order": "ASCENDING" },
+        { "fieldPath": "isVisible", "order": "ASCENDING" },
+        { "fieldPath": "dimension", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
