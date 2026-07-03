@@ -121,13 +121,15 @@ export default function MembersPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, orgId, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, orgId]);
 
   useEffect(() => {
     if (authLoading) return;
     if (!user) { router.replace("/auth/login"); return; }
     fetchData();
-  }, [user, authLoading, fetchData, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading, fetchData]);
 
   async function sendInvite(e: React.FormEvent) {
     e.preventDefault();

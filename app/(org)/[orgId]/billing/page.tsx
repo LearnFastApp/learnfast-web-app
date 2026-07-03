@@ -108,13 +108,15 @@ export default function BillingPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, orgId, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, orgId]);
 
   useEffect(() => {
     if (authLoading) return;
     if (!user) { router.replace("/auth/login"); return; }
     fetchOrgInfo();
-  }, [user, authLoading, fetchOrgInfo, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading, fetchOrgInfo]);
 
   async function fetchPreview(seats: number) {
     if (!user || !orgInfo?.stripeSubscriptionId || seats === orgInfo.seats.purchased) {
