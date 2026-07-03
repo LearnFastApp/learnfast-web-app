@@ -67,7 +67,7 @@ env:
     availability:
       - RUNTIME
   - variable: STRIPE_SECRET_KEY
-    secret: STRIPE_SECRET_KEY
+    secret: STRIPE_KEY_LIVE
     availability:
       - RUNTIME
   - variable: STRIPE_WEBHOOK_SECRET
