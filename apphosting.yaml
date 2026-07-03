@@ -66,10 +66,6 @@ env:
     secret: PODCAST_INDEX_SECRET
     availability:
       - RUNTIME
-  - variable: STRIPE_SECRET_KEY
-    secret: STRIPE_KEY_LIVE
-    availability:
-      - RUNTIME
   - variable: STRIPE_LIVE_KEY
     secret: STRIPE_KEY_LIVE
     availability:
