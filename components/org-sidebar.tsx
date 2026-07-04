@@ -13,6 +13,7 @@ import {
   Users,
   CreditCard,
   Settings,
+  TrendingUp,
   Menu,
   X,
   LogOut,
@@ -28,12 +29,18 @@ interface OrgSidebarProps {
 const MEMBER_NAV = [
   { segment: "dashboard",   label: "Dashboard",           icon: LayoutDashboard },
   { segment: "sessions",    label: "Sessions",            icon: CalendarDays },
-  { segment: "my-sessions", label: "Analytics",           icon: BarChart2 },
+  { segment: "my-sessions", label: "My Performance",      icon: BarChart2 },
   { segment: "rehearse",    label: "AI Analysis",         icon: Brain },
   { segment: "community",   label: "Team Coaching Feed",  icon: MessageSquare },
   { segment: "resources",   label: "Resource Hub",        icon: BookOpen },
 ];
 
+// Visible to coach, admin, owner — org-wide analytics view
+const COACH_NAV = [
+  { segment: "analytics", label: "Team Analytics", icon: TrendingUp },
+];
+
+// Visible to admin and owner only — management controls
 const ADMIN_NAV = [
   { segment: "members",  label: "Members",   icon: Users },
   { segment: "billing",  label: "Billing",   icon: CreditCard },
@@ -81,7 +88,8 @@ function SidebarContent({
   onNavClick?: () => void;
 }) {
   const pathname = usePathname();
-  const isAdmin = myRole === "owner" || myRole === "admin" || myRole === "coach";
+  const isCoachOrAbove = myRole === "owner" || myRole === "admin" || myRole === "coach";
+  const isAdminOrAbove = myRole === "owner" || myRole === "admin";
 
   function isActive(segment: string) {
     return pathname === `/${orgId}/${segment}`;
@@ -121,14 +129,24 @@ function SidebarContent({
           />
         ))}
 
-        {isAdmin && (
+        {isCoachOrAbove && (
           <>
             <div className="pt-5 pb-2 px-3">
               <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">
                 Admin
               </p>
             </div>
-            {ADMIN_NAV.map(({ segment, label, icon }) => (
+            {COACH_NAV.map(({ segment, label, icon }) => (
+              <NavItem
+                key={segment}
+                href={`/${orgId}/${segment}`}
+                label={label}
+                icon={icon}
+                active={isActive(segment)}
+                onClick={onNavClick}
+              />
+            ))}
+            {isAdminOrAbove && ADMIN_NAV.map(({ segment, label, icon }) => (
               <NavItem
                 key={segment}
                 href={`/${orgId}/${segment}`}
