@@ -37,6 +37,14 @@ export async function GET(
   }
 
   const db = getAdminDb();
+
+  // Ensure org members always have at least "lite" — catches accounts that
+  // joined before the join route started setting subscriptionStatus on accept.
+  const presSnap = await db.doc(`presenters/${uid}`).get();
+  if (presSnap.exists && presSnap.data()?.subscriptionStatus === "free") {
+    await db.doc(`presenters/${uid}`).update({ subscriptionStatus: "lite" });
+  }
+
   const orgSnap = await db.doc(`organizations/${orgId}`).get();
   const org = orgSnap.data()!;
 
