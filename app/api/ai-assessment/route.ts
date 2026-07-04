@@ -19,7 +19,10 @@ async function checkGate(uid: string): Promise<{ allowed: boolean; reason?: stri
   const status = data.subscriptionStatus as string;
   const pilotExpiry = data.pilotExpiresAt?.toDate?.() as Date | undefined;
   const isPilot = status === "pilot" && pilotExpiry && pilotExpiry > new Date();
-  const isPaid = status === "active" || isPilot;
+
+  // Org members are treated as Lite regardless of their consumer subscription status
+  const isOrgMember = !!(data.orgId as string | undefined);
+  const isPaid = status === "active" || status === "lite" || isOrgMember || isPilot;
 
   if (!isPaid) return { allowed: false, reason: "upgrade_required" };
 
