@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import MobileNav from "@/components/mobile-nav";
+import OrgSidebar from "@/components/org-sidebar";
 import {
   AlertTriangle,
   BookOpen,
@@ -250,19 +250,17 @@ export default function OrgRehearsePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#05070d]">
-      <MobileNav />
-      <div className="max-w-3xl mx-auto px-6 py-12">
+    <div className="min-h-screen bg-[#05070d]">
+      <OrgSidebar orgName={orgName} myRole={myRole} />
+      <main className="md:ml-60 pt-16 md:pt-0">
+      <div className="max-w-3xl mx-auto px-6 py-10">
 
         {/* Header */}
         <div className="mb-8">
-          {orgName && (
-            <p className="text-xs font-semibold text-violet-400 uppercase tracking-widest mb-1">{orgName}</p>
-          )}
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
               <Mic className="w-6 h-6 text-slate-400" />
-              Rehearse
+              AI Analysis
             </h1>
             <div className="flex items-center gap-2">
               {isPrivileged && (
@@ -282,18 +280,6 @@ export default function OrgRehearsePage() {
                 New rehearsal
               </a>
             </div>
-          </div>
-
-          {/* Nav */}
-          <div className="flex items-center gap-4 mt-4 flex-wrap">
-            <a href={`/${orgId}/members`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Members</a>
-            <a href={`/${orgId}/billing`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Billing</a>
-            <a href={`/${orgId}/content`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Content</a>
-            <a href={`/${orgId}/sessions`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Sessions</a>
-            <span className="text-sm text-violet-400 font-medium">Rehearse</span>
-            {isPrivileged && <a href={`/${orgId}/analytics`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Analytics</a>}
-            <a href={`/${orgId}/my-sessions`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">My sessions</a>
-            <a href={`/${orgId}/community`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Community</a>
           </div>
         </div>
 
@@ -601,6 +587,7 @@ export default function OrgRehearsePage() {
           </div>
         )}
       </div>
-    </main>
+      </main>
+    </div>
   );
 }

@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { TrendingUp, Users, Mic, Loader2, Calendar, ChevronRight, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import MobileNav from "@/components/mobile-nav";
+import OrgSidebar from "@/components/org-sidebar";
 import {
   ResponsiveContainer,
   RadarChart,
@@ -180,69 +180,16 @@ export default function MySessionsPage() {
 
   return (
     <div className="min-h-screen bg-[#05070d] text-white">
-      <MobileNav />
+      <OrgSidebar orgName={orgName} myRole={myRole} />
 
+      <main className="md:ml-60 pt-16 md:pt-0">
       <div className="max-w-4xl mx-auto px-4 py-10">
         {/* Header */}
         <div className="mb-8">
-          {orgName && (
-            <p className="text-sm text-slate-400 mb-1">{orgName}</p>
-          )}
           <div className="flex items-center gap-3 mb-6">
             <TrendingUp className="w-7 h-7 text-violet-400" />
-            <h1 className="text-2xl font-bold">My performance</h1>
+            <h1 className="text-2xl font-bold">Analytics</h1>
           </div>
-
-          {/* Nav row */}
-          <nav className="flex flex-wrap gap-1">
-            <a
-              href={`/${orgId}/members`}
-              className="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-            >
-              Members
-            </a>
-            <a
-              href={`/${orgId}/billing`}
-              className="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-            >
-              Billing
-            </a>
-            <a
-              href={`/${orgId}/content`}
-              className="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-            >
-              Content
-            </a>
-            <a
-              href={`/${orgId}/sessions`}
-              className="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-            >
-              Sessions
-            </a>
-            <a
-              href={`/${orgId}/rehearse`}
-              className="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-            >
-              Rehearse
-            </a>
-            {isPrivileged && (
-              <a
-                href={`/${orgId}/analytics`}
-                className="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-              >
-                Analytics
-              </a>
-            )}
-            <span className="px-3 py-1.5 rounded-lg text-sm text-violet-400 bg-violet-400/10 font-medium">
-              My sessions
-            </span>
-            <a
-              href={`/${orgId}/community`}
-              className="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-            >
-              Community
-            </a>
-          </nav>
         </div>
 
         {/* Stats row */}
@@ -407,6 +354,7 @@ export default function MySessionsPage() {
           </div>
         )}
       </div>
+      </main>
     </div>
   );
 }

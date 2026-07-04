@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import MobileNav from "@/components/mobile-nav";
+import OrgSidebar from "@/components/org-sidebar";
 import { DIM_COLOURS, DIMS, type Dim, type RankInfo } from "@/lib/rank";
 import { Loader2, MessageSquare, Play, Users } from "lucide-react";
 
@@ -246,45 +246,16 @@ export default function OrgCommunityPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#05070d]">
-      <MobileNav />
-      <div className="max-w-4xl mx-auto px-6 py-12">
+    <div className="min-h-screen bg-[#05070d]">
+      <OrgSidebar orgName={orgName} myRole={myRole} />
+      <main className="md:ml-60 pt-16 md:pt-0">
+      <div className="max-w-4xl mx-auto px-6 py-10">
         {/* Header */}
         <div className="mb-6">
-          <p className="text-xs font-semibold text-violet-400 uppercase tracking-widest mb-1">
-            {orgName}
-          </p>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
             <Users className="w-6 h-6 text-slate-400" />
-            Community
+            Team Coaching Feed
           </h1>
-          <div className="flex items-center gap-4 mt-2">
-            <a
-              href={`/${orgId}/members`}
-              className="text-sm text-slate-400 hover:text-slate-200 transition-colors"
-            >
-              Members
-            </a>
-            <a
-              href={`/${orgId}/sessions`}
-              className="text-sm text-slate-400 hover:text-slate-200 transition-colors"
-            >
-              Sessions
-            </a>
-            <a
-              href={`/${orgId}/rehearse`}
-              className="text-sm text-slate-400 hover:text-slate-200 transition-colors"
-            >
-              Rehearse
-            </a>
-            <a
-              href={`/${orgId}/my-sessions`}
-              className="text-sm text-slate-400 hover:text-slate-200 transition-colors"
-            >
-              My sessions
-            </a>
-            <span className="text-sm text-violet-400 font-medium">Community</span>
-          </div>
         </div>
 
         {/* About card */}
@@ -356,6 +327,7 @@ export default function OrgCommunityPage() {
           </div>
         )}
       </div>
-    </main>
+      </main>
+    </div>
   );
 }
