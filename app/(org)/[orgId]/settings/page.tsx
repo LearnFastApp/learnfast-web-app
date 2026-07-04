@@ -2,9 +2,12 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Settings, Loader2, CheckCircle, AlertCircle, ImageIcon } from "lucide-react";
+import { Settings, Loader2, CheckCircle, AlertCircle, ImageIcon, Upload, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import OrgSidebar from "@/components/org-sidebar";
+import { useRef } from "react";
+import { ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { storage } from "@/lib/firebase";
 
 export default function OrgSettingsPage() {
   const router = useRouter();
@@ -22,6 +25,9 @@ export default function OrgSettingsPage() {
   const [coachRosterMode, setCoachRosterMode] = useState<"all" | "approved_only">("all");
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoUploadProgress, setLogoUploadProgress] = useState(0);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -57,6 +63,36 @@ export default function OrgSettingsPage() {
   }, [user, authLoading, fetchData]);
 
   const isAdmin = myRole === "owner" || myRole === "admin";
+
+  async function handleLogoUpload(file: File) {
+    if (!user) return;
+    setLogoUploading(true);
+    setLogoUploadProgress(0);
+    setError("");
+    try {
+      const ext = file.name.split(".").pop() ?? "png";
+      const path = `org-logos/${orgId}/${Date.now()}.${ext}`;
+      const sRef = storageRef(storage, path);
+      await new Promise<void>((resolve, reject) => {
+        const task = uploadBytesResumable(sRef, file);
+        task.on(
+          "state_changed",
+          (snap) => setLogoUploadProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
+          reject,
+          async () => {
+            const url = await getDownloadURL(task.snapshot.ref);
+            setLogoUrl(url);
+            resolve();
+          }
+        );
+      });
+    } catch {
+      setError("Logo upload failed. Please try again.");
+    } finally {
+      setLogoUploading(false);
+      setLogoUploadProgress(0);
+    }
+  }
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -131,36 +167,68 @@ export default function OrgSettingsPage() {
               />
             </div>
 
-            {/* Logo URL */}
+            {/* Logo upload */}
             <div className="bg-[#0f172a] border border-[#1e293b] rounded-2xl p-6">
               <label className="block text-sm font-semibold text-white mb-1">
-                Logo URL
+                Organisation logo
               </label>
-              <p className="text-xs text-slate-500 mb-3">
-                Paste a public image URL (PNG or SVG recommended). This marks your branding as set.
+              <p className="text-xs text-slate-500 mb-4">
+                PNG, JPG, or SVG. Shown in the sidebar for your team.
               </p>
-              <input
-                type="url"
-                value={logoUrl}
-                onChange={(e) => setLogoUrl(e.target.value)}
-                placeholder="https://yourcompany.com/logo.png"
-                className="w-full bg-[#0a0f1a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-violet-500 transition-colors"
-              />
-              {logoUrl && (
-                <div className="mt-4 flex items-center gap-3">
-                  <div className="w-16 h-16 rounded-xl bg-[#0a0f1a] border border-[#1e293b] flex items-center justify-center overflow-hidden">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+
+              <div className="flex items-center gap-4">
+                {/* Preview */}
+                <div className="w-16 h-16 rounded-xl bg-[#0a0f1a] border border-[#1e293b] flex items-center justify-center overflow-hidden shrink-0">
+                  {logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={logoUrl}
                       alt="Logo preview"
                       className="max-w-full max-h-full object-contain"
                       onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                     />
+                  ) : (
                     <ImageIcon className="w-6 h-6 text-slate-600" />
-                  </div>
-                  <p className="text-xs text-slate-400">Preview</p>
+                  )}
                 </div>
-              )}
+
+                <div className="flex-1 min-w-0">
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleLogoUpload(file);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    disabled={logoUploading}
+                    onClick={() => logoInputRef.current?.click()}
+                    className="flex items-center gap-2 bg-[#0a0f1a] hover:bg-white/5 disabled:opacity-50 border border-[#1e293b] hover:border-slate-500 text-slate-300 text-sm font-medium px-4 py-2 rounded-xl transition-colors"
+                  >
+                    <Upload className="w-4 h-4" />
+                    {logoUploading ? `Uploading ${logoUploadProgress}%…` : logoUrl ? "Change logo" : "Upload logo"}
+                  </button>
+                  {logoUrl && !logoUploading && (
+                    <button
+                      type="button"
+                      onClick={() => { setLogoUrl(""); if (logoInputRef.current) logoInputRef.current.value = ""; }}
+                      className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-400 mt-2 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                      Remove logo
+                    </button>
+                  )}
+                  {logoUploading && (
+                    <div className="mt-2 h-1 bg-[#1e293b] rounded-full overflow-hidden w-32">
+                      <div className="h-full bg-violet-500 transition-all" style={{ width: `${logoUploadProgress}%` }} />
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Default member language */}

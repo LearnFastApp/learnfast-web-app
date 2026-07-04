@@ -8,6 +8,18 @@ service firebase.storage {
       allow write: if request.auth != null && request.auth.uid == guestUid;
       allow read: if false;
     }
+    // Org logo uploads — publicly readable, writable by org admins/owners.
+    match /org-logos/{orgId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && (
+        request.auth.token.email == 'physicalperformance@icloud.com' ||
+        (
+          firestore.exists(/databases/(default)/documents/organizations/$(orgId)/members/$(request.auth.uid)) &&
+          firestore.get(/databases/(default)/documents/organizations/$(orgId)/members/$(request.auth.uid)).data.role in ['owner', 'admin'] &&
+          firestore.get(/databases/(default)/documents/organizations/$(orgId)/members/$(request.auth.uid)).data.status == 'active'
+        )
+      );
+    }
     // Library content uploads — org admins/owners and platform admin only.
     match /org-content/{orgId}/{allPaths=**} {
       // Reads: org members only
