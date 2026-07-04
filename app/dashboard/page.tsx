@@ -106,6 +106,7 @@ export default function Dashboard() {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [orgId, setOrgId] = useState<string | null>(null);
+  const [orgRole, setOrgRole] = useState<string | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -130,6 +131,7 @@ export default function Dashboard() {
           }
         }
         if (data.orgId) setOrgId(data.orgId);
+        if (data.orgRole) setOrgRole(data.orgRole as string);
         if (!data.onboardingSeen) setShowOnboarding(true);
       }
     });
@@ -582,12 +584,16 @@ export default function Dashboard() {
                 <p className="text-sm text-violet-300">{isFr ? "Vous êtes membre d'une organisation." : "You're part of an organisation."}</p>
               </div>
               <div className="flex items-center gap-3 shrink-0">
-                <a href={`/${orgId}/members`} className="text-xs font-semibold text-violet-300 hover:text-white transition">
-                  {isFr ? "Membres" : "Members"}
-                </a>
-                <a href={`/${orgId}/billing`} className="text-xs font-semibold text-violet-300 hover:text-white transition">
-                  {isFr ? "Facturation" : "Billing"}
-                </a>
+                {(orgRole === "owner" || orgRole === "admin") && (
+                  <>
+                    <a href={`/${orgId}/members`} className="text-xs font-semibold text-violet-300 hover:text-white transition">
+                      {isFr ? "Membres" : "Members"}
+                    </a>
+                    <a href={`/${orgId}/billing`} className="text-xs font-semibold text-violet-300 hover:text-white transition">
+                      {isFr ? "Facturation" : "Billing"}
+                    </a>
+                  </>
+                )}
                 <a href={`/${orgId}/content`} className="text-xs font-semibold text-violet-300 hover:text-white transition">
                   {isFr ? "Contenu" : "Content"}
                 </a>
