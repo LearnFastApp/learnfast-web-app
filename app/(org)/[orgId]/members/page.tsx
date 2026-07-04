@@ -15,7 +15,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import MobileNav from "@/components/mobile-nav";
+import OrgSidebar from "@/components/org-sidebar";
 import OrgPastDueBanner from "@/components/org-past-due-banner";
 import type { OrgRole } from "@/types/enterprise";
 
@@ -238,28 +238,17 @@ export default function MembersPage() {
   const seatPct = seatPurchased > 0 ? (seatUsed / seatPurchased) * 100 : 0;
 
   return (
-    <main className="min-h-screen bg-[#05070d]">
-      <MobileNav />
-      <div className="max-w-3xl mx-auto px-6 py-12">
+    <div className="min-h-screen bg-[#05070d] text-white">
+      <OrgSidebar orgName={orgInfo?.name} myRole={myRole} />
+      <main className="md:ml-60 pt-16 md:pt-0">
+      <div className="max-w-3xl mx-auto px-6 py-10">
         {/* Header */}
         <div className="flex items-start justify-between mb-8">
           <div>
-            <p className="text-xs font-semibold text-violet-400 uppercase tracking-widest mb-1">
-              {orgInfo?.name ?? "Organisation"}
-            </p>
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
               <Users className="w-6 h-6 text-slate-400" />
               Members
             </h1>
-            <div className="flex items-center gap-4 mt-2">
-              <span className="text-sm text-violet-400 font-medium">Members</span>
-              <a href={`/${orgId}/billing`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Billing</a>
-              <a href={`/${orgId}/content`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Content</a>
-              <a href={`/${orgId}/sessions`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Sessions</a>
-              <a href={`/${orgId}/rehearse`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Rehearse</a>
-              {isAdmin && <a href={`/${orgId}/analytics`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Analytics</a>}
-              <a href={`/${orgId}/my-sessions`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">My sessions</a>
-            </div>
           </div>
           <div className="text-right">
             <p className="text-2xl font-bold text-white">{seatUsed}<span className="text-slate-500 text-base font-normal">/{seatPurchased}</span></p>
@@ -427,6 +416,7 @@ export default function MembersPage() {
           </div>
         )}
       </div>
-    </main>
+      </main>
+    </div>
   );
 }

@@ -101,13 +101,6 @@ function CellIcon({ type, label }: { type: "check" | "cross" | "call"; label: st
 export default function EnterprisePage() {
   return (
     <div className="min-h-screen bg-[#05070d] text-white">
-      {/* 0. Draft notice banner */}
-      <div className="bg-amber-500/10 border-b border-amber-500/20 px-6 py-3 text-center">
-        <p className="text-xs text-amber-400 font-semibold">
-          DRAFT — Copy under review. Do not share this URL publicly yet. Remove this banner once approved.
-        </p>
-      </div>
-
       {/* 1. Nav bar */}
       <header className="sticky top-0 z-50 border-b border-[#1e293b] bg-[#05070d]/90 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">

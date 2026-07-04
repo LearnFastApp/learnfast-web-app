@@ -20,7 +20,7 @@ import {
   Radar,
 } from "recharts";
 import { useAuth } from "@/lib/auth-context";
-import MobileNav from "@/components/mobile-nav";
+import OrgSidebar from "@/components/org-sidebar";
 import type { OrgRole } from "@/types/enterprise";
 
 const DIMENSIONS = ["clarity", "energy", "engagement", "understanding", "connection"] as const;
@@ -75,6 +75,7 @@ interface AnalyticsData {
 
 interface OrgInfo {
   name: string;
+  myRole?: string | null;
 }
 
 interface Assignment {
@@ -237,57 +238,16 @@ export default function AnalyticsPage() {
   const completedCount = assignments.filter((a) => a.status === "completed").length;
 
   return (
-    <main className="min-h-screen bg-[#05070d]">
-      <MobileNav />
-      <div className="max-w-4xl mx-auto px-6 py-12">
+    <div className="min-h-screen bg-[#05070d] text-white">
+      <OrgSidebar orgName={orgInfo?.name} myRole={orgInfo?.myRole ?? null} />
+      <main className="md:ml-60 pt-16 md:pt-0">
+      <div className="max-w-4xl mx-auto px-6 py-10">
         {/* Header */}
         <div className="mb-8">
-          <p className="text-xs font-semibold text-violet-400 uppercase tracking-widest mb-1">
-            {orgInfo?.name ?? "Organisation"}
-          </p>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
             <BarChart2 className="w-6 h-6 text-slate-400" />
             Analytics
           </h1>
-          <div className="flex items-center gap-4 mt-2 flex-wrap">
-            <a
-              href={`/${orgId}/members`}
-              className="text-sm text-slate-400 hover:text-slate-200 transition-colors"
-            >
-              Members
-            </a>
-            <a
-              href={`/${orgId}/billing`}
-              className="text-sm text-slate-400 hover:text-slate-200 transition-colors"
-            >
-              Billing
-            </a>
-            <a
-              href={`/${orgId}/content`}
-              className="text-sm text-slate-400 hover:text-slate-200 transition-colors"
-            >
-              Content
-            </a>
-            <a
-              href={`/${orgId}/sessions`}
-              className="text-sm text-slate-400 hover:text-slate-200 transition-colors"
-            >
-              Sessions
-            </a>
-            <a
-              href={`/${orgId}/rehearse`}
-              className="text-sm text-slate-400 hover:text-slate-200 transition-colors"
-            >
-              Rehearse
-            </a>
-            <span className="text-sm text-violet-400 font-medium">Analytics</span>
-            <a
-              href={`/${orgId}/my-sessions`}
-              className="text-sm text-slate-400 hover:text-slate-200 transition-colors"
-            >
-              My sessions
-            </a>
-          </div>
         </div>
 
         {/* Overview cards */}
@@ -558,6 +518,7 @@ export default function AnalyticsPage() {
           )}
         </div>
       </div>
-    </main>
+      </main>
+    </div>
   );
 }

@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Settings, Loader2, CheckCircle, AlertCircle, ImageIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import MobileNav from "@/components/mobile-nav";
+import OrgSidebar from "@/components/org-sidebar";
 
 export default function OrgSettingsPage() {
   const router = useRouter();
@@ -86,8 +86,9 @@ export default function OrgSettingsPage() {
 
   return (
     <div className="min-h-screen bg-[#05070d] text-white">
-      <MobileNav />
-      <div className="max-w-2xl mx-auto px-6 py-12">
+      <OrgSidebar orgName={orgName} myRole={myRole} />
+      <main className="md:ml-60 pt-16 md:pt-0">
+      <div className="max-w-2xl mx-auto px-6 py-10">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-6">
@@ -95,30 +96,6 @@ export default function OrgSettingsPage() {
             <h1 className="text-2xl font-bold">Organisation settings</h1>
           </div>
 
-          {/* Nav */}
-          <nav className="flex flex-wrap gap-1">
-            {[
-              { href: `/${orgId}/members`, label: "Members" },
-              { href: `/${orgId}/billing`, label: "Billing" },
-              { href: `/${orgId}/content`, label: "Content" },
-              { href: `/${orgId}/sessions`, label: "Sessions" },
-              { href: `/${orgId}/rehearse`, label: "Rehearse" },
-              ...(isAdmin ? [{ href: `/${orgId}/analytics`, label: "Analytics" }] : []),
-              { href: `/${orgId}/my-sessions`, label: "My sessions" },
-              { href: `/${orgId}/community`, label: "Community" },
-            ].map(({ href, label }) => (
-              <a
-                key={href}
-                href={href}
-                className="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-              >
-                {label}
-              </a>
-            ))}
-            <span className="px-3 py-1.5 rounded-lg text-sm text-violet-400 bg-violet-400/10 font-medium">
-              Settings
-            </span>
-          </nav>
         </div>
 
         {!isAdmin ? (
@@ -200,6 +177,7 @@ export default function OrgSettingsPage() {
           </form>
         )}
       </div>
+      </main>
     </div>
   );
 }
