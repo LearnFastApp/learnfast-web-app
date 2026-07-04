@@ -195,7 +195,7 @@ export default function EnterprisePage() {
         </span>
         <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
           YOUR WHOLE TEAM.{" "}
-          <span className="text-violet-400">ONE COACHING PLATFORM.</span>
+          <span className="text-violet-400">ONE FEEDBACK PLATFORM.</span>
         </h1>
         <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-slate-300">
           Live audience feedback, AI coaching, performance tracking over time, assignment management and a curated resource library — all in one platform your L&amp;D team controls. Buy seats in minutes. No sales call, no procurement cycle.
