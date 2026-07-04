@@ -199,10 +199,11 @@ export default function CoachApplyPage() {
               className="mt-0.5 w-4 h-4 accent-violet-600 cursor-pointer"
             />
             <label htmlFor="tryCompleted" className="text-sm text-slate-300 cursor-pointer">
-              I&apos;ve completed a LearnFast rehearsal at{" "}
-              <Link href="/rehearse" className="text-violet-400 hover:text-violet-300">
-                learnfastapp.com/rehearse
+              I&apos;ve completed a LearnFast rehearsal (create one from your{" "}
+              <Link href="/dashboard" className="text-violet-400 hover:text-violet-300">
+                dashboard
               </Link>
+              )
             </label>
           </div>
 
