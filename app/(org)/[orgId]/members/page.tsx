@@ -241,19 +241,17 @@ export default function MembersPage() {
     <div className="min-h-screen bg-[#05070d] text-white">
       <OrgSidebar orgName={orgInfo?.name} myRole={myRole} />
       <main className="md:ml-60 pt-16 md:pt-0">
-      <div className="max-w-3xl mx-auto px-6 py-10">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
         {/* Header */}
-        <div className="flex items-start justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-              <Users className="w-6 h-6 text-slate-400" />
-              Members
-            </h1>
-          </div>
-          <div className="text-right">
+        <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <Users className="w-6 h-6 text-slate-400" />
+            Members
+          </h1>
+          <div className="text-right shrink-0">
             <p className="text-2xl font-bold text-white">{seatUsed}<span className="text-slate-500 text-base font-normal">/{seatPurchased}</span></p>
             <p className="text-xs text-slate-400">seats used</p>
-            <div className="mt-1 w-24 h-1.5 bg-[#1e293b] rounded-full overflow-hidden">
+            <div className="mt-1 w-24 h-1.5 bg-[#1e293b] rounded-full overflow-hidden ml-auto">
               <div
                 className={`h-full rounded-full transition-all ${seatPct >= 90 ? "bg-red-500" : "bg-violet-500"}`}
                 style={{ width: `${Math.min(seatPct, 100)}%` }}
@@ -335,6 +333,13 @@ export default function MembersPage() {
 
         {/* Members list */}
         <div className="space-y-2 mb-8">
+          {members.length === 0 && (
+            <div className="bg-[#0f172a] border border-[#1e293b] rounded-2xl px-6 py-10 text-center">
+              <Users className="w-8 h-8 text-slate-700 mx-auto mb-3" />
+              <p className="text-slate-400 text-sm font-medium">No members yet</p>
+              <p className="text-slate-600 text-xs mt-1">Use the invite form above to add your team.</p>
+            </div>
+          )}
           {members.map((m) => (
             <div
               key={m.id}

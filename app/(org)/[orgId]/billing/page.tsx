@@ -249,7 +249,7 @@ export default function BillingPage() {
     <div className="min-h-screen bg-[#05070d] text-white">
       <OrgSidebar orgName={orgInfo.name} myRole={myRole} />
       <main className="md:ml-60 pt-16 md:pt-0">
-      <div className="max-w-2xl mx-auto px-6 py-10">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
             <CreditCard className="w-6 h-6 text-slate-400" />
@@ -313,10 +313,10 @@ export default function BillingPage() {
           {orgInfo.subscriptionStatus === "trialing" && isOwner && (
             <div className="border-t border-[#1e293b] pt-4 mt-4">
               <p className="text-sm text-slate-400 mb-3">Subscribe now to avoid interruption when your trial ends.</p>
-              <div className="flex gap-3 mb-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <button
                   onClick={() => setCheckoutInterval("monthly")}
-                  className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                  className={`w-full py-2.5 rounded-xl text-sm font-medium border transition-colors ${
                     checkoutInterval === "monthly"
                       ? "bg-violet-600 border-violet-600 text-white"
                       : "bg-transparent border-[#1e293b] text-slate-400"
@@ -326,7 +326,7 @@ export default function BillingPage() {
                 </button>
                 <button
                   onClick={() => setCheckoutInterval("annual")}
-                  className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                  className={`w-full py-2.5 rounded-xl text-sm font-medium border transition-colors ${
                     checkoutInterval === "annual"
                       ? "bg-violet-600 border-violet-600 text-white"
                       : "bg-transparent border-[#1e293b] text-slate-400"

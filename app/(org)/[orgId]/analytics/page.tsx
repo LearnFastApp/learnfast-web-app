@@ -241,12 +241,12 @@ export default function AnalyticsPage() {
     <div className="min-h-screen bg-[#05070d] text-white">
       <OrgSidebar orgName={orgInfo?.name} myRole={orgInfo?.myRole ?? null} />
       <main className="md:ml-60 pt-16 md:pt-0">
-      <div className="max-w-4xl mx-auto px-6 py-10">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
             <BarChart2 className="w-6 h-6 text-slate-400" />
-            Analytics
+            Team Analytics
           </h1>
         </div>
 
@@ -418,7 +418,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Table header */}
-          <div className="hidden sm:grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 px-6 py-3 border-b border-[#1e293b]">
+          <div className="hidden sm:grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 px-4 sm:px-6 py-3 border-b border-[#1e293b]">
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
               Name
             </span>
@@ -440,15 +440,17 @@ export default function AnalyticsPage() {
           </div>
 
           {members.length === 0 ? (
-            <div className="px-6 py-10 text-center">
-              <p className="text-slate-500 text-sm">No team members found.</p>
+            <div className="px-4 sm:px-6 py-12 text-center">
+              <Users className="w-8 h-8 text-slate-700 mx-auto mb-3" />
+              <p className="text-slate-400 text-sm font-medium">No team members yet</p>
+              <p className="text-slate-600 text-xs mt-1">Invite your team from the <a href={`/${orgId}/members`} className="text-violet-400 hover:text-violet-300">Members page</a>.</p>
             </div>
           ) : (
             <div className="divide-y divide-[#1e293b]">
               {members.map((m) => (
                 <div
                   key={m.id}
-                  className="px-6 py-4 flex flex-col sm:grid sm:grid-cols-[1fr_auto_auto_auto_auto_auto] sm:gap-4 sm:items-center gap-2"
+                  className="px-4 sm:px-6 py-4 flex flex-col sm:grid sm:grid-cols-[1fr_auto_auto_auto_auto_auto] sm:gap-4 sm:items-center gap-2"
                 >
                   {/* Name / email */}
                   <div className="min-w-0">

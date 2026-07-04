@@ -90,14 +90,11 @@ export default function OrgSettingsPage() {
     <div className="min-h-screen bg-[#05070d] text-white">
       <OrgSidebar orgName={orgName} myRole={myRole} />
       <main className="md:ml-60 pt-16 md:pt-0">
-      <div className="max-w-2xl mx-auto px-6 py-10">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-6">
-            <Settings className="w-7 h-7 text-violet-400" />
-            <h1 className="text-2xl font-bold">Organisation settings</h1>
-          </div>
-
+        <div className="flex items-center gap-3 mb-8">
+          <Settings className="w-6 h-6 text-violet-400" />
+          <h1 className="text-2xl font-bold">Organisation settings</h1>
         </div>
 
         {!isAdmin ? (
