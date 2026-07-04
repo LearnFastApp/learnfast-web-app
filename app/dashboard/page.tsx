@@ -9,7 +9,6 @@ import {
   BarChart3,
   BookOpen,
   Brain,
-  Building2,
   Mic,
   LayoutDashboard,
   LogOut,
@@ -106,8 +105,6 @@ export default function Dashboard() {
   const [rehearsalTagInput, setRehearsalTagInput] = useState("");
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
-  const [orgId, setOrgId] = useState<string | null>(null);
-  const [orgRole, setOrgRole] = useState<string | null>(null);
   const [activeCoachCall, setActiveCoachCall] = useState<{
     status: string; coachName: string; coachSlug: string;
     confirmedStart?: Date | null;
@@ -136,8 +133,11 @@ export default function Dashboard() {
             setPilotOrgName(data.pilotOrgName ?? null);
           }
         }
-        if (data.orgId) setOrgId(data.orgId);
-        if (data.orgRole) setOrgRole(data.orgRole as string);
+        if (data.orgId) {
+          // Org members live in the org dashboard — redirect immediately
+          router.replace(`/${data.orgId}/dashboard`);
+          return;
+        }
         if (!data.onboardingSeen) setShowOnboarding(true);
       }
     });
@@ -379,7 +379,7 @@ export default function Dashboard() {
 
   const displayName = user.displayName ?? user.email?.split("@")[0] ?? "Presenter";
   const isPaidOrPilot = subscriptionStatus === "active" || subscriptionStatus === "pilot";
-  const rehearsalMaxSeconds = (orgId || subscriptionStatus === "pilot") ? 1200 : 300;
+  const rehearsalMaxSeconds = subscriptionStatus === "pilot" ? 1200 : 300;
   const pilotDaysLeft = pilotExpiresAt
     ? Math.max(0, Math.ceil((pilotExpiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
@@ -393,7 +393,6 @@ export default function Dashboard() {
     { label: isFr ? "Analyse IA" : "AI Analysis", icon: Brain, href: "/ai-assessment" },
     ...(canSeeLeaderboard ? [{ label: isFr ? "Classement" : "Leaderboard", icon: Trophy, href: "/leaderboard" }] : []),
     { label: isFr ? "Feed coaching" : "Coaching Feed", icon: Users, href: "/feed" },
-    ...(orgId ? [{ label: "Organisation", icon: Building2, href: `/${orgId}/members` }] : []),
     { label: isFr ? "Contenu éducatif" : "Educational Content", icon: BookOpen, href: "/learning-hub" },
     { label: isFr ? "Paramètres" : "Settings", icon: Settings, href: "/settings" },
   ];
@@ -498,7 +497,7 @@ export default function Dashboard() {
             </div>
           )}
 
-          {!isPaidOrPilot && !orgId && (
+          {!isPaidOrPilot && (
             <div className={`mt-6 rounded-xl border p-4 ${sessions.length >= 2 ? "border-amber-500/30 bg-amber-500/5" : "border-white/10 bg-[#0a0d1a]"}`}>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t.freePlan}</p>
               <div className="flex gap-2 mb-3">
@@ -645,26 +644,6 @@ export default function Dashboard() {
               >
                 {t.upgradeLiteShort}
               </button>
-            </div>
-          )}
-
-          {/* Org quick-access banner */}
-          {orgId && (
-            <div className="flex items-center justify-between border-b border-violet-500/20 bg-violet-500/5 px-6 py-3 lg:px-8">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-violet-400" />
-                <p className="text-sm text-violet-300">{isFr ? "Vous êtes membre d'une organisation." : "You're part of an organisation."}</p>
-              </div>
-              {(orgRole === "owner" || orgRole === "admin") && (
-                <div className="flex items-center gap-3 shrink-0">
-                  <a href={`/${orgId}/members`} className="text-xs font-semibold text-violet-300 hover:text-white transition">
-                    {isFr ? "Membres" : "Members"}
-                  </a>
-                  <a href={`/${orgId}/billing`} className="text-xs font-semibold text-violet-300 hover:text-white transition">
-                    {isFr ? "Facturation" : "Billing"}
-                  </a>
-                </div>
-              )}
             </div>
           )}
 
