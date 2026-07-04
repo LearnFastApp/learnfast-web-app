@@ -126,7 +126,7 @@ export default function EnterprisePage() {
               Sign in
             </Link>
             <Link
-              href="/org/create"
+              href="/org/signup"
               className="rounded-lg bg-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-400"
             >
               Get started
@@ -150,7 +150,7 @@ export default function EnterprisePage() {
 
         <div className="mb-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
-            href="/org/create"
+            href="/org/signup"
             className="inline-flex items-center gap-2 rounded-xl bg-violet-500 px-8 py-3.5 font-semibold text-white transition hover:bg-violet-400"
           >
             Start a free trial
@@ -301,7 +301,7 @@ export default function EnterprisePage() {
         </p>
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
-            href="/org/create"
+            href="/org/signup"
             className="inline-flex items-center gap-2 rounded-xl bg-violet-500 px-8 py-3.5 font-semibold text-white transition hover:bg-violet-400"
           >
             Start free trial
