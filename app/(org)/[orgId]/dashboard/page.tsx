@@ -90,6 +90,7 @@ export default function OrgDashboardPage() {
 
   const [orgName, setOrgName] = useState("");
   const [myRole, setMyRole] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [dash, setDash] = useState<DashData | null>(null);
   const [rehearsals, setRehearsals] = useState<RehearsalSession[]>([]);
@@ -108,7 +109,7 @@ export default function OrgDashboardPage() {
         fetch(`/api/org/${orgId}/onboarding`, { headers: h }),
       ]);
       if (orgRes.status === 401 || myRes.status === 401) { router.replace("/auth/login"); return; }
-      if (orgRes.ok) { const d = await orgRes.json(); setOrgName(d.name ?? ""); setMyRole(d.myRole ?? null); }
+      if (orgRes.ok) { const d = await orgRes.json(); setOrgName(d.name ?? ""); setMyRole(d.myRole ?? null); setLogoUrl(d.logoUrl ?? null); }
       if (myRes.ok) { setDash(await myRes.json()); }
       if (rehRes.ok) { const d = await rehRes.json(); setRehearsals((d.sessions ?? []).slice(0, 3)); }
       if (onboardRes.ok) { setOnboarding(await onboardRes.json()); }
@@ -142,7 +143,7 @@ export default function OrgDashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#05070d] text-white">
-      <OrgSidebar orgName={orgName} myRole={myRole} />
+      <OrgSidebar orgName={orgName} myRole={myRole} logoUrl={logoUrl} />
 
       <main className="md:ml-60 pt-16 md:pt-0">
         <div className="max-w-4xl mx-auto px-5 py-10">

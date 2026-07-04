@@ -186,6 +186,7 @@ export default function OrgCommunityPage() {
   const [dimFilter, setDimFilter] = useState<Dim | "">("");
   const [orgName, setOrgName] = useState("");
   const [myRole, setMyRole] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -217,6 +218,7 @@ export default function OrgCommunityPage() {
         const data = await infoRes.json();
         setOrgName(data.name ?? "");
         setMyRole(data.myRole ?? null);
+        setLogoUrl(data.logoUrl ?? null);
       }
     } finally {
       setLoading(false);
@@ -247,7 +249,7 @@ export default function OrgCommunityPage() {
 
   return (
     <div className="min-h-screen bg-[#05070d]">
-      <OrgSidebar orgName={orgName} myRole={myRole} />
+      <OrgSidebar orgName={orgName} myRole={myRole} logoUrl={logoUrl} />
       <main className="md:ml-60 pt-16 md:pt-0">
       <div className="max-w-4xl mx-auto px-6 py-10">
         {/* Header */}

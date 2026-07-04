@@ -58,6 +58,7 @@ export default function ResourceHubPage() {
 
   const [orgName, setOrgName] = useState("");
   const [myRole, setMyRole] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [items, setItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeDim, setActiveDim] = useState<Dimension | "all">("all");
@@ -73,7 +74,7 @@ export default function ResourceHubPage() {
         fetch(`/api/library`, { headers: h }),
       ]);
       if (orgRes.status === 401) { router.replace("/auth/login"); return; }
-      if (orgRes.ok) { const d = await orgRes.json(); setOrgName(d.name ?? ""); setMyRole(d.myRole ?? null); }
+      if (orgRes.ok) { const d = await orgRes.json(); setOrgName(d.name ?? ""); setMyRole(d.myRole ?? null); setLogoUrl(d.logoUrl ?? null); }
       if (libRes.ok) { const d = await libRes.json(); setItems(d.items ?? []); }
     } catch {
       /* ignore */
@@ -108,7 +109,7 @@ export default function ResourceHubPage() {
 
   return (
     <div className="min-h-screen bg-[#05070d] text-white">
-      <OrgSidebar orgName={orgName} myRole={myRole} />
+      <OrgSidebar orgName={orgName} myRole={myRole} logoUrl={logoUrl} />
 
       <main className="md:ml-60 pt-16 md:pt-0">
         <div className="max-w-4xl mx-auto px-5 py-10">

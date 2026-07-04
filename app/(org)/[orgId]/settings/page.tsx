@@ -148,7 +148,7 @@ export default function OrgSettingsPage() {
 
   return (
     <div className="min-h-screen bg-[#05070d] text-white">
-      <OrgSidebar orgName={orgName} myRole={myRole} />
+      <OrgSidebar orgName={orgName} myRole={myRole} logoUrl={logoUrl || null} />
       <main className="md:ml-60 pt-16 md:pt-0">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
         {/* Header */}

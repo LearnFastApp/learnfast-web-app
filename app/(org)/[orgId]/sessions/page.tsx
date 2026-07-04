@@ -149,6 +149,7 @@ export default function SessionsPage() {
   const [sessions, setSessions] = useState<OrgSession[]>([]);
   const [myRole, setMyRole] = useState<OrgRole | null>(null);
   const [orgName, setOrgName] = useState("");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [showForm, setShowForm] = useState(false);
@@ -196,6 +197,7 @@ export default function SessionsPage() {
         const d = await orgRes.json();
         setOrgName(d.name ?? "");
         setMyRole(d.myRole ?? null);
+        setLogoUrl(d.logoUrl ?? null);
       }
       if (onboardingRes.ok) {
         const d = await onboardingRes.json();
@@ -295,7 +297,7 @@ export default function SessionsPage() {
 
   return (
     <div className="min-h-screen bg-[#05070d] text-white">
-      <OrgSidebar orgName={orgName} myRole={myRole} />
+      <OrgSidebar orgName={orgName} myRole={myRole} logoUrl={logoUrl} />
       <main className="md:ml-60 pt-16 md:pt-0">
       <div className="max-w-3xl mx-auto px-6 py-10">
         {/* Header */}

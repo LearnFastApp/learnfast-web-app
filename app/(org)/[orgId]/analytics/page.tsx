@@ -76,6 +76,7 @@ interface AnalyticsData {
 interface OrgInfo {
   name: string;
   myRole?: string | null;
+  logoUrl?: string | null;
 }
 
 interface Assignment {
@@ -239,7 +240,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-[#05070d] text-white">
-      <OrgSidebar orgName={orgInfo?.name} myRole={orgInfo?.myRole ?? null} />
+      <OrgSidebar orgName={orgInfo?.name} myRole={orgInfo?.myRole ?? null} logoUrl={orgInfo?.logoUrl ?? null} />
       <main className="md:ml-60 pt-16 md:pt-0">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
         {/* Header */}

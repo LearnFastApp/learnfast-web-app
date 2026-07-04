@@ -24,6 +24,7 @@ import { auth } from "@/lib/firebase";
 interface OrgSidebarProps {
   orgName?: string;
   myRole?: string | null;
+  logoUrl?: string | null;
 }
 
 const MEMBER_NAV = [
@@ -82,11 +83,13 @@ function SidebarContent({
   orgId,
   orgName,
   myRole,
+  logoUrl,
   onNavClick,
 }: {
   orgId: string;
   orgName?: string;
   myRole?: string | null;
+  logoUrl?: string | null;
   onNavClick?: () => void;
 }) {
   const pathname = usePathname();
@@ -106,13 +109,22 @@ function SidebarContent({
     <div className="flex flex-col h-full">
       {/* Logo + org name */}
       <div className="px-5 py-5 border-b border-[#1e293b]">
-        <div className="flex items-center gap-2 mb-3">
-          <Image src="/icon-mark.png" alt="LearnFast" width={26} height={19} />
-          <span className="text-sm font-bold tracking-tight" style={{ color: "#5bb8f5" }}>
-            LEARN<span className="font-light">FAST</span>
-            <sup className="text-[0.5em] font-normal ml-0.5 align-super">™</sup>
-          </span>
-        </div>
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={logoUrl}
+            alt={orgName ?? "Organisation logo"}
+            className="h-8 max-w-[140px] object-contain mb-3"
+          />
+        ) : (
+          <div className="flex items-center gap-2 mb-3">
+            <Image src="/icon-mark.png" alt="LearnFast" width={26} height={19} />
+            <span className="text-sm font-bold tracking-tight" style={{ color: "#5bb8f5" }}>
+              LEARN<span className="font-light">FAST</span>
+              <sup className="text-[0.5em] font-normal ml-0.5 align-super">™</sup>
+            </span>
+          </div>
+        )}
         {orgName && (
           <p className="text-xs font-semibold text-slate-300 truncate leading-tight">{orgName}</p>
         )}
@@ -176,7 +188,7 @@ function SidebarContent({
   );
 }
 
-export default function OrgSidebar({ orgName, myRole }: OrgSidebarProps) {
+export default function OrgSidebar({ orgName, myRole, logoUrl }: OrgSidebarProps) {
   const params = useParams();
   const orgId = params?.orgId as string;
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -185,17 +197,22 @@ export default function OrgSidebar({ orgName, myRole }: OrgSidebarProps) {
     <>
       {/* Desktop sidebar */}
       <aside className="hidden md:flex fixed inset-y-0 left-0 w-60 flex-col bg-[#080c14] border-r border-[#1e293b] z-40">
-        <SidebarContent orgId={orgId} orgName={orgName} myRole={myRole} />
+        <SidebarContent orgId={orgId} orgName={orgName} myRole={myRole} logoUrl={logoUrl} />
       </aside>
 
       {/* Mobile top bar */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3 bg-[#080c14] border-b border-[#1e293b]">
-        <div className="flex items-center gap-2">
-          <Image src="/icon-mark.png" alt="LearnFast" width={22} height={16} />
-          <span className="text-sm font-bold tracking-tight" style={{ color: "#5bb8f5" }}>
-            LEARN<span className="font-light">FAST</span>™
-          </span>
-        </div>
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoUrl} alt={orgName ?? "Organisation logo"} className="h-7 max-w-[120px] object-contain" />
+        ) : (
+          <div className="flex items-center gap-2">
+            <Image src="/icon-mark.png" alt="LearnFast" width={22} height={16} />
+            <span className="text-sm font-bold tracking-tight" style={{ color: "#5bb8f5" }}>
+              LEARN<span className="font-light">FAST</span>™
+            </span>
+          </div>
+        )}
         {orgName && <p className="text-xs text-slate-400 truncate mx-3 flex-1">{orgName}</p>}
         <button
           onClick={() => setMobileOpen(true)}
@@ -224,6 +241,7 @@ export default function OrgSidebar({ orgName, myRole }: OrgSidebarProps) {
                 orgId={orgId}
                 orgName={orgName}
                 myRole={myRole}
+                logoUrl={logoUrl}
                 onNavClick={() => setMobileOpen(false)}
               />
             </div>

@@ -79,6 +79,7 @@ export default function OrgRehearsePage() {
   const [sessions, setSessions] = useState<RehearsalSession[]>([]);
   const [orgName, setOrgName] = useState("");
   const [myRole, setMyRole] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showRehearsalModal, setShowRehearsalModal] = useState(false);
 
@@ -119,6 +120,7 @@ export default function OrgRehearsePage() {
         const d = await orgRes.json();
         setOrgName(d.name ?? "");
         setMyRole(d.myRole ?? null);
+        setLogoUrl(d.logoUrl ?? null);
       }
       if (assignRes.ok) {
         const d = await assignRes.json();
@@ -253,7 +255,7 @@ export default function OrgRehearsePage() {
 
   return (
     <div className="min-h-screen bg-[#05070d]">
-      <OrgSidebar orgName={orgName} myRole={myRole} />
+      <OrgSidebar orgName={orgName} myRole={myRole} logoUrl={logoUrl} />
       <main className="md:ml-60 pt-16 md:pt-0">
       <div className="max-w-3xl mx-auto px-6 py-10">
 
