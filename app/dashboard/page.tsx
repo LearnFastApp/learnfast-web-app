@@ -461,7 +461,7 @@ export default function Dashboard() {
             </div>
           )}
 
-          {!isPaidOrPilot && (
+          {!isPaidOrPilot && !orgId && (
             <div className={`mt-6 rounded-xl border p-4 ${sessions.length >= 2 ? "border-amber-500/30 bg-amber-500/5" : "border-white/10 bg-[#0a0d1a]"}`}>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t.freePlan}</p>
               <div className="flex gap-2 mb-3">
