@@ -82,6 +82,7 @@ export async function POST(
     tx.update(db.doc(`presenters/${uid}`), {
       orgId,
       orgRole: tokenData.role,
+      subscriptionStatus: "lite",
       updatedAt: FieldValue.serverTimestamp(),
     });
   });
