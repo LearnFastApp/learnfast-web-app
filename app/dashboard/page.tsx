@@ -334,6 +334,7 @@ export default function Dashboard() {
 
   const displayName = user.displayName ?? user.email?.split("@")[0] ?? "Presenter";
   const isPaidOrPilot = subscriptionStatus === "active" || subscriptionStatus === "pilot";
+  const rehearsalMaxSeconds = (orgId || subscriptionStatus === "pilot") ? 1200 : 300;
   const pilotDaysLeft = pilotExpiresAt
     ? Math.max(0, Math.ceil((pilotExpiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
@@ -443,6 +444,7 @@ export default function Dashboard() {
         <CreateRehearsalModal
           onClose={() => { setShowRehearsalModal(false); fetchRehearsalSessions(); }}
           locale={locale}
+          maxRecordSeconds={rehearsalMaxSeconds}
         />
       )}
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} locale={locale} />}

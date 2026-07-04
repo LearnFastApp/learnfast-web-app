@@ -20,7 +20,6 @@ const DIM_COLORS: Record<string, string> = {
 };
 const DIMS = ["clarity", "energy", "engagement", "understanding", "connection"] as const;
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
-const MAX_RECORD_SECONDS = 300;
 const ACCEPTED_TYPES = ["video/mp4","video/quicktime","video/webm","audio/mpeg","audio/wav","audio/mp4","audio/x-m4a","audio/webm"];
 
 interface Take {
@@ -45,6 +44,7 @@ interface Session {
   takeCount: number;
   status: string;
   promotedAssessmentId?: string | null;
+  tier?: string;
 }
 
 type PageStage = "loading" | "polling" | "ready" | "recording" | "recorded" | "uploading" | "promoting" | "promoted" | "error";
@@ -93,6 +93,7 @@ function RehearsalPageInner() {
   }, [user]);
 
   const isFr = locale === "fr";
+  const maxRecordSeconds = (session?.tier === "pro" || session?.tier === "admin") ? 1200 : 300;
 
   const t = isFr ? {
     rehearsal: "Répétition",
@@ -136,7 +137,7 @@ function RehearsalPageInner() {
     errorFallback: "Veuillez essayer une autre prise.",
     tryAgain: "Essayer une autre prise →",
     errLoad: "Impossible de charger la répétition. Vérifiez votre connexion.",
-    errDuration: "L'enregistrement dépasse la limite de 5 minutes.",
+    errDuration: "L'enregistrement dépasse la durée maximale autorisée.",
     errAnalysis: "L'analyse a échoué. Veuillez essayer une autre prise.",
     errTakesLimit: "Vous avez atteint le nombre maximum de prises sur Lite. Passez à Pro pour des prises illimitées.",
     errFileTooLarge: "Fichier trop volumineux (max 50 Mo).",
@@ -187,7 +188,7 @@ function RehearsalPageInner() {
     errorFallback: "Please try recording another take.",
     tryAgain: "Try another take →",
     errLoad: "Could not load rehearsal. Please check your connection.",
-    errDuration: "Recording exceeds the 5-minute limit.",
+    errDuration: "Recording exceeds the maximum duration for your plan.",
     errAnalysis: "Analysis failed. Please try another take.",
     errTakesLimit: "You've reached the maximum takes for this rehearsal on Lite. Upgrade to Pro for unlimited takes.",
     errFileTooLarge: "File too large (max 50 MB).",
@@ -329,9 +330,10 @@ function RehearsalPageInner() {
       mediaRef.current = mr;
       setRecordingSeconds(0);
       setPageStage("recording");
+      const maxSecs = maxRecordSeconds;
       timerRef.current = setInterval(() => {
         setRecordingSeconds((s) => {
-          if (s + 1 >= MAX_RECORD_SECONDS) { stopRecording(); return s + 1; }
+          if (s + 1 >= maxSecs) { stopRecording(); return s + 1; }
           return s + 1;
         });
       }, 1000);
@@ -737,13 +739,20 @@ function RehearsalPageInner() {
             </div>
 
             {inputMode === "record" && pageStage === "ready" && !recordedBlob && (
-              <button
-                onClick={startRecording}
-                className="w-full rounded-xl bg-white/10 py-3 font-semibold text-white hover:bg-white/15 transition flex items-center justify-center gap-2"
-              >
-                <Mic className="h-4 w-4" />
-                {t.startRecording}
-              </button>
+              <div className="space-y-1.5">
+                <button
+                  onClick={startRecording}
+                  className="w-full rounded-xl bg-white/10 py-3 font-semibold text-white hover:bg-white/15 transition flex items-center justify-center gap-2"
+                >
+                  <Mic className="h-4 w-4" />
+                  {t.startRecording}
+                </button>
+                <p className="text-xs text-slate-600 text-center">
+                  {isFr
+                    ? `Jusqu'à ${Math.round(maxRecordSeconds / 60)} minutes par prise`
+                    : `Up to ${Math.round(maxRecordSeconds / 60)} minutes per take`}
+                </p>
+              </div>
             )}
 
             {inputMode === "upload" && !recordedBlob && (

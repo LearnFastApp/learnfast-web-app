@@ -593,6 +593,7 @@ export default function OrgRehearsePage() {
       {showRehearsalModal && (
         <CreateRehearsalModal
           onClose={() => { setShowRehearsalModal(false); fetchData(); }}
+          maxRecordSeconds={1200}
         />
       )}
     </div>

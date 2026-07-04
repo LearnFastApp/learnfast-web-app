@@ -12,20 +12,21 @@ const CONTEXTS = isContextsEnabled() ? getEnabledContexts() : [];
 
 const ACCEPTED_TYPES = ["video/mp4","video/quicktime","video/webm","audio/mpeg","audio/wav","audio/mp4","audio/x-m4a","audio/webm"];
 const MAX_SIZE_BYTES = 50 * 1024 * 1024;
-const MAX_RECORD_SECONDS = 300; // 5 min for rehearsal (more generous than guest)
 
 interface Props {
   onClose: () => void;
   locale?: "en" | "fr";
+  maxRecordSeconds?: number;
 }
 
 type Tab = "record" | "upload";
 type Stage = "setup" | "recording" | "preview" | "submitting";
 
-export default function CreateRehearsalModal({ onClose, locale = "en" }: Props) {
+export default function CreateRehearsalModal({ onClose, locale = "en", maxRecordSeconds = 300 }: Props) {
   const { user } = useAuth();
   const router = useRouter();
   const isFr = locale === "fr";
+  const maxMins = Math.round(maxRecordSeconds / 60);
 
   const [tab, setTab] = useState<Tab>("record");
   const [stage, setStage] = useState<Stage>("setup");
@@ -75,7 +76,7 @@ export default function CreateRehearsalModal({ onClose, locale = "en" }: Props) 
       setStage("recording");
       timerRef.current = setInterval(() => {
         setRecordingSeconds((s) => {
-          if (s + 1 >= MAX_RECORD_SECONDS) { stopRecording(); return s + 1; }
+          if (s + 1 >= maxRecordSeconds) { stopRecording(); return s + 1; }
           return s + 1;
         });
       }, 1000);
@@ -261,7 +262,7 @@ export default function CreateRehearsalModal({ onClose, locale = "en" }: Props) 
                     <Mic className="h-7 w-7 text-violet-400" />
                   </div>
                   <p className="text-sm text-slate-400">
-                    {isFr ? "Jusqu'à 5 minutes d'enregistrement." : "Up to 5 minutes per take."}
+                    {isFr ? `Jusqu'à ${maxMins} minutes d'enregistrement.` : `Up to ${maxMins} minutes per take.`}
                   </p>
                   <button
                     onClick={startRecording}
@@ -342,7 +343,7 @@ export default function CreateRehearsalModal({ onClose, locale = "en" }: Props) 
                   <div className="space-y-2">
                     <UploadCloud className="h-8 w-8 text-slate-500 mx-auto" />
                     <p className="text-sm text-slate-400">{isFr ? "Cliquez pour choisir un fichier" : "Click to choose a file"}</p>
-                    <p className="text-xs text-slate-600">MP4 · MOV · WebM · MP3 · WAV · max 50 MB</p>
+                    <p className="text-xs text-slate-600">{`MP4 · MOV · WebM · MP3 · WAV · up to ${maxMins} min · max 50 MB`}</p>
                   </div>
                 )}
               </button>

@@ -7,7 +7,12 @@ import type { AssessmentScores } from "@/lib/ai-assessment-analysis";
 
 export const dynamic = "force-dynamic";
 
-const MAX_DURATION_SECONDS = 300; // 5 minutes — matches UI recording cap
+const DURATION_LIMITS: Record<string, number> = {
+  pro: 1200,   // 20 min — Pro subscribers and org members
+  admin: 1200, // 20 min — internal
+  lite: 300,   // 5 min
+  free: 300,   // 5 min
+};
 
 export async function GET(
   req: NextRequest,
@@ -57,7 +62,9 @@ export async function GET(
   }
 
   const audioDurationSeconds = transcript.audio_duration ?? 0;
-  if (audioDurationSeconds > MAX_DURATION_SECONDS) {
+  const sessionTier = (sessionSnap.data()!.tier as string | undefined) ?? "free";
+  const maxDuration = DURATION_LIMITS[sessionTier] ?? 300;
+  if (audioDurationSeconds > maxDuration) {
     await takeRef.update({ status: "failed", error: "duration_exceeded" });
     return NextResponse.json({ status: "failed", error: "duration_exceeded", takeId });
   }
