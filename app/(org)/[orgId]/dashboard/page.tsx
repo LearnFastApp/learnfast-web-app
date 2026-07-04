@@ -12,6 +12,8 @@ import {
   ArrowRight,
   TrendingUp,
   MessageSquare,
+  CheckCircle2,
+  Circle,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import OrgSidebar from "@/components/org-sidebar";
@@ -49,6 +51,13 @@ interface RehearsalSession {
   createdAt: string | null;
 }
 
+interface OnboardingStatus {
+  teamInvited: boolean;
+  brandingSet: boolean;
+  sessionScheduled: boolean;
+  feedbackCollected: boolean;
+}
+
 const DIMS: Dimension[] = ["clarity", "energy", "engagement", "understanding", "connection"];
 
 function formatDate(iso: string) {
@@ -84,6 +93,7 @@ export default function OrgDashboardPage() {
   const [displayName, setDisplayName] = useState("");
   const [dash, setDash] = useState<DashData | null>(null);
   const [rehearsals, setRehearsals] = useState<RehearsalSession[]>([]);
+  const [onboarding, setOnboarding] = useState<OnboardingStatus | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -91,15 +101,17 @@ export default function OrgDashboardPage() {
     try {
       const token = await user.getIdToken();
       const h = { Authorization: `Bearer ${token}` };
-      const [orgRes, myRes, rehRes] = await Promise.all([
+      const [orgRes, myRes, rehRes, onboardRes] = await Promise.all([
         fetch(`/api/org/${orgId}/info`, { headers: h }),
         fetch(`/api/org/${orgId}/my-sessions`, { headers: h }),
         fetch("/api/rehearsal", { headers: h }),
+        fetch(`/api/org/${orgId}/onboarding`, { headers: h }),
       ]);
       if (orgRes.status === 401 || myRes.status === 401) { router.replace("/auth/login"); return; }
       if (orgRes.ok) { const d = await orgRes.json(); setOrgName(d.name ?? ""); setMyRole(d.myRole ?? null); }
       if (myRes.ok) { setDash(await myRes.json()); }
       if (rehRes.ok) { const d = await rehRes.json(); setRehearsals((d.sessions ?? []).slice(0, 3)); }
+      if (onboardRes.ok) { setOnboarding(await onboardRes.json()); }
       setDisplayName(user.displayName ?? user.email?.split("@")[0] ?? "");
     } catch {
       /* ignore */
@@ -140,6 +152,54 @@ export default function OrgDashboardPage() {
             <p className="text-sm text-slate-500 mb-1">Welcome back</p>
             <h1 className="text-2xl font-bold">{displayName || "Your dashboard"}</h1>
           </div>
+
+          {/* Onboarding checklist — admins/owners only, hidden once all steps complete */}
+          {onboarding && (myRole === "owner" || myRole === "admin") && !(
+            onboarding.teamInvited && onboarding.brandingSet &&
+            onboarding.sessionScheduled && onboarding.feedbackCollected
+          ) && (
+            <div className="bg-[#0f172a] border border-violet-500/20 rounded-2xl p-6 mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-sm font-semibold text-white">Get started</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Complete these steps to set up your organisation.</p>
+                </div>
+                <span className="text-xs font-semibold text-violet-400 bg-violet-500/10 px-3 py-1 rounded-full">
+                  {[onboarding.teamInvited, onboarding.brandingSet, onboarding.sessionScheduled, onboarding.feedbackCollected].filter(Boolean).length} / 4
+                </span>
+              </div>
+              <div className="space-y-3">
+                {[
+                  { done: onboarding.teamInvited,       label: "Invite your team",            sub: "Add members via email invite",                  href: `/${orgId}/members` },
+                  { done: onboarding.brandingSet,       label: "Add your logo",               sub: "Upload your brand mark in settings",            href: `/${orgId}/settings` },
+                  { done: onboarding.sessionScheduled,  label: "Schedule a session",          sub: "Create your first live feedback session",        href: `/${orgId}/sessions` },
+                  { done: onboarding.feedbackCollected, label: "Collect audience feedback",   sub: "Share the QR or link during a live session",    href: `/${orgId}/sessions` },
+                ].map(({ done, label, sub, href }) => (
+                  <a
+                    key={label}
+                    href={done ? undefined : href}
+                    className={`flex items-center gap-4 rounded-xl px-4 py-3 transition-colors ${
+                      done
+                        ? "opacity-50 cursor-default"
+                        : "hover:bg-white/[0.03] cursor-pointer"
+                    }`}
+                  >
+                    {done
+                      ? <CheckCircle2 className="w-5 h-5 text-violet-400 shrink-0" />
+                      : <Circle className="w-5 h-5 text-slate-600 shrink-0" />
+                    }
+                    <div className="min-w-0 flex-1">
+                      <p className={`text-sm font-medium ${done ? "line-through text-slate-500" : "text-white"}`}>
+                        {label}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-0.5">{sub}</p>
+                    </div>
+                    {!done && <ArrowRight className="w-4 h-4 text-slate-600 shrink-0" />}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Stat cards */}
           <div className="grid grid-cols-3 gap-4 mb-8">
