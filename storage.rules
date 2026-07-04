@@ -8,11 +8,21 @@ service firebase.storage {
       allow write: if request.auth != null && request.auth.uid == guestUid;
       allow read: if false;
     }
-    // Library content uploads — org admins and platform admin upload via client SDK.
-    // Org membership/role is validated in the API before the Firestore record is created.
+    // Library content uploads — org admins/owners and platform admin only.
     match /org-content/{orgId}/{allPaths=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      // Reads: org members only
+      allow read: if request.auth != null &&
+        firestore.exists(/databases/(default)/documents/organizations/$(orgId)/members/$(request.auth.uid));
+
+      // Writes: platform admin OR org owner/admin with active status
+      allow write: if request.auth != null && (
+        request.auth.token.email == 'physicalperformance@icloud.com' ||
+        (
+          firestore.exists(/databases/(default)/documents/organizations/$(orgId)/members/$(request.auth.uid)) &&
+          firestore.get(/databases/(default)/documents/organizations/$(orgId)/members/$(request.auth.uid)).data.role in ['owner', 'admin'] &&
+          firestore.get(/databases/(default)/documents/organizations/$(orgId)/members/$(request.auth.uid)).data.status == 'active'
+        )
+      );
     }
     match /premium-content/{allPaths=**} {
       allow read: if request.auth != null;
