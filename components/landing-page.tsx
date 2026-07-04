@@ -149,9 +149,22 @@ export default function LandingPage() {
       <section className="relative text-center pt-36 pb-0 px-5 lg:px-12 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 90% 50% at 50% 0%, rgba(109,40,217,0.22) 0%, transparent 60%)" }} />
 
-        <p className="relative text-[10px] sm:text-xs font-semibold tracking-[0.3em] text-slate-400 uppercase mb-5">
+        <p className="relative text-[10px] sm:text-xs font-semibold tracking-[0.3em] text-slate-400 uppercase mb-6">
           AI-Powered Presentation Intelligence
         </p>
+
+        {/* Personal / Business toggle */}
+        <div className="relative inline-flex items-center gap-1 bg-white/[0.05] border border-white/10 rounded-full p-1 mb-8">
+          <span className="px-5 py-2 rounded-full text-sm font-semibold text-white" style={{ backgroundColor: RED }}>
+            Personal
+          </span>
+          <a
+            href="/enterprise"
+            className="px-5 py-2 rounded-full text-sm font-semibold text-slate-400 hover:text-white transition-colors"
+          >
+            Business
+          </a>
+        </div>
         <h1 className="relative text-3xl sm:text-6xl md:text-7xl lg:text-8xl font-light leading-tight tracking-tight text-slate-400 mb-1">
           INTRODUCING
         </h1>
