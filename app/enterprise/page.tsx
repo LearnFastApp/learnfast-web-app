@@ -136,8 +136,8 @@ export default function EnterprisePage() {
           Enterprise
         </span>
         <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-          Your whole team.{" "}
-          <span className="text-violet-400">Measurably better</span> presenters.
+          Every session makes{" "}
+          <span className="text-violet-400">the whole team better.</span>
         </h1>
         <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-slate-300">
           LearnFast Enterprise wraps a manager dashboard and team analytics around the same AI coaching, live audience feedback, and rehearsal engine your best presenters already use — so every session makes the whole team better.
@@ -176,27 +176,27 @@ export default function EnterprisePage() {
       <section className="border-y border-[#1e293b] bg-[#0f172a]/50">
         <div className="mx-auto max-w-6xl px-6 py-20">
           <h2 className="mb-3 text-center text-2xl font-bold sm:text-3xl">How it works</h2>
-          <p className="mb-14 text-center text-slate-400">Up and running in under five minutes.</p>
+          <p className="mb-14 text-center text-slate-400">Up and running in under five minutes. No IT team required.</p>
 
           <div className="grid gap-8 md:grid-cols-3">
             {[
               {
                 step: "01",
-                title: "Set up your org",
-                time: "30 seconds",
-                body: "Create your organisation, invite your team with one link. They join with their existing LearnFast account or create one in seconds.",
+                title: "Bring your team in",
+                time: "2 minutes",
+                body: "Create your organisation and invite your team. They join with their existing LearnFast account or sign up in seconds — no software to install, no IT ticketing.",
               },
               {
                 step: "02",
-                title: "Schedule & collect feedback",
-                time: "Every session",
-                body: "Every session gets a QR code. Audience scans → rates in 30 seconds → no account, no download. Scores feed straight into each presenter's five-dimension profile.",
+                title: "Collect feedback at every session",
+                time: "30 seconds per audience member",
+                body: "Each session gets a QR code. The audience scans and rates in under a minute — no app, no login, no friction. Scores flow straight into each presenter's five-dimension profile.",
               },
               {
                 step: "03",
-                title: "Coach with data",
+                title: "Coach the whole team with data",
                 time: "Ongoing",
-                body: "Your manager dashboard shows individual trends and org-wide radar charts. Assign rehearsal tasks. Watch scores move.",
+                body: "Your dashboard shows individual trends and team-wide patterns side by side. Assign rehearsals, set targets, and watch scores move — session by session, person by person.",
               },
             ].map(({ step, title, time, body }) => (
               <div
@@ -221,7 +221,7 @@ export default function EnterprisePage() {
       <section id="pricing" className="mx-auto max-w-6xl px-6 py-20">
         <div className="mb-14 text-center">
           <h2 className="mb-3 text-2xl font-bold sm:text-3xl">
-            Self-serve. No contracts. No calls.
+            Simple pricing. No contracts, no calls.
           </h2>
           <div className="mt-6 flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-6">
             <div className="rounded-2xl border border-violet-500/30 bg-violet-500/10 px-8 py-5 text-center">
@@ -262,10 +262,10 @@ export default function EnterprisePage() {
       <section className="border-y border-[#1e293b] bg-[#0f172a]/50">
         <div className="mx-auto max-w-6xl px-6 py-20">
           <h2 className="mb-3 text-center text-2xl font-bold sm:text-3xl">
-            Built on a proven five-dimension framework
+            One framework. Five dimensions. Measurable progress.
           </h2>
           <p className="mx-auto mb-12 max-w-2xl text-center text-slate-400">
-            Every session score, AI assessment, and coaching recommendation maps to the same five dimensions — so progress is measurable across the whole team.
+            Every score, every AI assessment, and every coaching note maps to the same five dimensions — so you can see exactly where each person is growing and where the team needs work.
           </p>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -289,10 +289,10 @@ export default function EnterprisePage() {
       {/* 6. CTA section */}
       <section className="mx-auto max-w-6xl px-6 py-24 text-center">
         <h2 className="mb-4 text-3xl font-bold sm:text-4xl">
-          Ready to build a team of better presenters?
+          Your best presenters are already using it.
         </h2>
         <p className="mb-10 text-lg text-slate-400">
-          Start a 14-day free trial — no card required.
+          Bring the whole team. 14-day free trial — no card required.
         </p>
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
