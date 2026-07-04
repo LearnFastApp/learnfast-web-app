@@ -19,6 +19,14 @@ export async function GET(req: NextRequest, { params }: Params) {
   const db = getAdminDb();
   const PAGE = 20;
 
+  // Build set of active org member UIDs to enforce closed-feed membership check
+  const membersSnap = await db.collection(`organizations/${orgId}/members`).get();
+  const activeMemberIds = new Set(
+    membersSnap.docs
+      .filter((d) => d.data().status === "active")
+      .map((d) => d.id),
+  );
+
   // Fetch public rehearsals belonging to this org (in-memory sort avoids composite index)
   const snap = await db
     .collection("rehearsal_sessions")
@@ -27,11 +35,13 @@ export async function GET(req: NextRequest, { params }: Params) {
     .limit(100)
     .get();
 
-  const sorted = snap.docs.sort((a, b) => {
-    const aDate = a.data().sharedAt ?? "";
-    const bDate = b.data().sharedAt ?? "";
-    return bDate > aDate ? 1 : bDate < aDate ? -1 : 0;
-  });
+  const sorted = snap.docs
+    .filter((d) => activeMemberIds.has(d.data().presenterId as string))
+    .sort((a, b) => {
+      const aDate = a.data().sharedAt ?? "";
+      const bDate = b.data().sharedAt ?? "";
+      return bDate > aDate ? 1 : bDate < aDate ? -1 : 0;
+    });
 
   const { searchParams } = new URL(req.url);
   const cursor = searchParams.get("cursor");
