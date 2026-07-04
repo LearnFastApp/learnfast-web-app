@@ -68,6 +68,7 @@ export default function MembersPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const redirectingRef = useRef(false);
   const [invites, setInvites] = useState<PendingInvite[]>([]);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -174,6 +175,24 @@ export default function MembersPage() {
       fetchData();
     } catch {
       /* ignore */
+    }
+  }
+
+  async function revokeInvite(inviteId: string, email: string) {
+    if (!user) return;
+    if (!confirm(`Revoke invite for ${email}?`)) return;
+    setRevokingId(inviteId);
+    try {
+      const idToken = await user.getIdToken();
+      await fetch(`/api/org/${orgId}/invite/${inviteId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+      fetchData();
+    } catch {
+      /* ignore */
+    } finally {
+      setRevokingId(null);
     }
   }
 
@@ -389,7 +408,19 @@ export default function MembersPage() {
                       )}
                     </div>
                   </div>
-                  <span className="text-xs text-slate-400 capitalize ml-4 shrink-0">{inv.role}</span>
+                  <div className="flex items-center gap-2 ml-4 shrink-0">
+                    <span className="text-xs text-slate-400 capitalize">{inv.role}</span>
+                    <button
+                      onClick={() => revokeInvite(inv.id, inv.email)}
+                      disabled={revokingId === inv.id}
+                      title="Revoke invite"
+                      className="p-1.5 text-slate-500 hover:text-red-400 transition-colors rounded-lg hover:bg-red-400/10 disabled:opacity-40"
+                    >
+                      {revokingId === inv.id
+                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                        : <Trash2 className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
