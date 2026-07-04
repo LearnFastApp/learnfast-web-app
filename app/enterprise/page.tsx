@@ -145,7 +145,7 @@ export default function EnterprisePage() {
           <span className="text-violet-400">the whole team better.</span>
         </h1>
         <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-slate-300">
-          LearnFast Enterprise wraps a manager dashboard and team analytics around the same AI coaching, live audience feedback, and rehearsal engine your best presenters already use — so every session makes the whole team better.
+          Your top performers are already on LearnFast. Enterprise adds the team layer — manager dashboards, trend analytics, and coaching tools — so every session lifts the whole organisation, not just the person presenting.
         </p>
 
         <div className="mb-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
