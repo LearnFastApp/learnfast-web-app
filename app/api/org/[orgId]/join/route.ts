@@ -86,5 +86,10 @@ export async function POST(
     });
   });
 
+  // Mark email as verified — the invite itself is the verification signal
+  // (admin explicitly chose this email; requiring a separate verification email
+  // would add friction with no security benefit for enterprise invites).
+  await getAdminAuth().updateUser(uid, { emailVerified: true }).catch(() => null);
+
   return NextResponse.json({ orgId, role: tokenData.role });
 }
