@@ -45,6 +45,11 @@ const FEATURES = [
     title: "Dimension-Matched Resources",
     body: "Based on YOUR scores, LearnFast surfaces the most relevant articles, TED Talks, videos and podcasts — matched to your exact development areas, not a generic library.",
   },
+  {
+    icon: "🤝",
+    title: "Executive Coach Roster",
+    body: "Book a 1-to-1 session with a vetted communication coach, filtered by specialism — executive presence, pitch coaching, storytelling, data communication and more. Your LearnFast scores tell them exactly where to focus.",
+  },
 ];
 
 const SIGNALS = [
@@ -546,7 +551,8 @@ export default function LandingPage() {
                   "Comparative coaching across sessions",
                   "3 rehearsal sessions per month (5 takes each)",
                   "Curated articles, TED Talks & podcasts",
-                  "Advanced analytics & trends",
+                  "Performance over time — line chart + dimension trends",
+                  "Auto-generated insights from your session history",
                   "Post-session email summary with AI insights",
                 ].map((f) => (
                   <li key={f} className="flex items-center gap-2.5">

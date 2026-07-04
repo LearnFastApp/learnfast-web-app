@@ -30,6 +30,54 @@ const DIMENSIONS = [
   },
 ];
 
+const FEATURES = [
+  {
+    icon: "📡",
+    title: "Live Audience Feedback",
+    body: "Every session gets a QR code. The audience scans and rates across all five dimensions in under a minute — no app, no login, no friction. Scores appear in real time as they arrive.",
+  },
+  {
+    icon: "📈",
+    title: "Team Analytics & Trends",
+    body: "A team-wide radar and performance table showing every member's session count, feedback volume and dimension averages side by side. Spot who's improving and who needs support — at a glance.",
+  },
+  {
+    icon: "🔍",
+    title: "Member Performance Drill-Down",
+    body: "Click any team member to see their full session history, a performance-over-time line chart with dimension toggles, and first-to-last trend indicators. The same depth as individual analytics — for every person on your team.",
+  },
+  {
+    icon: "🧠",
+    title: "AI Rehearsal Coaching",
+    body: "Every member gets AI-powered rehearsal. Record a take, receive high-standard coaching on your weakest dimensions, then go again with precise direction. Take-by-take progression, script improvement suggestions, save-your-best-take flow.",
+  },
+  {
+    icon: "📋",
+    title: "Assignment System",
+    body: "Coaches and admins can assign rehearsal tasks to specific members with due dates. Track completion from the analytics dashboard — pending, overdue and completed assignments in one view.",
+  },
+  {
+    icon: "💬",
+    title: "Team Coaching Feed",
+    body: "Members share rehearsals to a private team feed. Coaches leave targeted feedback by dimension. A contribution rank system keeps the team accountable and engaged.",
+  },
+  {
+    icon: "📚",
+    title: "Resource Hub",
+    body: "Every member gets access to a curated library of articles, TED Talks, videos and podcasts — filtered by the dimension they're working on. Content updates automatically as their scores evolve.",
+  },
+  {
+    icon: "🤝",
+    title: "Executive Coach Roster",
+    body: "Give your team access to vetted communication coaches, matched by specialism — executive presence, storytelling, pitch coaching, data communication and more. Org admins control roster access.",
+  },
+  {
+    icon: "🎨",
+    title: "Organisation Branding",
+    body: "Upload your logo and the platform automatically extracts your brand colour and applies it throughout — replacing the LearnFast wordmark with yours. Your platform, your identity.",
+  },
+];
+
 const COMPARISON_ROWS = [
   {
     feature: "Transparent pricing",
@@ -42,14 +90,19 @@ const COMPARISON_ROWS = [
     competitor: { type: "cross" as const, label: "Annual contracts" },
   },
   {
-    feature: "Real meeting feedback loop",
-    learnfast: { type: "check" as const, label: "QR → live scores" },
+    feature: "Live audience feedback loop",
+    learnfast: { type: "check" as const, label: "QR → real-time scores" },
     competitor: { type: "cross" as const, label: "Practice sandbox only" },
   },
   {
     feature: "AI + Audience + Self-reflection",
     learnfast: { type: "check" as const, label: "Three Signal Model" },
-    competitor: { type: "cross" as const, label: "Delivery only" },
+    competitor: { type: "cross" as const, label: "Delivery AI only" },
+  },
+  {
+    feature: "Individual performance tracking",
+    learnfast: { type: "check" as const, label: "Drill-down + trend charts" },
+    competitor: { type: "cross" as const, label: "" },
   },
   {
     feature: "Manager dashboard",
@@ -57,9 +110,19 @@ const COMPARISON_ROWS = [
     competitor: { type: "check" as const, label: "" },
   },
   {
-    feature: "Rehearsal & coaching",
+    feature: "Rehearsal & AI coaching",
     learnfast: { type: "check" as const, label: "" },
     competitor: { type: "check" as const, label: "" },
+  },
+  {
+    feature: "Curated learning resources",
+    learnfast: { type: "check" as const, label: "Dimension-matched" },
+    competitor: { type: "cross" as const, label: "" },
+  },
+  {
+    feature: "Assignment tracking",
+    learnfast: { type: "check" as const, label: "" },
+    competitor: { type: "cross" as const, label: "" },
   },
   {
     feature: "5-seat minimum",
@@ -101,7 +164,7 @@ function CellIcon({ type, label }: { type: "check" | "cross" | "call"; label: st
 export default function EnterprisePage() {
   return (
     <div className="min-h-screen bg-[#05070d] text-white">
-      {/* 1. Nav bar */}
+      {/* Nav */}
       <header className="sticky top-0 z-50 border-b border-[#1e293b] bg-[#05070d]/90 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
@@ -112,10 +175,7 @@ export default function EnterprisePage() {
             </span>
           </Link>
           <div className="flex items-center gap-4">
-            <Link
-              href="/auth/login"
-              className="text-sm text-slate-300 transition hover:text-white"
-            >
+            <Link href="/auth/login" className="text-sm text-slate-300 transition hover:text-white">
               Sign in
             </Link>
             <Link
@@ -128,17 +188,17 @@ export default function EnterprisePage() {
         </div>
       </header>
 
-      {/* 2. Hero */}
+      {/* Hero */}
       <section className="mx-auto max-w-6xl px-6 pb-20 pt-24 text-center">
         <span className="mb-4 inline-block text-xs font-semibold uppercase tracking-widest text-violet-400">
           Enterprise
         </span>
         <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-          PRESENTATION DELIVERY FEEDBACK{" "}
-          <span className="text-violet-400">FOR YOUR WHOLE TEAM.</span>
+          YOUR WHOLE TEAM.{" "}
+          <span className="text-violet-400">ONE COACHING PLATFORM.</span>
         </h1>
         <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-slate-300">
-          Give your whole team an AI coach, a presentation rehearsal room, and a zero-friction audience feedback loop. Buy seats in minutes, manage everything from one dashboard — no sales call, no procurement cycle.
+          Live audience feedback, AI coaching, performance tracking over time, assignment management and a curated resource library — all in one platform your L&amp;D team controls. Buy seats in minutes. No sales call, no procurement cycle.
         </p>
 
         <div className="mb-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -157,9 +217,8 @@ export default function EnterprisePage() {
           </Link>
         </div>
 
-        {/* Trust metrics */}
         <div className="flex flex-wrap items-center justify-center gap-3">
-          {["No sales call required", "5-seat minimum", "Cancel any time"].map((label) => (
+          {["No sales call required", "5-seat minimum", "14-day free trial", "Cancel any time"].map((label) => (
             <span
               key={label}
               className="rounded-full border border-[#1e293b] bg-[#0f172a] px-4 py-1.5 text-sm text-slate-400"
@@ -170,7 +229,7 @@ export default function EnterprisePage() {
         </div>
       </section>
 
-      {/* 3. How it works */}
+      {/* How it works */}
       <section className="border-y border-[#1e293b] bg-[#0f172a]/50">
         <div className="mx-auto max-w-6xl px-6 py-20">
           <h2 className="mb-3 text-center text-2xl font-bold sm:text-3xl">How it works</h2>
@@ -182,7 +241,7 @@ export default function EnterprisePage() {
                 step: "01",
                 title: "Bring your team in",
                 time: "2 minutes",
-                body: "Create your organisation and invite your team. They join with their existing LearnFast account or sign up in seconds — no software to install, no IT ticketing.",
+                body: "Create your organisation, upload your logo and invite your team. They join with their existing LearnFast account or sign up in seconds — no software to install, no IT ticketing.",
               },
               {
                 step: "02",
@@ -194,13 +253,10 @@ export default function EnterprisePage() {
                 step: "03",
                 title: "Coach the whole team with data",
                 time: "Ongoing",
-                body: "Your dashboard shows individual trends and team-wide patterns side by side. Assign rehearsals, set targets, and watch scores move — session by session, person by person.",
+                body: "Your dashboard shows individual trends and team-wide patterns side by side. Drill into any member's performance history, assign rehearsals, and watch scores move — session by session, person by person.",
               },
             ].map(({ step, title, time, body }) => (
-              <div
-                key={step}
-                className="rounded-2xl border border-[#1e293b] bg-[#0f172a] p-7"
-              >
+              <div key={step} className="rounded-2xl border border-[#1e293b] bg-[#0f172a] p-7">
                 <div className="mb-4 flex items-center gap-3">
                   <span className="text-3xl font-black text-violet-500/40">{step}</span>
                   <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-2.5 py-0.5 text-xs font-semibold text-violet-400">
@@ -215,49 +271,67 @@ export default function EnterprisePage() {
         </div>
       </section>
 
-      {/* 4. Pricing & comparison */}
-      <section id="pricing" className="mx-auto max-w-6xl px-6 py-20">
-        <div className="mb-14 text-center">
-          <h2 className="mb-3 text-2xl font-bold sm:text-3xl">
-            Simple pricing. No contracts, no calls.
-          </h2>
-          <div className="mt-6 flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-6">
-            <div className="rounded-2xl border border-violet-500/30 bg-violet-500/10 px-8 py-5 text-center">
-              <p className="text-3xl font-black text-white">£15</p>
-              <p className="mt-1 text-sm text-slate-400">/ seat / month</p>
-              <p className="mt-2 text-xs font-semibold text-violet-400">5-seat minimum</p>
+      {/* Features grid */}
+      <section className="mx-auto max-w-6xl px-6 py-20">
+        <h2 className="mb-3 text-center text-2xl font-bold sm:text-3xl">Everything in the platform</h2>
+        <p className="mb-14 text-center text-slate-400 max-w-2xl mx-auto">
+          From the moment a presenter steps up to a year of tracked development — every tool they need is already here.
+        </p>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map(({ icon, title, body }) => (
+            <div key={title} className="rounded-2xl border border-[#1e293b] bg-[#0f172a] p-6">
+              <p className="text-3xl mb-4">{icon}</p>
+              <p className="font-bold text-sm uppercase tracking-wider mb-3 text-white">{title}</p>
+              <p className="text-sm text-slate-400 leading-relaxed">{body}</p>
             </div>
-            <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] px-8 py-5 text-center">
-              <p className="text-3xl font-black text-white">£12</p>
-              <p className="mt-1 text-sm text-slate-400">/ seat / month, billed annually</p>
-              <p className="mt-2 text-xs font-semibold text-green-400">Save 20%</p>
-            </div>
-          </div>
+          ))}
         </div>
+      </section>
 
-        {/* Comparison table */}
-        <div className="overflow-hidden rounded-2xl border border-[#1e293b] bg-[#0f172a]">
-          {/* Table header */}
-          <div className="grid grid-cols-3 border-b border-[#1e293b] bg-[#0a0f1a] px-6 py-4">
-            <p className="text-sm font-semibold text-slate-400">Feature</p>
-            <p className="text-sm font-semibold text-violet-400">LearnFast Enterprise</p>
-            <p className="text-sm font-semibold text-slate-400">Yoodli / Orai</p>
+      {/* Pricing & comparison */}
+      <section id="pricing" className="border-t border-[#1e293b] bg-[#0f172a]/50">
+        <div className="mx-auto max-w-6xl px-6 py-20">
+          <div className="mb-14 text-center">
+            <h2 className="mb-3 text-2xl font-bold sm:text-3xl">
+              Simple pricing. No contracts, no calls.
+            </h2>
+            <div className="mt-6 flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-6">
+              <div className="rounded-2xl border border-violet-500/30 bg-violet-500/10 px-8 py-5 text-center">
+                <p className="text-3xl font-black text-white">£15</p>
+                <p className="mt-1 text-sm text-slate-400">/ seat / month</p>
+                <p className="mt-2 text-xs font-semibold text-violet-400">5-seat minimum</p>
+              </div>
+              <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] px-8 py-5 text-center">
+                <p className="text-3xl font-black text-white">£12</p>
+                <p className="mt-1 text-sm text-slate-400">/ seat / month, billed annually</p>
+                <p className="mt-2 text-xs font-semibold text-green-400">Save 20%</p>
+              </div>
+            </div>
           </div>
 
-          <div className="divide-y divide-[#1e293b]">
-            {COMPARISON_ROWS.map((row) => (
-              <div key={row.feature} className="grid grid-cols-3 items-center gap-4 px-6 py-4">
-                <p className="text-sm text-slate-300">{row.feature}</p>
-                <CellIcon type={row.learnfast.type} label={row.learnfast.label} />
-                <CellIcon type={row.competitor.type} label={row.competitor.label} />
-              </div>
-            ))}
+          {/* Comparison table */}
+          <div className="overflow-hidden rounded-2xl border border-[#1e293b] bg-[#0f172a]">
+            <div className="grid grid-cols-3 border-b border-[#1e293b] bg-[#0a0f1a] px-6 py-4">
+              <p className="text-sm font-semibold text-slate-400">Feature</p>
+              <p className="text-sm font-semibold text-violet-400">LearnFast Enterprise</p>
+              <p className="text-sm font-semibold text-slate-400">Yoodli / Orai</p>
+            </div>
+
+            <div className="divide-y divide-[#1e293b]">
+              {COMPARISON_ROWS.map((row) => (
+                <div key={row.feature} className="grid grid-cols-3 items-center gap-4 px-6 py-4">
+                  <p className="text-sm text-slate-300">{row.feature}</p>
+                  <CellIcon type={row.learnfast.type} label={row.learnfast.label} />
+                  <CellIcon type={row.competitor.type} label={row.competitor.label} />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* 5. Five dimensions */}
-      <section className="border-y border-[#1e293b] bg-[#0f172a]/50">
+      {/* Five dimensions */}
+      <section className="border-y border-[#1e293b]">
         <div className="mx-auto max-w-6xl px-6 py-20">
           <h2 className="mb-3 text-center text-2xl font-bold sm:text-3xl">
             One framework. Five dimensions. Measurable progress.
@@ -272,9 +346,7 @@ export default function EnterprisePage() {
                 key={name}
                 className={`rounded-2xl border p-5 ${color.includes("purple") ? "border-purple-500/30 bg-purple-500/10" : color.includes("amber") ? "border-amber-500/30 bg-amber-500/10" : color.includes("cyan") ? "border-cyan-500/30 bg-cyan-500/10" : color.includes("emerald") ? "border-emerald-500/30 bg-emerald-500/10" : "border-pink-500/30 bg-pink-500/10"}`}
               >
-                <span
-                  className={`mb-3 inline-block rounded-full border px-3 py-1 text-xs font-semibold ${color}`}
-                >
+                <span className={`mb-3 inline-block rounded-full border px-3 py-1 text-xs font-semibold ${color}`}>
                   {name}
                 </span>
                 <p className="text-sm leading-relaxed text-slate-400">{desc}</p>
@@ -284,7 +356,7 @@ export default function EnterprisePage() {
         </div>
       </section>
 
-      {/* 6. CTA section */}
+      {/* CTA */}
       <section className="mx-auto max-w-6xl px-6 py-24 text-center">
         <h2 className="mb-4 text-3xl font-bold sm:text-4xl">
           Your best presenters are already using it.
@@ -309,21 +381,14 @@ export default function EnterprisePage() {
         </div>
       </section>
 
-      {/* 7. Footer */}
+      {/* Footer */}
       <footer className="border-t border-[#1e293b] px-6 py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-sm text-slate-500 sm:flex-row">
           <p>© 2026 LearnFast</p>
           <div className="flex items-center gap-6">
-            <Link href="/privacy" className="transition hover:text-slate-300">
-              Privacy
-            </Link>
-            <Link href="/terms" className="transition hover:text-slate-300">
-              Terms
-            </Link>
-            <a
-              href="mailto:info@learnfastapp.com"
-              className="transition hover:text-slate-300"
-            >
+            <Link href="/privacy" className="transition hover:text-slate-300">Privacy</Link>
+            <Link href="/terms" className="transition hover:text-slate-300">Terms</Link>
+            <a href="mailto:info@learnfastapp.com" className="transition hover:text-slate-300">
               info@learnfastapp.com
             </a>
           </div>
