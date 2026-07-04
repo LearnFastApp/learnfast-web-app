@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import OrgSidebar from "@/components/org-sidebar";
+import CreateRehearsalModal from "@/components/create-rehearsal-modal";
 import {
   AlertTriangle,
   BookOpen,
@@ -79,6 +80,7 @@ export default function OrgRehearsePage() {
   const [orgName, setOrgName] = useState("");
   const [myRole, setMyRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showRehearsalModal, setShowRehearsalModal] = useState(false);
 
   // Assignments state
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -272,13 +274,13 @@ export default function OrgRehearsePage() {
                   Assign rehearsal
                 </button>
               )}
-              <a
-                href="/dashboard"
+              <button
+                onClick={() => setShowRehearsalModal(true)}
                 className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 New rehearsal
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -438,13 +440,13 @@ export default function OrgRehearsePage() {
                     {/* Actions */}
                     {!isPrivileged && (
                       <div className="flex items-center gap-3 mt-3">
-                        <a
-                          href="/dashboard"
+                        <button
+                          onClick={() => setShowRehearsalModal(true)}
                           className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition-colors"
                         >
                           <Mic className="w-3.5 h-3.5" />
                           Start rehearsal
-                        </a>
+                        </button>
                         <button
                           onClick={() => handleMarkComplete(a.id)}
                           disabled={isLoading}
@@ -550,13 +552,13 @@ export default function OrgRehearsePage() {
             <p className="text-sm text-slate-500 max-w-xs">
               Click <strong className="text-slate-300">New rehearsal</strong> to record your first take and get AI coaching feedback.
             </p>
-            <a
-              href="/dashboard"
+            <button
+              onClick={() => setShowRehearsalModal(true)}
               className="mt-2 inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
             >
               <Plus className="w-4 h-4" />
               Start first rehearsal
-            </a>
+            </button>
           </div>
         ) : (
           <div className="space-y-3">
@@ -588,6 +590,11 @@ export default function OrgRehearsePage() {
         )}
       </div>
       </main>
+      {showRehearsalModal && (
+        <CreateRehearsalModal
+          onClose={() => { setShowRehearsalModal(false); fetchData(); }}
+        />
+      )}
     </div>
   );
 }
