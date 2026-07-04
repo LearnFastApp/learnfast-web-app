@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Check, X, Phone, ArrowRight } from "lucide-react";
 
 const DIMENSIONS = [
@@ -110,8 +111,12 @@ export default function EnterprisePage() {
       {/* 1. Nav bar */}
       <header className="sticky top-0 z-50 border-b border-[#1e293b] bg-[#05070d]/90 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/">
-            <img src="/logo.png" className="h-7 w-auto" alt="LearnFast" />
+          <Link href="/" className="flex items-center gap-2">
+            <Image src="/icon-mark.png" alt="LearnFast" width={32} height={23} />
+            <span className="text-base font-bold tracking-tight" style={{ color: "#5bb8f5" }}>
+              LEARN<span className="font-light">FAST</span>
+              <sup className="text-[0.5em] font-normal ml-0.5 align-super">™</sup>
+            </span>
           </Link>
           <div className="flex items-center gap-4">
             <Link
