@@ -119,6 +119,14 @@ export async function PATCH(
     updates.defaultLocale = dl;
   }
 
+  if (body.settings !== undefined) {
+    const s = body.settings as { managerCanViewIndividualSessions?: boolean };
+    updates["settings.managerCanViewIndividualSessions"] =
+      typeof s.managerCanViewIndividualSessions === "boolean"
+        ? s.managerCanViewIndividualSessions
+        : false;
+  }
+
   if (body.coachRoster !== undefined) {
     const cr = body.coachRoster as { enabled?: boolean; mode?: string; approvedCoachIds?: string[] };
     updates.coachRoster = {

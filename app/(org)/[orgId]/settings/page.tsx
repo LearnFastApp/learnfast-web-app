@@ -23,6 +23,7 @@ export default function OrgSettingsPage() {
   const [myRole, setMyRole] = useState<string | null>(null);
   const [coachRosterEnabled, setCoachRosterEnabled] = useState(true);
   const [coachRosterMode, setCoachRosterMode] = useState<"all" | "approved_only">("all");
+  const [managerCanViewSessions, setManagerCanViewSessions] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const [brandColor, setBrandColor] = useState("#8b5cf6");
@@ -50,6 +51,7 @@ export default function OrgSettingsPage() {
           setCoachRosterEnabled(d.coachRoster.enabled ?? true);
           setCoachRosterMode(d.coachRoster.mode ?? "all");
         }
+        setManagerCanViewSessions(d.settings?.managerCanViewIndividualSessions ?? false);
       }
     } catch {
       setError("Failed to load settings.");
@@ -123,6 +125,7 @@ export default function OrgSettingsPage() {
           brandColor: brandColor || null,
           defaultLocale,
           coachRoster: { enabled: coachRosterEnabled, mode: coachRosterMode, approvedCoachIds: [] },
+          settings: { managerCanViewIndividualSessions: managerCanViewSessions },
         }),
       });
       if (res.ok) {
@@ -357,6 +360,23 @@ export default function OrgSettingsPage() {
                   )}
                 </div>
               )}
+            </div>
+
+            {/* Privacy */}
+            <div className="bg-[#0f172a] border border-[#1e293b] rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-sm font-semibold text-white">Member performance visibility</label>
+                <button
+                  type="button"
+                  onClick={() => setManagerCanViewSessions(!managerCanViewSessions)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${managerCanViewSessions ? "bg-violet-600" : "bg-slate-700"}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${managerCanViewSessions ? "translate-x-6" : "translate-x-1"}`} />
+                </button>
+              </div>
+              <p className="text-xs text-slate-500">
+                Allow admins and coaches to view individual session histories for each team member. Off by default — aggregates only.
+              </p>
             </div>
 
             {/* Feedback */}

@@ -77,6 +77,7 @@ interface OrgInfo {
   name: string;
   myRole?: string | null;
   logoUrl?: string | null;
+  settings?: { managerCanViewIndividualSessions?: boolean };
 }
 
 interface Assignment {
@@ -226,6 +227,8 @@ export default function AnalyticsPage() {
     dimension: DIM_LABELS[d],
     value: orgAvgScores ? Number(orgAvgScores[d].toFixed(2)) : 0,
   }));
+
+  const canViewIndividual = orgInfo?.settings?.managerCanViewIndividualSessions === true;
 
   const sortedAssignments = assignments.slice().sort((a, b) => {
     if (!a.dueDate && !b.dueDate) return 0;
@@ -448,11 +451,9 @@ export default function AnalyticsPage() {
             </div>
           ) : (
             <div className="divide-y divide-[#1e293b]">
-              {members.map((m) => (
-                <div
-                  key={m.id}
-                  className="px-4 sm:px-6 py-4 flex flex-col sm:grid sm:grid-cols-[1fr_auto_auto_auto_auto_auto] sm:gap-4 sm:items-center gap-2"
-                >
+              {members.map((m) => {
+                const rowContent = (
+                  <>
                   {/* Name / email */}
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-white truncate">
@@ -515,8 +516,23 @@ export default function AnalyticsPage() {
                       {formatDate(m.lastSessionAt)}
                     </span>
                   </div>
-                </div>
-              ))}
+                </>
+                );
+                const rowClass = "px-4 sm:px-6 py-4 flex flex-col sm:grid sm:grid-cols-[1fr_auto_auto_auto_auto_auto] sm:gap-4 sm:items-center gap-2";
+                return canViewIndividual ? (
+                  <a
+                    key={m.id}
+                    href={`/${orgId}/members/${m.id}/performance`}
+                    className={`${rowClass} hover:bg-white/[0.02] transition-colors cursor-pointer`}
+                  >
+                    {rowContent}
+                  </a>
+                ) : (
+                  <div key={m.id} className={rowClass}>
+                    {rowContent}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
