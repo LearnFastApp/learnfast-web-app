@@ -172,6 +172,8 @@ export default function AnalyticsPage() {
       if (snap.exists()) {
         const data = snap.data();
         if (data.subscriptionStatus === "active" ||
+            data.subscriptionStatus === "lite" ||
+            data.orgId ||
             (data.subscriptionStatus === "pilot" && data.pilotExpiresAt?.toDate() > new Date())) {
           setSubscriptionStatus("active");
         }

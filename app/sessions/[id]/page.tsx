@@ -320,7 +320,7 @@ export default function LiveSessionPage() {
     getDoc(doc(db, "presenters", user.uid)).then((snap) => {
       if (snap.exists()) {
         const data = snap.data();
-        if (data.subscriptionStatus === "active") {
+        if (data.subscriptionStatus === "active" || data.subscriptionStatus === "lite" || data.orgId) {
           setSubscriptionStatus("active");
         } else if (data.subscriptionStatus === "pilot") {
           const expiry = data.pilotExpiresAt?.toDate?.() as Date | undefined;
