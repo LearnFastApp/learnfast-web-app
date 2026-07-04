@@ -62,6 +62,7 @@ export async function GET(
     stripeSubscriptionId: org.stripeSubscriptionId ?? null,
     myRole: ctx.role,
     logoUrl: org.logoUrl ?? null,
+    brandColor: (org.brandColor as string | undefined) ?? null,
     defaultLocale: (org.defaultLocale as string | undefined) ?? "en",
     coachRoster: org.coachRoster ?? { enabled: true, mode: "all", approvedCoachIds: [] },
   });
@@ -100,6 +101,14 @@ export async function PATCH(
       return NextResponse.json({ error: "invalid_logo_url" }, { status: 400 });
     }
     updates.logoUrl = url || null;
+  }
+
+  if ("brandColor" in body) {
+    const color = typeof body.brandColor === "string" ? body.brandColor.trim() : null;
+    if (color && !/^#[0-9a-fA-F]{6}$/.test(color)) {
+      return NextResponse.json({ error: "invalid_brand_color" }, { status: 400 });
+    }
+    updates.brandColor = color || null;
   }
 
   if (typeof body.defaultLocale === "string") {

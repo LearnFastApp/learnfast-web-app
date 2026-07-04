@@ -65,10 +65,12 @@ function NavItem({
       href={href}
       onClick={onClick}
       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-        active
-          ? "bg-violet-500/15 text-violet-300"
-          : "text-slate-400 hover:text-white hover:bg-white/5"
+        active ? "" : "text-slate-400 hover:text-white hover:bg-white/5"
       }`}
+      style={active
+        ? { background: "var(--org-accent-tint)", color: "var(--org-accent)" }
+        : undefined
+      }
     >
       <Icon className="w-4 h-4 shrink-0" />
       {label}

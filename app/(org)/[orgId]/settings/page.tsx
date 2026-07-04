@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Settings, Loader2, CheckCircle, AlertCircle, ImageIcon, Upload, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import OrgSidebar from "@/components/org-sidebar";
-import { useRef } from "react";
 import { ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
+import { getColorSync } from "colorthief";
 
 export default function OrgSettingsPage() {
   const router = useRouter();
@@ -25,6 +25,7 @@ export default function OrgSettingsPage() {
   const [coachRosterMode, setCoachRosterMode] = useState<"all" | "approved_only">("all");
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const [brandColor, setBrandColor] = useState("#8b5cf6");
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoUploadProgress, setLogoUploadProgress] = useState(0);
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -42,6 +43,7 @@ export default function OrgSettingsPage() {
         const d = await res.json();
         setOrgName(d.name ?? "");
         setLogoUrl(d.logoUrl ?? "");
+        setBrandColor(d.brandColor ?? "#8b5cf6");
         setDefaultLocale((d.defaultLocale as "en" | "fr") ?? "en");
         setMyRole(d.myRole ?? null);
         if (d.coachRoster) {
@@ -82,6 +84,16 @@ export default function OrgSettingsPage() {
           async () => {
             const url = await getDownloadURL(task.snapshot.ref);
             setLogoUrl(url);
+            // Extract dominant color from the uploaded image
+            try {
+              const img = new Image();
+              img.crossOrigin = "anonymous";
+              img.onload = () => {
+                const color = getColorSync(img);
+                if (color) setBrandColor(color.hex());
+              };
+              img.src = url;
+            } catch { /* ignore — user can set manually */ }
             resolve();
           }
         );
@@ -108,6 +120,7 @@ export default function OrgSettingsPage() {
         body: JSON.stringify({
           name: orgName,
           logoUrl: logoUrl || null,
+          brandColor: brandColor || null,
           defaultLocale,
           coachRoster: { enabled: coachRosterEnabled, mode: coachRosterMode, approvedCoachIds: [] },
         }),
@@ -227,6 +240,44 @@ export default function OrgSettingsPage() {
                       <div className="h-full bg-violet-500 transition-all" style={{ width: `${logoUploadProgress}%` }} />
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* Brand colour */}
+              <div className="mt-5 pt-5 border-t border-[#1e293b]">
+                <label className="block text-sm font-semibold text-white mb-1">
+                  Brand colour
+                </label>
+                <p className="text-xs text-slate-500 mb-3">
+                  Auto-extracted from your logo. Used for active nav highlights and accents across your workspace.
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-[#1e293b] shrink-0">
+                    <div className="absolute inset-0" style={{ background: brandColor }} />
+                    <input
+                      type="color"
+                      value={brandColor}
+                      onChange={(e) => setBrandColor(e.target.value)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    value={brandColor}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (/^#[0-9a-fA-F]{0,6}$/.test(v)) setBrandColor(v);
+                    }}
+                    maxLength={7}
+                    className="w-28 bg-[#0a0f1a] border border-[#1e293b] rounded-xl px-3 py-2 text-white text-sm font-mono focus:outline-none focus:border-violet-500 transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setBrandColor("#8b5cf6")}
+                    className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+                  >
+                    Reset to default
+                  </button>
                 </div>
               </div>
             </div>
