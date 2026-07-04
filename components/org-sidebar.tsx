@@ -14,6 +14,7 @@ import {
   CreditCard,
   Settings,
   TrendingUp,
+  UserRound,
   Menu,
   X,
   LogOut,
@@ -33,7 +34,8 @@ const MEMBER_NAV = [
   { segment: "my-sessions",  label: "My Performance",      icon: BarChart2 },
   { segment: "rehearse",     label: "AI Analysis",         icon: Brain },
   { segment: "community",    label: "Team Coaching Feed",  icon: MessageSquare },
-  { segment: "learning-hub", label: "Resource Hub",        icon: BookOpen, href: "/learning-hub" },
+  { segment: "learning-hub", label: "Resource Hub",        icon: BookOpen,    href: "/learning-hub" },
+  { segment: "coaches",      label: "Coach Roster",        icon: UserRound,   href: "/coaches" },
 ];
 
 // Visible to coach, admin, owner — org-wide analytics view
