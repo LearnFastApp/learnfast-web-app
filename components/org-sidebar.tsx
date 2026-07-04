@@ -27,6 +27,7 @@ interface OrgSidebarProps {
 
 const MEMBER_NAV = [
   { segment: "dashboard",   label: "Dashboard",           icon: LayoutDashboard },
+  { segment: "sessions",    label: "Sessions",            icon: CalendarDays },
   { segment: "my-sessions", label: "Analytics",           icon: BarChart2 },
   { segment: "rehearse",    label: "AI Analysis",         icon: Brain },
   { segment: "community",   label: "Team Coaching Feed",  icon: MessageSquare },
@@ -34,7 +35,6 @@ const MEMBER_NAV = [
 ];
 
 const ADMIN_NAV = [
-  { segment: "sessions", label: "Sessions",  icon: CalendarDays },
   { segment: "members",  label: "Members",   icon: Users },
   { segment: "billing",  label: "Billing",   icon: CreditCard },
   { segment: "settings", label: "Settings",  icon: Settings },

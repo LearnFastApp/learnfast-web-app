@@ -6,6 +6,7 @@ import {
   BarChart2,
   Brain,
   BookOpen,
+  CalendarDays,
   Loader2,
   Mic,
   ArrowRight,
@@ -254,9 +255,10 @@ export default function OrgDashboardPage() {
           </div>
 
           {/* Quick actions */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {[
-              { href: `/${orgId}/rehearse`,   icon: Brain,        label: "Start a rehearsal",    sub: "Practice with AI feedback" },
+              { href: `/${orgId}/sessions`,   icon: CalendarDays,  label: "Start a session",     sub: "Run live audience feedback" },
+              { href: `/${orgId}/rehearse`,   icon: Brain,         label: "Start a rehearsal",   sub: "Practice with AI feedback" },
               { href: `/${orgId}/community`,  icon: MessageSquare, label: "Team coaching feed",  sub: "See what your team is sharing" },
               { href: `/${orgId}/resources`,  icon: BookOpen,      label: "Resource hub",        sub: "Browse learning resources" },
             ].map(({ href, icon: Icon, label, sub }) => (

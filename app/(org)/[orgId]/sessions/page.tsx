@@ -8,7 +8,7 @@ import {
   Plus, QrCode, Save, Trash2, Users, X, ChevronDown, Radio,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import MobileNav from "@/components/mobile-nav";
+import OrgSidebar from "@/components/org-sidebar";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db as clientDb } from "@/lib/firebase";
 import type { OrgSessionType, OrgSessionStatus, OrgRole } from "@/types/enterprise";
@@ -294,29 +294,17 @@ export default function SessionsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#05070d]">
-      <MobileNav />
-      <div className="max-w-3xl mx-auto px-6 py-12">
+    <div className="min-h-screen bg-[#05070d] text-white">
+      <OrgSidebar orgName={orgName} myRole={myRole} />
+      <main className="md:ml-60 pt-16 md:pt-0">
+      <div className="max-w-3xl mx-auto px-6 py-10">
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div>
-            <p className="text-xs font-semibold text-violet-400 uppercase tracking-widest mb-1">
-              {orgName || "Organisation"}
-            </p>
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
               <Calendar className="w-6 h-6 text-slate-400" />
               Sessions
             </h1>
-            <div className="flex items-center gap-4 mt-2">
-              <a href={`/${orgId}/members`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Members</a>
-              <a href={`/${orgId}/billing`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Billing</a>
-              <a href={`/${orgId}/content`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Content</a>
-              <span className="text-sm text-violet-400 font-medium">Sessions</span>
-              <a href={`/${orgId}/rehearse`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Rehearse</a>
-              {isAdmin && <a href={`/${orgId}/analytics`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Analytics</a>}
-              <a href={`/${orgId}/my-sessions`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">My sessions</a>
-              <a href={`/${orgId}/community`} className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Community</a>
-            </div>
           </div>
           <button
             onClick={() => {
@@ -551,7 +539,8 @@ export default function SessionsPage() {
           </div>
         )}
       </div>
-    </main>
+      </main>
+    </div>
   );
 }
 
