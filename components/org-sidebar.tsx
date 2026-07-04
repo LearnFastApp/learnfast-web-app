@@ -27,12 +27,12 @@ interface OrgSidebarProps {
 }
 
 const MEMBER_NAV = [
-  { segment: "dashboard",   label: "Dashboard",           icon: LayoutDashboard },
-  { segment: "sessions",    label: "Sessions",            icon: CalendarDays },
-  { segment: "my-sessions", label: "My Performance",      icon: BarChart2 },
-  { segment: "rehearse",    label: "AI Analysis",         icon: Brain },
-  { segment: "community",   label: "Team Coaching Feed",  icon: MessageSquare },
-  { segment: "resources",   label: "Resource Hub",        icon: BookOpen },
+  { segment: "dashboard",    label: "Dashboard",           icon: LayoutDashboard },
+  { segment: "sessions",     label: "Sessions",            icon: CalendarDays },
+  { segment: "my-sessions",  label: "My Performance",      icon: BarChart2 },
+  { segment: "rehearse",     label: "AI Analysis",         icon: Brain },
+  { segment: "community",    label: "Team Coaching Feed",  icon: MessageSquare },
+  { segment: "learning-hub", label: "Resource Hub",        icon: BookOpen, href: "/learning-hub" },
 ];
 
 // Visible to coach, admin, owner — org-wide analytics view
@@ -118,13 +118,13 @@ function SidebarContent({
 
       {/* Member nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-        {MEMBER_NAV.map(({ segment, label, icon }) => (
+        {MEMBER_NAV.map(({ segment, label, icon, href: itemHref }) => (
           <NavItem
             key={segment}
-            href={`/${orgId}/${segment}`}
+            href={itemHref ?? `/${orgId}/${segment}`}
             label={label}
             icon={icon}
-            active={isActive(segment)}
+            active={itemHref ? pathname === itemHref : isActive(segment)}
             onClick={onNavClick}
           />
         ))}
