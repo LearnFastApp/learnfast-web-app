@@ -118,6 +118,11 @@ env:
     value: "true"
     availability:
       - RUNTIME
+  - variable: NEXT_PUBLIC_FEATURE_CONTEXTS
+    value: "true"
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: STRIPE_ENTERPRISE_PRICE_ID_MONTHLY
     secret: STRIPE_ENTERPRISE_PRICE_ID_MONTHLY
     availability:
