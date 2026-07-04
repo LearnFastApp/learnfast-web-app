@@ -12,6 +12,16 @@ export function isEnterpriseEnabled(): boolean {
 }
 
 /**
+ * Context Engine feature flag (Context-Aware Assessment V1).
+ * Set NEXT_PUBLIC_FEATURE_CONTEXTS=true in apphosting.yaml to enable.
+ * When disabled, all flows behave exactly as before — contextId defaults to "general"
+ * and no context UI is shown.
+ */
+export function isContextsEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_FEATURE_CONTEXTS === "true";
+}
+
+/**
  * Convenience assertion for API routes. Throws a typed error object
  * so callers can return a consistent 403 response.
  *

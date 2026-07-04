@@ -22,6 +22,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { classifyArchetype, ARCHETYPE_DEFS } from "@/lib/archetypes";
+import { trackAssessmentCompleted } from "@/lib/contexts/analytics";
 
 const DIMENSIONS = [
   "clarity",
@@ -75,6 +76,7 @@ interface AssessmentData {
   error?: string;
   assessmentId?: string;
   guestToken?: string;
+  contextLabelAtTime?: string;
 }
 
 function SignUpCTA({
@@ -129,9 +131,11 @@ export default function GuestResultsPage() {
           setAssessment({ status: "failed", error: "not_found" });
           return;
         }
-        const data = (await res.json()) as AssessmentData;
+        const data = (await res.json()) as AssessmentData & { contextId?: string; contextPromptVersion?: string };
         setAssessment(data);
-        if (data.status !== "complete" && data.status !== "failed") {
+        if (data.status === "complete") {
+          trackAssessmentCompleted(data.contextId ?? "general", data.contextPromptVersion ?? "1.0.0");
+        } else if (data.status !== "failed") {
           pollRef.current = setTimeout(poll, 5000);
         }
       } catch {
@@ -242,7 +246,7 @@ export default function GuestResultsPage() {
       </header>
 
       <div className="mx-auto max-w-4xl px-6 py-8 space-y-8">
-        {/* File info */}
+        {/* File info + context badge */}
         {assessment.fileName && (
           <div className="flex items-center gap-2 flex-wrap">
             <Brain className="h-4 w-4 text-amber-400 shrink-0" />
@@ -255,6 +259,9 @@ export default function GuestResultsPage() {
                 · {assessment.wordsPerMinute} words/min
               </span>
             )}
+            <span className="ml-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/20">
+              {assessment.contextLabelAtTime ?? "General Presentation"}
+            </span>
           </div>
         )}
 

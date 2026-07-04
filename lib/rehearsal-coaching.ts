@@ -2,6 +2,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { LANGUAGE_NAMES } from "./language-names";
 import { AI_MODEL } from "./ai-model";
 import type { AssessmentScores } from "./ai-assessment-analysis";
+import { getContext } from "./contexts/registry";
+import { buildContextPromptBlock } from "./contexts/prompts";
 
 export interface RehearsalCoaching {
   scores: AssessmentScores;
@@ -34,6 +36,7 @@ export async function coachRehearsalTake(opts: {
   takeNumber: number;
   previousTake: PreviousTakeContext | null;
   locale?: string;
+  contextId?: string;
 }): Promise<RehearsalCoaching> {
   const client = getClient();
 
@@ -47,6 +50,9 @@ export async function coachRehearsalTake(opts: {
       : "0";
 
   const lang = LANGUAGE_NAMES[opts.locale ?? "en"] ?? "English";
+
+  const assessmentContext = getContext(opts.contextId ?? "general");
+  const contextPromptBlock = buildContextPromptBlock(assessmentContext);
 
   const contextBlock = opts.previousTake
     ? `This is Take ${opts.takeNumber}. The presenter's previous take (Take ${opts.previousTake.takeNumber}) scored:
@@ -64,7 +70,7 @@ Your "comparison" field MUST reference these scores explicitly — name what mov
 This presenter has chosen to rehearse. They are investing in themselves. Your job is to be their trusted coach through every take — specific, honest, encouraging, and always focused on what will make the next take better.
 
 LANGUAGE: Write all fields in ${lang}.
-
+${contextPromptBlock}
 ${contextBlock}
 
 SCORING CALIBRATION — apply this rigorously:

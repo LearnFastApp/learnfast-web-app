@@ -1,6 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { LANGUAGE_NAMES } from "./language-names";
 import { AI_MODEL } from "./ai-model";
+import { getContext } from "./contexts/registry";
+import { buildContextPromptBlock } from "./contexts/prompts";
 
 const DIMENSIONS = ["clarity", "energy", "engagement", "understanding", "connection"] as const;
 type Dimension = (typeof DIMENSIONS)[number];
@@ -54,6 +56,7 @@ export async function analyseTranscript(opts: {
   locale?: string;
   industry?: string | null;
   priorAssessments?: PriorAssessmentContext[];
+  contextId?: string;
 }): Promise<AssessmentAnalysis> {
   const client = getClient();
 
@@ -66,6 +69,9 @@ export async function analyseTranscript(opts: {
   const durationMins = Math.round(opts.audioDurationSeconds / 60);
 
   const lang = LANGUAGE_NAMES[opts.locale ?? "en"] ?? "English";
+
+  const context = getContext(opts.contextId ?? "general");
+  const contextBlock = buildContextPromptBlock(context);
 
   const industryCtx = opts.industry
     ? `\nPRESENTER CONTEXT: Industry/sector — ${opts.industry}. Tailor coaching language and examples to this professional context where relevant.\n`
@@ -82,7 +88,7 @@ In the summary, include ONE sentence noting the most significant change since th
 
   const prompt = `You are an expert presentation coach scoring a presenter across five core communication dimensions.
 LANGUAGE: Write all text fields (rationale, highlights, tips, summary) in ${lang}.
-${industryCtx}${historyBlock}
+${contextBlock}${industryCtx}${historyBlock}
 
 SCORING CALIBRATION — apply this strictly. Scores reflect professional presentation standards, not personal encouragement:
 - 85–100: Exceptional. Conference keynote or TED-talk quality. Rare — only award when the evidence strongly supports it.

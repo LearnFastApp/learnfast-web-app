@@ -108,6 +108,7 @@ export async function GET(
       locale: transcript.language_code ?? "en",
       industry: null,
       priorAssessments: [],
+      contextId: (data.contextId as string | undefined) ?? "general",
     });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);

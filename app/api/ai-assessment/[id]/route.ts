@@ -117,6 +117,7 @@ export async function GET(
       locale,
       industry: (data.industry as string | undefined) ?? null,
       priorAssessments,
+      contextId: (data.contextId as string | undefined) ?? "general",
     });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);

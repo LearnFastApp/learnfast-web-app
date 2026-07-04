@@ -14,6 +14,11 @@ import {
   Loader2,
   Mail,
 } from "lucide-react";
+import { getEnabledContexts } from "@/lib/contexts/registry";
+import { isContextsEnabled } from "@/lib/feature-flags";
+import { trackContextSelected } from "@/lib/contexts/analytics";
+
+const CONTEXTS = isContextsEnabled() ? getEnabledContexts() : [];
 
 type Tab = "record" | "upload";
 type RecordStage = "idle" | "requesting" | "recording" | "preview";
@@ -117,6 +122,7 @@ async function trimAudioTo90s(file: File): Promise<{ blob: Blob; trimmed: boolea
 export default function TryPage() {
   const [tab, setTab] = useState<Tab>("record");
   const [email, setEmail] = useState("");
+  const [contextId, setContextId] = useState("general");
   const [pageStage, setPageStage] = useState<PageStage>("form");
   const [errorMsg, setErrorMsg] = useState("");
   const [dragOver, setDragOver] = useState(false);
@@ -322,6 +328,7 @@ export default function TryPage() {
       const formData = new FormData();
       formData.append("email", trimmedEmail);
       formData.append("file", audioBlob, fileName);
+      formData.append("contextId", contextId);
 
       const res = await fetch("/api/guest-assessment", {
         method: "POST",
@@ -599,6 +606,32 @@ export default function TryPage() {
               </>
             )}
           </button>
+
+          {/* Context selector — optional, visually secondary, below primary CTA */}
+          {CONTEXTS.length > 0 && (
+            <div className="pt-1">
+              <label className="block text-xs text-slate-500 mb-1.5">
+                What are you rehearsing? <span className="text-slate-600">(optional — default: General)</span>
+              </label>
+              <select
+                value={contextId}
+                onChange={(e) => {
+                  setContextId(e.target.value);
+                  if (e.target.value !== "general") trackContextSelected(e.target.value, "try");
+                }}
+                className="w-full bg-[#0d1117] border border-white/[0.07] rounded-xl px-3 py-2.5 text-sm text-slate-400 outline-none focus:border-violet-500/50 focus:text-white transition appearance-none"
+              >
+                {CONTEXTS.map((c) => (
+                  <option key={c.contextId} value={c.contextId}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-slate-600">
+                We&apos;ll tailor your feedback to what this presentation needs to achieve.
+              </p>
+            </div>
+          )}
 
           <p className="text-center text-xs text-slate-600">
             One free assessment per email · No account required · Any length · First 90s analysed

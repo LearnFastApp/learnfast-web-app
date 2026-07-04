@@ -3,6 +3,7 @@ import { createHash } from "crypto";
 import { Timestamp } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { uploadAndSubmitTranscription } from "@/lib/assemblyai-client";
+import { getContext } from "@/lib/contexts/registry";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,10 @@ export async function POST(req: NextRequest) {
   let fileBuffer: Buffer;
   let fileName: string;
 
+  let contextId: string;
+  let contextLabelAtTime: string;
+  let contextPromptVersion: string;
+
   try {
     const formData = await req.formData();
     email = ((formData.get("email") as string) ?? "").toLowerCase().trim();
@@ -29,6 +34,11 @@ export async function POST(req: NextRequest) {
     if (file.size > MAX_FILE_BYTES) return NextResponse.json({ error: "file_too_large" }, { status: 400 });
     fileName = file.name || "recording";
     fileBuffer = Buffer.from(await file.arrayBuffer());
+    const rawContextId = ((formData.get("contextId") as string) ?? "general").trim() || "general";
+    const resolvedContext = getContext(rawContextId);
+    contextId = resolvedContext.contextId;
+    contextLabelAtTime = resolvedContext.label;
+    contextPromptVersion = resolvedContext.promptVersion;
   } catch {
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   }
@@ -68,6 +78,9 @@ export async function POST(req: NextRequest) {
     status: "queued",
     assemblyAiId: null,
     scores: null,
+    contextId,
+    contextLabelAtTime,
+    contextPromptVersion,
   });
 
   // Token index for O(1) lookup

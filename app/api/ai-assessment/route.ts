@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
 import { submitTranscription } from "@/lib/assemblyai-client";
+import { getContext } from "@/lib/contexts/registry";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +57,8 @@ export async function POST(req: NextRequest) {
   const fileName = typeof body.fileName === "string" ? body.fileName : "recording";
   const storagePath = typeof body.storagePath === "string" ? body.storagePath : null;
   const sessionId = typeof body.sessionId === "string" ? body.sessionId : null;
+  const rawContextId = typeof body.contextId === "string" ? body.contextId : "general";
+  const resolvedContext = getContext(rawContextId);
 
   if (!downloadUrl) return NextResponse.json({ error: "Missing downloadUrl" }, { status: 400 });
 
@@ -79,6 +82,9 @@ export async function POST(req: NextRequest) {
     assemblyAiId: null,
     scores: null,
     analysis: null,
+    contextId: resolvedContext.contextId,
+    contextLabelAtTime: resolvedContext.label,
+    contextPromptVersion: resolvedContext.promptVersion,
   });
 
   // Link assessment back to the session doc so the session page can find it by direct read

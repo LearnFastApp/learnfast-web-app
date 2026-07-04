@@ -3,6 +3,7 @@ import { Timestamp } from "firebase-admin/firestore";
 import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
 import { uploadAndSubmitTranscription } from "@/lib/assemblyai-client";
 import { uploadTakeAudio } from "@/lib/r2-client";
+import { getContext } from "@/lib/contexts/registry";
 
 export const dynamic = "force-dynamic";
 
@@ -95,12 +96,20 @@ export async function POST(req: NextRequest) {
   let tags: string[];
   let fileBuffer: Buffer;
   let fileName: string;
+  let contextId: string;
+  let contextLabelAtTime: string;
+  let contextPromptVersion: string;
 
   try {
     const formData = await req.formData();
     title = ((formData.get("title") as string) ?? "").trim();
     const rawTags = (formData.get("tags") as string) ?? "[]";
     tags = JSON.parse(rawTags) as string[];
+    const rawContextId = ((formData.get("contextId") as string) ?? "general").trim() || "general";
+    const resolvedContext = getContext(rawContextId);
+    contextId = resolvedContext.contextId;
+    contextLabelAtTime = resolvedContext.label;
+    contextPromptVersion = resolvedContext.promptVersion;
     const file = formData.get("file") as File | null;
     if (!file) return NextResponse.json({ error: "missing_file" }, { status: 400 });
     if (file.size > MAX_FILE_BYTES) return NextResponse.json({ error: "file_too_large" }, { status: 400 });
@@ -140,6 +149,9 @@ export async function POST(req: NextRequest) {
     orgId: gate.orgId ?? null,
     promotedTakeId: null,
     promotedAssessmentId: null,
+    contextId,
+    contextLabelAtTime,
+    contextPromptVersion,
   });
 
   const mimeType = fileName.endsWith(".webm") ? "audio/webm" : "audio/mpeg";

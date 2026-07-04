@@ -4,6 +4,11 @@ import { useState, useRef, useEffect, KeyboardEvent } from "react";
 import { X, Mic, UploadCloud, Tag, Square, RotateCcw } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
+import { getEnabledContexts } from "@/lib/contexts/registry";
+import { isContextsEnabled } from "@/lib/feature-flags";
+import { trackContextSelected } from "@/lib/contexts/analytics";
+
+const CONTEXTS = isContextsEnabled() ? getEnabledContexts() : [];
 
 const ACCEPTED_TYPES = ["video/mp4","video/quicktime","video/webm","audio/mpeg","audio/wav","audio/mp4","audio/x-m4a","audio/webm"];
 const MAX_SIZE_BYTES = 50 * 1024 * 1024;
@@ -27,6 +32,7 @@ export default function CreateRehearsalModal({ onClose, locale = "en" }: Props) 
   const [title, setTitle] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const [contextId, setContextId] = useState("general");
   const [errorMsg, setErrorMsg] = useState("");
 
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
@@ -106,6 +112,7 @@ export default function CreateRehearsalModal({ onClose, locale = "en" }: Props) 
       const formData = new FormData();
       formData.append("title", title.trim());
       formData.append("tags", JSON.stringify(tags));
+      formData.append("contextId", contextId);
       formData.append("file", blob, tab === "record" ? "rehearsal.webm" : (uploadFile as File).name);
 
       const res = await fetch("/api/rehearsal", {
@@ -195,6 +202,39 @@ export default function CreateRehearsalModal({ onClose, locale = "en" }: Props) 
               />
             </div>
           </div>
+
+          {/* Context selector — only shown when feature flag is on */}
+          {CONTEXTS.length > 0 && (
+            <div>
+              <label className="mb-1.5 block text-sm text-slate-400">
+                {isFr ? "Qu'est-ce que vous répétez ?" : "What are you rehearsing?"}
+              </label>
+              <select
+                value={contextId}
+                onChange={(e) => {
+                  setContextId(e.target.value);
+                  trackContextSelected(e.target.value, "app");
+                }}
+                className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white text-sm outline-none focus:border-violet-500 appearance-none"
+              >
+                {CONTEXTS.map((c) => (
+                  <option key={c.contextId} value={c.contextId}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+              {contextId && CONTEXTS.find((c) => c.contextId === contextId) && (
+                <p className="mt-1.5 text-xs text-slate-500">
+                  {CONTEXTS.find((c) => c.contextId === contextId)!.description}
+                </p>
+              )}
+              <p className="mt-1 text-xs text-slate-600">
+                {isFr
+                  ? "Nous adapterons vos retours à l'objectif de cette présentation."
+                  : "We'll tailor your feedback to what this presentation needs to achieve."}
+              </p>
+            </div>
+          )}
 
           {/* Tabs */}
           <div className="flex gap-1 rounded-xl bg-white/5 p-1">

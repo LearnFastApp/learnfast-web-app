@@ -107,6 +107,9 @@ export async function GET(
     }
   }
 
+  // Pass context from session doc down to the coaching function
+  const sessionContextId = (sessionSnap.data()!.contextId as string | undefined) ?? "general";
+
   let coaching;
   try {
     coaching = await coachRehearsalTake({
@@ -120,6 +123,7 @@ export async function GET(
       takeNumber,
       previousTake,
       locale: languageCode,
+      contextId: sessionContextId,
     });
   } catch (err) {
     console.error("[rehearsal/takeId] Coaching failed:", err);
