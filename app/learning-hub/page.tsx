@@ -21,7 +21,7 @@ const DIMENSIONS: { key: Dimension; label: string; labelFr: string; dot: string;
 
 interface Article { title: string; url: string; source: string }
 interface Video   { videoId: string; title: string; channelTitle: string; thumbnail: string }
-interface Podcast { title: string; url: string; podcastTitle: string; duration?: number }
+interface Podcast { title: string; author: string; description: string; image: string; link: string }
 interface Webinar { id: string; title: string; date: string; url: string; organiser?: string }
 
 interface ResourcePayload {
@@ -73,7 +73,7 @@ export default function LearningHubPage() {
 
     fetch(`/api/resources/podcasts?dimension=${dim}`, { headers })
       .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d?.episodes) setPodcasts(d.episodes); })
+      .then((d) => { if (d?.podcasts) setPodcasts(d.podcasts); })
       .finally(() => setLoadingPod(false));
 
     fetch(`/api/webinars?dimension=${dim}`)
@@ -228,7 +228,7 @@ export default function LearningHubPage() {
               {podcasts.map((p, i) => (
                 <a
                   key={i}
-                  href={p.url}
+                  href={p.link}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex items-center justify-between rounded-2xl border border-white/10 bg-[#0f172a] px-5 py-4 hover:border-white/20 hover:bg-white/[0.03] transition-all"
@@ -238,7 +238,7 @@ export default function LearningHubPage() {
                       {p.title}
                     </p>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      {p.podcastTitle}{p.duration ? ` · ${formatDuration(p.duration)}` : ""}
+                      {p.author}
                     </p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-slate-400 shrink-0 ml-4 transition-colors" />
