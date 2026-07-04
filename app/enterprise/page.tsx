@@ -134,8 +134,8 @@ export default function EnterprisePage() {
           Enterprise
         </span>
         <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-          Presentation Delivery Feedback{" "}
-          <span className="text-violet-400">For Your Whole Team.</span>
+          PRESENTATION DELIVERY FEEDBACK{" "}
+          <span className="text-violet-400">FOR YOUR WHOLE TEAM.</span>
         </h1>
         <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-slate-300">
           Give your whole team an AI coach, a presentation rehearsal room, and a zero-friction audience feedback loop. Buy seats in minutes, manage everything from one dashboard — no sales call, no procurement cycle.
