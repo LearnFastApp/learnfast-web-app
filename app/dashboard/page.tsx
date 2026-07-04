@@ -354,7 +354,7 @@ export default function Dashboard() {
     ...(canSeeLeaderboard ? [{ label: isFr ? "Classement" : "Leaderboard", icon: Trophy, href: "/leaderboard" }] : []),
     { label: isFr ? "Feed coaching" : "Coaching Feed", icon: Users, href: "/feed" },
     ...(orgId ? [{ label: "Organisation", icon: Building2, href: `/${orgId}/members` }] : []),
-    { label: isFr ? "Hub de ressources" : "Premium Resource Hub", icon: BookOpen, href: "#", comingSoon: true },
+    { label: isFr ? "Contenu éducatif" : "Educational Content", icon: BookOpen, href: "#", comingSoon: true },
     { label: isFr ? "Paramètres" : "Settings", icon: Settings, href: "/settings" },
   ];
 
@@ -583,24 +583,16 @@ export default function Dashboard() {
                 <Building2 className="h-4 w-4 text-violet-400" />
                 <p className="text-sm text-violet-300">{isFr ? "Vous êtes membre d'une organisation." : "You're part of an organisation."}</p>
               </div>
-              <div className="flex items-center gap-3 shrink-0">
-                {(orgRole === "owner" || orgRole === "admin") && (
-                  <>
-                    <a href={`/${orgId}/members`} className="text-xs font-semibold text-violet-300 hover:text-white transition">
-                      {isFr ? "Membres" : "Members"}
-                    </a>
-                    <a href={`/${orgId}/billing`} className="text-xs font-semibold text-violet-300 hover:text-white transition">
-                      {isFr ? "Facturation" : "Billing"}
-                    </a>
-                  </>
-                )}
-                <a href={`/${orgId}/content`} className="text-xs font-semibold text-violet-300 hover:text-white transition">
-                  {isFr ? "Contenu" : "Content"}
-                </a>
-                <a href={`/${orgId}/sessions`} className="text-xs font-semibold text-violet-300 hover:text-white transition">
-                  {isFr ? "Séances" : "Sessions"}
-                </a>
-              </div>
+              {(orgRole === "owner" || orgRole === "admin") && (
+                <div className="flex items-center gap-3 shrink-0">
+                  <a href={`/${orgId}/members`} className="text-xs font-semibold text-violet-300 hover:text-white transition">
+                    {isFr ? "Membres" : "Members"}
+                  </a>
+                  <a href={`/${orgId}/billing`} className="text-xs font-semibold text-violet-300 hover:text-white transition">
+                    {isFr ? "Facturation" : "Billing"}
+                  </a>
+                </div>
+              )}
             </div>
           )}
 
