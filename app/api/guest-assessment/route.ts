@@ -81,6 +81,7 @@ export async function POST(req: NextRequest) {
     contextId,
     contextLabelAtTime,
     contextPromptVersion,
+    userLocale: "en",
   });
 
   // Token index for O(1) lookup

@@ -95,7 +95,7 @@ export async function GET(
   // AssemblyAI complete — run Claude analysis
   const words = transcript.words ?? [];
   const wordCount = words.length;
-  const fillerWordCount = countFillerWords(words);
+  const fillerWordCount = countFillerWords(words, transcript.language_code ?? undefined);
   const audioDurationSeconds = transcript.audio_duration ?? 0;
 
   const sentiments = transcript.sentiment_analysis_results ?? [];
@@ -115,6 +115,7 @@ export async function GET(
       neutralPercent,
       negativePercent,
       locale,
+      userLocale: (data.userLocale as string | undefined) ?? "en",
       industry: (data.industry as string | undefined) ?? null,
       priorAssessments,
       contextId: (data.contextId as string | undefined) ?? "general",

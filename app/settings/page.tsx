@@ -15,6 +15,8 @@ import MobileNav from "@/components/mobile-nav";
 import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { INDUSTRIES } from "@/lib/industries";
+import { useLocale, useSetLocale, useTranslations } from "@/lib/i18n";
+import { trackLocaleSet } from "@/lib/locale/analytics";
 
 interface PresenterData {
   displayName?: string;
@@ -30,6 +32,10 @@ interface PresenterData {
 export default function SettingsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
+  const setLocale = useSetLocale();
+  const t = useTranslations("settings");
+  const isFr = locale === "fr";
 
   const [presenter, setPresenter] = useState<PresenterData>({});
   const [sessionCount, setSessionCount] = useState(0);
@@ -59,7 +65,6 @@ export default function SettingsPage() {
   const [pilotSuccess, setPilotSuccess] = useState("");
 
   // Language
-  const [locale, setLocale] = useState<"en" | "fr">("en");
   const [localeSaving, setLocaleSaving] = useState(false);
   const [localeSaved, setLocaleSaved] = useState(false);
 
@@ -71,8 +76,6 @@ export default function SettingsPage() {
   const [nicknameSaving, setNicknameSaving] = useState(false);
   const [nicknameSaved, setNicknameSaved] = useState(false);
   const [nicknameError, setNicknameError] = useState("");
-
-  const isFr = locale === "fr";
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth/login");
@@ -86,7 +89,6 @@ export default function SettingsPage() {
       if (snap.exists()) {
         const data = snap.data() as PresenterData;
         setPresenter(data);
-        if (data.locale === "fr") setLocale("fr");
         if (data.nickname) setNickname(data.nickname);
         if (data.industry) setIndustry(data.industry);
       }
@@ -113,7 +115,7 @@ export default function SettingsPage() {
       setProfileSaved(true);
       setTimeout(() => setProfileSaved(false), 3000);
     } catch {
-      setProfileError(isFr ? "Échec de l'enregistrement. Veuillez réessayer." : "Failed to save. Please try again.");
+      setProfileError(t.errSave);
     } finally {
       setProfileSaving(false);
     }
@@ -125,11 +127,11 @@ export default function SettingsPage() {
     setPasswordError("");
 
     if (newPassword !== confirmPassword) {
-      setPasswordError(isFr ? "Les nouveaux mots de passe ne correspondent pas." : "New passwords don't match.");
+      setPasswordError(t.errPasswordMatch);
       return;
     }
     if (newPassword.length < 6) {
-      setPasswordError(isFr ? "Le mot de passe doit contenir au moins 6 caractères." : "Password must be at least 6 characters.");
+      setPasswordError(t.errPasswordLength);
       return;
     }
 
@@ -146,9 +148,9 @@ export default function SettingsPage() {
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";
       if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
-        setPasswordError(isFr ? "Le mot de passe actuel est incorrect." : "Current password is incorrect.");
+        setPasswordError(t.errPasswordCurrent);
       } else {
-        setPasswordError(isFr ? "Échec de la mise à jour du mot de passe." : "Failed to update password. Please try again.");
+        setPasswordError(t.errPasswordFailed);
       }
     } finally {
       setPasswordSaving(false);
@@ -157,7 +159,7 @@ export default function SettingsPage() {
 
   async function handleManageBilling() {
     if (!presenter.stripeCustomerId) {
-      setPortalError(isFr ? "Aucun compte de facturation trouvé. Contactez le support." : "No billing account found. Please contact support.");
+      setPortalError(t.errBillingNone);
       return;
     }
     setPortalLoading(true);
@@ -173,11 +175,11 @@ export default function SettingsPage() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        setPortalError(data.error ?? (isFr ? "Impossible d'ouvrir le portail de facturation." : "Failed to open billing portal. Please try again."));
+        setPortalError(data.error ?? t.errBillingOpen);
         setPortalLoading(false);
       }
     } catch {
-      setPortalError(isFr ? "Erreur réseau. Veuillez réessayer." : "Network error. Please try again.");
+      setPortalError(t.errNetwork);
       setPortalLoading(false);
     }
   }
@@ -185,7 +187,7 @@ export default function SettingsPage() {
   if (authLoading || !user) {
     return (
       <main className="min-h-screen bg-[#05070d] flex items-center justify-center">
-        <p className="text-slate-400 animate-pulse">{isFr ? "Chargement…" : "Loading…"}</p>
+        <p className="text-slate-400 animate-pulse">{t.loading}</p>
       </main>
     );
   }
@@ -228,7 +230,7 @@ export default function SettingsPage() {
     setNicknameError("");
     const trimmed = nickname.trim();
     if (trimmed && trimmed.length < 2) {
-      setNicknameError(isFr ? "Le pseudo doit contenir au moins 2 caractères." : "Nickname must be at least 2 characters.");
+      setNicknameError(t.errNicknameLength);
       return;
     }
     setNicknameSaving(true);
@@ -237,33 +239,32 @@ export default function SettingsPage() {
       setNicknameSaved(true);
       setTimeout(() => setNicknameSaved(false), 3000);
     } catch {
-      setNicknameError(isFr ? "Échec de l'enregistrement. Veuillez réessayer." : "Failed to save. Please try again.");
+      setNicknameError(t.errNicknameSave);
     } finally {
       setNicknameSaving(false);
     }
   }
 
   async function handleSaveLocale(newLocale: "en" | "fr") {
-    if (!user) return;
-    setLocale(newLocale);
     setLocaleSaving(true);
-    await updateDoc(doc(db, "presenters", user.uid), { locale: newLocale });
+    await setLocale(newLocale);
+    trackLocaleSet(newLocale, "setting");
     setLocaleSaving(false);
     setLocaleSaved(true);
-    setTimeout(() => setLocaleSaved(false), 2000);
+    setTimeout(() => { setLocaleSaved(false); window.location.reload(); }, 1000);
   }
 
   return (
     <main className="min-h-screen bg-[#05070d] text-white pb-20 lg:pb-0">
-      <MobileNav locale={locale} />
+      <MobileNav />
       <header className="border-b border-white/10 bg-[#101523] px-6 py-6 lg:px-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">{isFr ? "Paramètres" : "Settings"}</h1>
-            <p className="text-sm text-slate-400">{isFr ? "Gérez votre compte et votre abonnement." : "Manage your account and subscription."}</p>
+            <h1 className="text-2xl font-bold">{t.pageTitle}</h1>
+            <p className="text-sm text-slate-400">{t.pageSubtitle}</p>
           </div>
           <a href="/dashboard" className="text-sm text-slate-400 hover:text-white transition">
-            {isFr ? "← Tableau de bord" : "← Dashboard"}
+            {t.backLink}
           </a>
         </div>
       </header>
@@ -276,22 +277,22 @@ export default function SettingsPage() {
             <div className="rounded-xl bg-violet-500/20 p-2">
               <User className="h-4 w-4 text-violet-400" />
             </div>
-            <h2 className="font-bold text-lg">{isFr ? "Profil" : "Profile"}</h2>
+            <h2 className="font-bold text-lg">{t.profile}</h2>
           </div>
 
           <form onSubmit={handleSaveProfile} className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-sm text-slate-400">{isFr ? "Nom d'affichage" : "Display name"}</label>
+              <label className="mb-1.5 block text-sm text-slate-400">{t.displayName}</label>
               <input
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-violet-500"
-                placeholder={isFr ? "Votre nom" : "Your name"}
+                placeholder={t.displayNamePlaceholder}
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm text-slate-400">{isFr ? "Adresse email" : "Email address"}</label>
+              <label className="mb-1.5 block text-sm text-slate-400">{t.emailAddress}</label>
               <input
                 type="email"
                 value={user.email ?? ""}
@@ -300,16 +301,14 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm text-slate-400">
-                {isFr ? "Secteur / Profession" : "Industry / Profession"}
-              </label>
+              <label className="mb-1.5 block text-sm text-slate-400">{t.industryLabel}</label>
               <select
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value)}
                 className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white outline-none focus:border-violet-500 appearance-none cursor-pointer"
               >
                 <option value="" disabled className="text-slate-500">
-                  {isFr ? "Sélectionnez votre secteur" : "Select your industry"}
+                  {t.industryPlaceholder}
                 </option>
                 {INDUSTRIES.map((ind) => (
                   <option key={ind.value} value={ind.value} className="bg-[#1a2135]">
@@ -317,11 +316,7 @@ export default function SettingsPage() {
                   </option>
                 ))}
               </select>
-              <p className="mt-1.5 text-[11px] text-slate-600">
-                {isFr
-                  ? "Utilisé pour les classements sectoriels et les conseils IA personnalisés."
-                  : "Used for industry leaderboards and personalised AI coaching."}
-              </p>
+              <p className="mt-1.5 text-[11px] text-slate-600">{t.industryNote}</p>
             </div>
             {profileError && <p className="text-sm text-red-400">{profileError}</p>}
             <button
@@ -330,8 +325,8 @@ export default function SettingsPage() {
               className="flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-400 disabled:opacity-50 transition"
             >
               {profileSaved ? (
-                <><Check className="h-4 w-4" /> {isFr ? "Enregistré" : "Saved"}</>
-              ) : profileSaving ? (isFr ? "Enregistrement…" : "Saving…") : (isFr ? "Enregistrer" : "Save changes")}
+                <><Check className="h-4 w-4" /> {t.saved}</>
+              ) : profileSaving ? t.saving : t.saveChanges}
             </button>
           </form>
         </section>
@@ -343,21 +338,19 @@ export default function SettingsPage() {
               <Trophy className="h-4 w-4 text-amber-400" />
             </div>
             <div>
-              <h2 className="font-bold text-lg">{isFr ? "Classement" : "Leaderboard"}</h2>
+              <h2 className="font-bold text-lg">{t.leaderboardSection}</h2>
             </div>
           </div>
 
           <form onSubmit={handleSaveNickname} className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-sm text-slate-400">
-                {isFr ? "Pseudo de classement" : "Leaderboard nickname"}
-              </label>
+              <label className="mb-1.5 block text-sm text-slate-400">{t.nickname}</label>
               <input
                 type="text"
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
                 maxLength={24}
-                placeholder={isFr ? "Choisissez un pseudo" : "Choose a nickname"}
+                placeholder={t.nicknamePlaceholder}
                 className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-amber-500"
               />
               <p className="mt-2 text-[11px] text-amber-600">
@@ -365,11 +358,7 @@ export default function SettingsPage() {
                   ? "⚠ Votre pseudo sera visible par les autres utilisateurs sur le classement sectoriel."
                   : "⚠ Your nickname will be visible to other users on the industry leaderboard."}
               </p>
-              <p className="mt-1 text-[11px] text-slate-600">
-                {isFr
-                  ? "Laissez vide pour ne pas apparaître sur le classement."
-                  : "Leave blank to stay off the leaderboard."}
-              </p>
+              <p className="mt-1 text-[11px] text-slate-600">{t.nicknameNote}</p>
             </div>
             {nicknameError && <p className="text-sm text-red-400">{nicknameError}</p>}
             <button
@@ -378,8 +367,8 @@ export default function SettingsPage() {
               className="flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-amber-400 disabled:opacity-50 transition"
             >
               {nicknameSaved ? (
-                <><Check className="h-4 w-4" /> {isFr ? "Enregistré" : "Saved"}</>
-              ) : nicknameSaving ? (isFr ? "Enregistrement…" : "Saving…") : (isFr ? "Enregistrer le pseudo" : "Save nickname")}
+                <><Check className="h-4 w-4" /> {t.saved}</>
+              ) : nicknameSaving ? t.saving : (isFr ? "Enregistrer le pseudo" : "Save nickname")}
             </button>
           </form>
         </section>
@@ -390,12 +379,12 @@ export default function SettingsPage() {
             <div className="rounded-xl bg-violet-500/20 p-2">
               <Lock className="h-4 w-4 text-violet-400" />
             </div>
-            <h2 className="font-bold text-lg">{isFr ? "Mot de passe" : "Password"}</h2>
+            <h2 className="font-bold text-lg">{t.passwordSection}</h2>
           </div>
 
           <form onSubmit={handleChangePassword} className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-sm text-slate-400">{isFr ? "Mot de passe actuel" : "Current password"}</label>
+              <label className="mb-1.5 block text-sm text-slate-400">{t.currentPassword}</label>
               <input
                 type="password"
                 value={currentPassword}
@@ -406,7 +395,7 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm text-slate-400">{isFr ? "Nouveau mot de passe" : "New password"}</label>
+              <label className="mb-1.5 block text-sm text-slate-400">{t.newPassword}</label>
               <input
                 type="password"
                 value={newPassword}
@@ -417,7 +406,7 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm text-slate-400">{isFr ? "Confirmer le nouveau mot de passe" : "Confirm new password"}</label>
+              <label className="mb-1.5 block text-sm text-slate-400">{t.confirmPassword}</label>
               <input
                 type="password"
                 value={confirmPassword}
@@ -435,7 +424,7 @@ export default function SettingsPage() {
             >
               {passwordSaved ? (
                 <><Check className="h-4 w-4" /> {isFr ? "Mot de passe mis à jour" : "Password updated"}</>
-              ) : passwordSaving ? (isFr ? "Mise à jour…" : "Updating…") : (isFr ? "Mettre à jour" : "Update password")}
+              ) : passwordSaving ? (isFr ? "Mise à jour…" : "Updating…") : t.updatePassword}
             </button>
           </form>
         </section>
@@ -483,7 +472,7 @@ export default function SettingsPage() {
                 disabled={portalLoading}
                 className="w-full rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 disabled:opacity-50 transition"
               >
-                {portalLoading ? (isFr ? "Ouverture du portail…" : "Opening portal…") : (isFr ? "Gérer la facturation →" : "Manage billing →")}
+                {portalLoading ? (isFr ? "Ouverture du portail…" : "Opening portal…") : t.manageBilling + " →"}
               </button>
               {portalError && (
                 <p className="mt-2 text-sm text-red-400">{portalError}</p>
@@ -527,7 +516,7 @@ export default function SettingsPage() {
                 disabled={pilotLoading || !pilotCode.trim()}
                 className="rounded-xl bg-violet-500 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-400 disabled:opacity-50 transition"
               >
-                {pilotLoading ? "…" : (isFr ? "Appliquer" : "Apply")}
+                {pilotLoading ? "…" : t.apply}
               </button>
             </form>
             {pilotError && <p className="mt-3 text-sm text-red-400">{pilotError}</p>}
@@ -566,11 +555,7 @@ export default function SettingsPage() {
             </div>
             <div>
               <h2 className="font-bold text-white text-sm">Language / Langue</h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {isFr
-                  ? "Les ressources et emails seront fournis dans la langue choisie."
-                  : "Resources and emails will be served in your chosen language."}
-              </p>
+              <p className="text-xs text-slate-500 mt-0.5">{t.languageNote}</p>
             </div>
           </div>
           <div className="flex rounded-xl border border-white/10 bg-[#0f1424] p-1">
@@ -589,7 +574,7 @@ export default function SettingsPage() {
           </div>
           {(localeSaving || localeSaved) && (
             <p className="text-xs text-sky-400 flex items-center gap-1">
-              {localeSaved ? <><Check className="h-3 w-3" /> {isFr ? "Enregistré" : "Saved"}</> : (isFr ? "Enregistrement…" : "Saving…")}
+              {localeSaved ? <><Check className="h-3 w-3" /> {t.saved}</> : t.saving}
             </p>
           )}
         </section>

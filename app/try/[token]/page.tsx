@@ -134,7 +134,7 @@ export default function GuestResultsPage() {
         const data = (await res.json()) as AssessmentData & { contextId?: string; contextPromptVersion?: string };
         setAssessment(data);
         if (data.status === "complete") {
-          trackAssessmentCompleted(data.contextId ?? "general", data.contextPromptVersion ?? "1.0.0");
+          trackAssessmentCompleted(data.contextId ?? "general", data.contextPromptVersion ?? "1.0.0", (data as unknown as Record<string, unknown>).userLocale as string | undefined);
         } else if (data.status !== "failed") {
           pollRef.current = setTimeout(poll, 5000);
         }

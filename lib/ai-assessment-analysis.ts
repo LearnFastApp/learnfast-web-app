@@ -3,6 +3,7 @@ import { LANGUAGE_NAMES } from "./language-names";
 import { AI_MODEL } from "./ai-model";
 import { getContext } from "./contexts/registry";
 import { buildContextPromptBlock } from "./contexts/prompts";
+import { buildLocaleBlock } from "./locale/prompt";
 
 const DIMENSIONS = ["clarity", "energy", "engagement", "understanding", "connection"] as const;
 type Dimension = (typeof DIMENSIONS)[number];
@@ -57,6 +58,7 @@ export async function analyseTranscript(opts: {
   industry?: string | null;
   priorAssessments?: PriorAssessmentContext[];
   contextId?: string;
+  userLocale?: string;
 }): Promise<AssessmentAnalysis> {
   const client = getClient();
 
@@ -72,6 +74,7 @@ export async function analyseTranscript(opts: {
 
   const context = getContext(opts.contextId ?? "general");
   const contextBlock = buildContextPromptBlock(context);
+  const localeBlock = buildLocaleBlock(opts.userLocale ?? "en", opts.contextId ?? "general");
 
   const industryCtx = opts.industry
     ? `\nPRESENTER CONTEXT: Industry/sector — ${opts.industry}. Tailor coaching language and examples to this professional context where relevant.\n`
@@ -86,9 +89,16 @@ ${prior.map((p) =>
 In the summary, include ONE sentence noting the most significant change since the previous session (improvement or regression). If a dimension has been consistently low across all prior sessions, acknowledge it as a persistent development area rather than repeating the same advice. If a dimension has improved meaningfully (≥8 points), acknowledge the progress explicitly.\n`
     : "\nThis is the presenter's first assessment — no prior history available. Provide a clear baseline assessment.\n";
 
+  // Mixed-language note: if French user presents in English, note it in feedback
+  const spokenLang = LANGUAGE_NAMES[opts.locale ?? "en"] ?? "English";
+  const feedbackLang = opts.userLocale === "fr" ? "French (français)" : spokenLang;
+  const mixedLangNote = opts.userLocale === "fr" && (opts.locale ?? "en") !== "fr"
+    ? `\nNOTE: This presentation was delivered in ${spokenLang}. Deliver all written feedback in French as per the user's language preference. Include one sentence noting: "Votre présentation était en ${spokenLang === "English" ? "anglais" : spokenLang} ; le retour est fourni en français."\n`
+    : "";
+
   const prompt = `You are an expert presentation coach scoring a presenter across five core communication dimensions.
-LANGUAGE: Write all text fields (rationale, highlights, tips, summary) in ${lang}.
-${contextBlock}${industryCtx}${historyBlock}
+LANGUAGE: Write all text fields (rationale, highlights, tips, summary) in ${feedbackLang}.
+${localeBlock}${contextBlock}${mixedLangNote}${industryCtx}${historyBlock}
 
 SCORING CALIBRATION — apply this strictly. Scores reflect professional presentation standards, not personal encouragement:
 - 85–100: Exceptional. Conference keynote or TED-talk quality. Rare — only award when the evidence strongly supports it.

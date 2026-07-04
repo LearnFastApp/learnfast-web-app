@@ -19,6 +19,8 @@ export async function POST(
   if (!sessionSnap.exists || sessionSnap.data()!.presenterId !== uid) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
+  const sessionUserLocale = (sessionSnap.data()!.userLocale as string | undefined) ?? "en";
+  const sessionContextId = (sessionSnap.data()!.contextId as string | undefined) ?? "general";
 
   const takeSnap = await sessionRef.collection("takes").doc(takeId).get();
   if (!takeSnap.exists) return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -53,6 +55,8 @@ export async function POST(
       nextFocus: (take.nextFocus as string[]) ?? [],
       takeNumber: take.takeNumber as number,
       locale: (take.languageCode as string) ?? "en",
+      userLocale: sessionUserLocale,
+      contextId: sessionContextId,
     });
 
     return NextResponse.json(suggestion);

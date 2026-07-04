@@ -62,6 +62,7 @@ export async function GET(
     stripeSubscriptionId: org.stripeSubscriptionId ?? null,
     myRole: ctx.role,
     logoUrl: org.logoUrl ?? null,
+    defaultLocale: (org.defaultLocale as string | undefined) ?? "en",
   });
 }
 
@@ -98,6 +99,14 @@ export async function PATCH(
       return NextResponse.json({ error: "invalid_logo_url" }, { status: 400 });
     }
     updates.logoUrl = url || null;
+  }
+
+  if (typeof body.defaultLocale === "string") {
+    const dl = body.defaultLocale;
+    if (dl !== "en" && dl !== "fr") {
+      return NextResponse.json({ error: "invalid_locale" }, { status: 400 });
+    }
+    updates.defaultLocale = dl;
   }
 
   if (Object.keys(updates).length === 0) {

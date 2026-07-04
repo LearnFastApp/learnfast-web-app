@@ -2,10 +2,16 @@ export const DIMENSIONS = ["clarity", "energy", "engagement", "understanding", "
 export type Dimension = (typeof DIMENSIONS)[number];
 export type DimensionWeight = "low" | "standard" | "high" | "critical";
 
+export interface ContextI18n {
+  label: string;
+  description: string;
+}
+
 export interface AssessmentContext {
   contextId: string;
   label: string;
   description: string;
+  i18n: Record<string, ContextI18n>;
   successDefinition: string;
   dimensionWeights: Record<Dimension, DimensionWeight>;
   dimensionReinterpretations: Record<Dimension, string>;
@@ -20,6 +26,9 @@ export const CONTEXT_REGISTRY: AssessmentContext[] = [
     contextId: "general",
     label: "General Presentation",
     description: "Balanced assessment across all dimensions — the default.",
+    i18n: {
+      fr: { label: "Présentation générale", description: "Évaluation équilibrée sur toutes les dimensions — par défaut." },
+    },
     successDefinition: "Deliver a clear, engaging, and well-structured presentation that communicates ideas effectively to a general audience.",
     dimensionWeights: {
       clarity: "standard",
@@ -43,6 +52,9 @@ export const CONTEXT_REGISTRY: AssessmentContext[] = [
     contextId: "board_presentation",
     label: "Board / Executive Presentation",
     description: "Win confidence and a decision from time-poor senior stakeholders.",
+    i18n: {
+      fr: { label: "Présentation au conseil / direction", description: "Obtenir la confiance et une décision de parties prenantes seniors disposant de peu de temps." },
+    },
     successDefinition: "Earn the room's confidence and secure a clear decision from senior executives by demonstrating precision, composure, and complete command of the material.",
     dimensionWeights: {
       clarity: "critical",
@@ -66,6 +78,9 @@ export const CONTEXT_REGISTRY: AssessmentContext[] = [
     contextId: "team_talk",
     label: "Team Talk / Staff Room",
     description: "Move a group to aligned action through conviction and shared purpose.",
+    i18n: {
+      fr: { label: "Message d'équipe / réunion d'équipe", description: "Mobiliser un groupe vers une action alignée par la conviction et un objectif commun." },
+    },
     successDefinition: "Drive a team to aligned action by combining emotional connection, message simplicity, and visible personal conviction in the outcome.",
     dimensionWeights: {
       clarity: "high",
@@ -89,6 +104,9 @@ export const CONTEXT_REGISTRY: AssessmentContext[] = [
     contextId: "investor_pitch",
     label: "Investor Pitch",
     description: "Earn belief and a follow-up meeting with logic, credibility, and command of numbers.",
+    i18n: {
+      fr: { label: "Pitch investisseurs", description: "Susciter la confiance et un rendez-vous de suivi grâce à la logique, la crédibilité et la maîtrise des chiffres." },
+    },
     successDefinition: "Earn investor belief in the opportunity and the team by combining a compelling narrative with crisp command of the numbers, market logic, and honest handling of scepticism.",
     dimensionWeights: {
       clarity: "high",
@@ -112,6 +130,9 @@ export const CONTEXT_REGISTRY: AssessmentContext[] = [
     contextId: "cold_call",
     label: "Cold Call / Phone Pitch",
     description: "Earn the next 30 seconds through speed, hook clarity, and vocal energy.",
+    i18n: {
+      fr: { label: "Appel à froid / pitch téléphonique", description: "Gagner les 30 prochaines secondes par la rapidité, la clarté de l'accroche et l'énergie vocale." },
+    },
     successDefinition: "Earn the prospect's next 30 seconds of attention by opening with a sharp hook, delivering a clear value proposition, and handling the instinct to hang up.",
     dimensionWeights: {
       clarity: "critical",
@@ -136,6 +157,9 @@ export const CONTEXT_REGISTRY: AssessmentContext[] = [
     contextId: "conference_talk",
     label: "Conference / Keynote Talk",
     description: "Be memorable and authoritative to a large, passive audience.",
+    i18n: {
+      fr: { label: "Conférence / discours principal", description: "Être mémorable et faire autorité devant un large public passif." },
+    },
     successDefinition: "Leave a large passive audience with a clear memorable idea, a feeling of having been genuinely informed, and a lasting impression of the speaker's authority.",
     dimensionWeights: {
       clarity: "high",
@@ -159,6 +183,9 @@ export const CONTEXT_REGISTRY: AssessmentContext[] = [
     contextId: "coach_to_athletes",
     label: "Coaching Session (Coach → Athletes)",
     description: "Land instruction and belief with athletes across the training week.",
+    i18n: {
+      fr: { label: "Séance d'entraînement (entraîneur → athlètes)", description: "Transmettre instruction et confiance aux athlètes tout au long de la semaine d'entraînement." },
+    },
     successDefinition: "Give athletes clear, actionable instruction while building the belief and trust that drives performance when it counts.",
     dimensionWeights: {
       clarity: "critical",
@@ -189,4 +216,14 @@ export function getContext(contextId: string): AssessmentContext {
 
 export function getEnabledContexts(): AssessmentContext[] {
   return CONTEXT_REGISTRY.filter((c) => c.enabled).sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+export function getLocalizedContextLabel(contextId: string, locale: string): string {
+  const ctx = getContext(contextId);
+  return ctx.i18n[locale]?.label ?? ctx.label;
+}
+
+export function getLocalizedContextDescription(contextId: string, locale: string): string {
+  const ctx = getContext(contextId);
+  return ctx.i18n[locale]?.description ?? ctx.description;
 }

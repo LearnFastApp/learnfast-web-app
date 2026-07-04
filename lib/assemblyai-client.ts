@@ -40,8 +40,12 @@ export async function getTranscription(transcriptId: string): Promise<Transcript
   return client.transcripts.get(transcriptId);
 }
 
-export function countFillerWords(words: Transcript["words"]): number {
+const EN_FILLERS = new Set(["um", "uh", "umm", "uhh", "hmm"]);
+const FR_FILLERS = new Set(["euh", "ben", "alors", "voilà", "donc", "voila"]);
+
+export function countFillerWords(words: Transcript["words"], languageCode?: string): number {
   if (!words) return 0;
-  const fillers = new Set(["um", "uh", "umm", "uhh", "hmm"]);
+  const isFr = languageCode?.startsWith("fr");
+  const fillers = isFr ? new Set([...EN_FILLERS, ...FR_FILLERS]) : EN_FILLERS;
   return words.filter((w) => fillers.has(w.text.toLowerCase().replace(/[.,!?]/g, ""))).length;
 }

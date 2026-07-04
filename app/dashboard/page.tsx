@@ -31,6 +31,8 @@ import MobileNav from "@/components/mobile-nav";
 import OnboardingModal from "@/components/onboarding-modal";
 import { ProfileCardCompact, type ProfileData } from "@/components/profile-card";
 import ProfileSetupModal from "@/components/profile-setup-modal";
+import { useLocale, useSetLocale, useTranslations } from "@/lib/i18n";
+import { trackLocaleSet } from "@/lib/locale/analytics";
 
 
 interface Session {
@@ -70,7 +72,10 @@ function scoreBadgeClass(score: number) {
 export default function Dashboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [locale, setLocale] = useState<"en" | "fr">("en");
+  const locale = useLocale();
+  const setLocaleCtx = useSetLocale();
+  const t = useTranslations("dashboard");
+  const isFr = locale === "fr";
   const [showModal, setShowModal] = useState(false);
   const [showRehearsalModal, setShowRehearsalModal] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
@@ -115,7 +120,6 @@ export default function Dashboard() {
     getDoc(doc(db, "presenters", user.uid)).then((snap) => {
       if (snap.exists()) {
         const data = snap.data();
-        if (data.locale === "fr") setLocale("fr");
         if (data.subscriptionStatus === "active") setSubscriptionStatus("active");
         if (data.subscriptionStatus === "pilot") {
           const expiry = data.pilotExpiresAt?.toDate?.() as Date | undefined;
@@ -318,10 +322,9 @@ export default function Dashboard() {
 
   async function handleToggleLocale(newLocale: "en" | "fr") {
     if (newLocale === locale) return;
-    setLocale(newLocale);
-    if (user) {
-      await updateDoc(doc(db, "presenters", user.uid), { locale: newLocale });
-    }
+    await setLocaleCtx(newLocale);
+    trackLocaleSet(newLocale, "setting");
+    window.location.reload();
   }
 
   if (loading || !user) {
@@ -339,7 +342,6 @@ export default function Dashboard() {
     ? Math.max(0, Math.ceil((pilotExpiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
 
-  const isFr = locale === "fr";
   const ADMIN_UID = "zuFmYCIaGLViRSc7LXFwej6wql22";
   const canSeeLeaderboard = isPaidOrPilot || user.uid === ADMIN_UID;
 
@@ -349,87 +351,10 @@ export default function Dashboard() {
     { label: isFr ? "Analyse IA" : "AI Analysis", icon: Brain, href: "/ai-assessment" },
     ...(canSeeLeaderboard ? [{ label: isFr ? "Classement" : "Leaderboard", icon: Trophy, href: "/leaderboard" }] : []),
     { label: isFr ? "Feed coaching" : "Coaching Feed", icon: Users, href: "/feed" },
-    ...(orgId ? [{ label: isFr ? "Organisation" : "Organisation", icon: Building2, href: `/${orgId}/members` }] : []),
+    ...(orgId ? [{ label: "Organisation", icon: Building2, href: `/${orgId}/members` }] : []),
     { label: isFr ? "Hub de ressources" : "Premium Resource Hub", icon: BookOpen, href: "#", comingSoon: true },
     { label: isFr ? "Paramètres" : "Settings", icon: Settings, href: "/settings" },
   ];
-  const t = isFr ? {
-    comingSoon: "Bientôt",
-    pilotAccess: "Accès pilote",
-    pilotDaysLeft: (n: number) => `${n} jour${n !== 1 ? "s" : ""} restant${n !== 1 ? "s" : ""} — accès complet à toutes les fonctionnalités.`,
-    freePlan: "Plan gratuit",
-    session: (n: number) => `Session ${n}`,
-    freeSessionsExplore: "2 sessions gratuites pour découvrir LearnFast.",
-    freeSession1Left: "1 session gratuite restante.",
-    freeSessionsUsed: "Vous avez utilisé vos 2 sessions gratuites. Commencez votre essai de 7 jours pour continuer.",
-    startTrial: "Commencer l'essai de 7 jours →",
-    upgradeLite: "Passer à Lite — £3.99/mois",
-    trialFree: "7 jours d'essai gratuit",
-    cancelAnytime: "annulable à tout moment",
-    presenter: "Présentateur",
-    signOut: "Se déconnecter",
-    pageTitle: "Tableau de bord",
-    pageSubtitle: "Suivez vos retours de présentation et votre progression.",
-    createSession: "Créer une session",
-    usedBothFree: "Vous avez utilisé vos 2 sessions gratuites.",
-    upgradeLiteShort: "Passer à Lite",
-    tabSessions: "Sessions",
-    tabReflections: "Réflexions",
-    yourSessions: "Vos sessions",
-    noSessionsYet: (cta: string) => <>Aucune session pour l&apos;instant — cliquez sur <strong className="text-slate-300">{cta}</strong> pour commencer.</>,
-    live: "En direct",
-    ended: "Terminée",
-    responses: (n: number) => `${n} réponse${n !== 1 ? "s" : ""}`,
-    deleteBtn: "Supprimer",
-    loadMore: "Charger plus de sessions",
-    loading: "Chargement…",
-    reflectionLog: "Journal de réflexions",
-    reflectionLogSub: "Vos scores auto-évalués sur toutes les sessions.",
-    noReflections: "Aucune réflexion pour l'instant — évaluez-vous à la fin d'une session pour construire votre journal.",
-    nextFocusPrefix: "Objectif — ",
-    howItWent: "Comment ça s'est passé",
-    joinLinkTitle: "Lien de participation",
-    joinLinkDesc: "Partagez",
-    joinLinkSuffix: "ou scannez le QR depuis n'importe quelle session active.",
-  } : {
-    comingSoon: "Coming Soon",
-    pilotAccess: "Pilot Access",
-    pilotDaysLeft: (n: number) => `${n} day${n !== 1 ? "s" : ""} remaining — full access to all features.`,
-    freePlan: "Free Plan",
-    session: (n: number) => `Session ${n}`,
-    freeSessionsExplore: "2 free sessions to explore LearnFast.",
-    freeSession1Left: "1 free session remaining.",
-    freeSessionsUsed: "You've used both free sessions. Start your 7-day trial to continue.",
-    startTrial: "Start 7-Day Free Trial →",
-    upgradeLite: "Upgrade to Lite — £3.99/mo",
-    trialFree: "7 day free trial",
-    cancelAnytime: "cancel anytime",
-    presenter: "Presenter",
-    signOut: "Sign Out",
-    pageTitle: "Dashboard",
-    pageSubtitle: "Track presentation feedback and development progress.",
-    createSession: "Create Session",
-    usedBothFree: "You've used both free sessions.",
-    upgradeLiteShort: "Upgrade to Lite",
-    tabSessions: "Sessions",
-    tabReflections: "Reflections",
-    yourSessions: "Your sessions",
-    noSessionsYet: (cta: string) => <>No sessions yet — hit <strong className="text-slate-300">{cta}</strong> to start.</>,
-    live: "Live",
-    ended: "Ended",
-    responses: (n: number) => `${n} response${n !== 1 ? "s" : ""}`,
-    deleteBtn: "Delete",
-    loadMore: "Load more sessions",
-    loading: "Loading…",
-    reflectionLog: "Reflection log",
-    reflectionLogSub: "Your self-assessed scores across all sessions.",
-    noReflections: "No reflections yet — rate yourself at the end of a session to build your log.",
-    nextFocusPrefix: "Next session focus — ",
-    howItWent: "How it went",
-    joinLinkTitle: "Audience join link",
-    joinLinkDesc: "Share",
-    joinLinkSuffix: "or scan the QR from any active session.",
-  };
 
   return (
     <main className="min-h-screen bg-[#05070d] text-white">

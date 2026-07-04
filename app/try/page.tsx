@@ -17,6 +17,7 @@ import {
 import { getEnabledContexts } from "@/lib/contexts/registry";
 import { isContextsEnabled } from "@/lib/feature-flags";
 import { trackContextSelected } from "@/lib/contexts/analytics";
+import { useLocale } from "@/lib/i18n";
 
 const CONTEXTS = isContextsEnabled() ? getEnabledContexts() : [];
 
@@ -120,6 +121,7 @@ async function trimAudioTo90s(file: File): Promise<{ blob: Blob; trimmed: boolea
 }
 
 export default function TryPage() {
+  const locale = useLocale();
   const [tab, setTab] = useState<Tab>("record");
   const [email, setEmail] = useState("");
   const [contextId, setContextId] = useState("general");
@@ -617,7 +619,7 @@ export default function TryPage() {
                 value={contextId}
                 onChange={(e) => {
                   setContextId(e.target.value);
-                  if (e.target.value !== "general") trackContextSelected(e.target.value, "try");
+                  if (e.target.value !== "general") trackContextSelected(e.target.value, "try", locale);
                 }}
                 className="w-full bg-[#0d1117] border border-white/[0.07] rounded-xl px-3 py-2.5 text-sm text-slate-400 outline-none focus:border-violet-500/50 focus:text-white transition appearance-none"
               >

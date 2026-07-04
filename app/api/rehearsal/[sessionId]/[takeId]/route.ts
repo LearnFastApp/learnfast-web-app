@@ -81,7 +81,7 @@ export async function GET(
 
   const words = transcript.words ?? [];
   const wordCount = words.length;
-  const fillerWordCount = countFillerWords(words);
+  const fillerWordCount = countFillerWords(words, transcript.language_code ?? undefined);
 
   const sentiments = transcript.sentiment_analysis_results ?? [];
   const total = sentiments.length || 1;
@@ -114,8 +114,9 @@ export async function GET(
     }
   }
 
-  // Pass context from session doc down to the coaching function
-  const sessionContextId = (sessionSnap.data()!.contextId as string | undefined) ?? "general";
+  const sessionData = sessionSnap.data()!;
+  const sessionContextId = (sessionData.contextId as string | undefined) ?? "general";
+  const sessionUserLocale = (sessionData.userLocale as string | undefined) ?? "en";
 
   let coaching;
   try {
@@ -131,6 +132,7 @@ export async function GET(
       previousTake,
       locale: languageCode,
       contextId: sessionContextId,
+      userLocale: sessionUserLocale,
     });
   } catch (err) {
     console.error("[rehearsal/takeId] Coaching failed:", err);

@@ -83,7 +83,7 @@ export async function GET(
   // Run Claude analysis
   const words = transcript.words ?? [];
   const wordCount = words.length;
-  const fillerWordCount = countFillerWords(words);
+  const fillerWordCount = countFillerWords(words, transcript.language_code ?? undefined);
 
   const sentiments = transcript.sentiment_analysis_results ?? [];
   const total = sentiments.length || 1;
@@ -106,6 +106,7 @@ export async function GET(
       neutralPercent,
       negativePercent,
       locale: transcript.language_code ?? "en",
+      userLocale: (data.userLocale as string | undefined) ?? "en",
       industry: null,
       priorAssessments: [],
       contextId: (data.contextId as string | undefined) ?? "general",

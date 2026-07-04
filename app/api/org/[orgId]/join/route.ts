@@ -79,10 +79,13 @@ export async function POST(
     tx.update(orgRef, { "seats.used": FieldValue.increment(1) });
     tx.update(db.doc(`org_invite_tokens/${token}`), { status: "accepted" });
     tx.update(db.doc(`organizations/${orgId}/invites/${tokenData.inviteId}`), { status: "accepted" });
+    const orgDefaultLocale = (org.defaultLocale as string | undefined) ?? "en";
+    const presenterLocale = presenterSnap.data()?.locale as string | undefined;
     tx.update(db.doc(`presenters/${uid}`), {
       orgId,
       orgRole: tokenData.role,
       subscriptionStatus: "lite",
+      ...(presenterLocale ? {} : { locale: orgDefaultLocale }),
       updatedAt: FieldValue.serverTimestamp(),
     });
   });

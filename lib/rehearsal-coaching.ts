@@ -4,6 +4,7 @@ import { AI_MODEL } from "./ai-model";
 import type { AssessmentScores } from "./ai-assessment-analysis";
 import { getContext } from "./contexts/registry";
 import { buildContextPromptBlock } from "./contexts/prompts";
+import { buildLocaleBlock } from "./locale/prompt";
 
 export interface RehearsalCoaching {
   scores: AssessmentScores;
@@ -37,6 +38,7 @@ export async function coachRehearsalTake(opts: {
   previousTake: PreviousTakeContext | null;
   locale?: string;
   contextId?: string;
+  userLocale?: string;
 }): Promise<RehearsalCoaching> {
   const client = getClient();
 
@@ -49,10 +51,13 @@ export async function coachRehearsalTake(opts: {
       ? ((opts.fillerWordCount / opts.audioDurationSeconds) * 60).toFixed(1)
       : "0";
 
-  const lang = LANGUAGE_NAMES[opts.locale ?? "en"] ?? "English";
+  const spokenLang = LANGUAGE_NAMES[opts.locale ?? "en"] ?? "English";
+  const feedbackLang = opts.userLocale === "fr" ? "French (français)" : spokenLang;
+  const lang = feedbackLang;
 
   const assessmentContext = getContext(opts.contextId ?? "general");
   const contextPromptBlock = buildContextPromptBlock(assessmentContext);
+  const localeBlock = buildLocaleBlock(opts.userLocale ?? "en", opts.contextId ?? "general");
 
   const contextBlock = opts.previousTake
     ? `This is Take ${opts.takeNumber}. The presenter's previous take (Take ${opts.previousTake.takeNumber}) scored:
@@ -70,7 +75,7 @@ Your "comparison" field MUST reference these scores explicitly — name what mov
 This presenter has chosen to rehearse. They are investing in themselves. Your job is to be their trusted coach through every take — specific, honest, encouraging, and always focused on what will make the next take better.
 
 LANGUAGE: Write all fields in ${lang}.
-${contextPromptBlock}
+${localeBlock}${contextPromptBlock}
 ${contextBlock}
 
 SCORING CALIBRATION — apply this rigorously:

@@ -8,10 +8,10 @@ function fireGtag(event: string, params: Record<string, string>) {
   }
 }
 
-export function trackContextSelected(contextId: string, surface: ContextSurface) {
-  fireGtag("context_selected", { context_id: contextId, surface });
+export function trackContextSelected(contextId: string, surface: ContextSurface, locale?: string) {
+  fireGtag("context_selected", { context_id: contextId, surface, ...(locale ? { locale } : {}) });
 }
 
-export function trackAssessmentCompleted(contextId: string, contextPromptVersion: string) {
-  fireGtag("assessment_completed", { context_id: contextId, context_prompt_version: contextPromptVersion });
+export function trackAssessmentCompleted(contextId: string, contextPromptVersion: string, locale?: string) {
+  fireGtag("assessment_completed", { context_id: contextId, context_prompt_version: contextPromptVersion, ...(locale ? { locale } : {}) });
 }

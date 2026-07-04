@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
 import { submitTranscription } from "@/lib/assemblyai-client";
-import { getContext } from "@/lib/contexts/registry";
+import { getContext, getLocalizedContextLabel } from "@/lib/contexts/registry";
 
 export const dynamic = "force-dynamic";
 
@@ -64,9 +64,10 @@ export async function POST(req: NextRequest) {
 
   const db = getAdminDb();
 
-  // Read presenter industry to tag assessment for normative benchmarking
+  // Read presenter profile for industry and locale
   const presenterSnap = await db.collection("presenters").doc(uid).get();
   const industry = (presenterSnap.data()?.industry as string | undefined) ?? null;
+  const userLocale = (presenterSnap.data()?.locale as string | undefined) ?? "en";
 
   // Create the assessment doc
   const ref = db.collection("ai_assessments").doc();
@@ -83,8 +84,9 @@ export async function POST(req: NextRequest) {
     scores: null,
     analysis: null,
     contextId: resolvedContext.contextId,
-    contextLabelAtTime: resolvedContext.label,
+    contextLabelAtTime: getLocalizedContextLabel(resolvedContext.contextId, userLocale),
     contextPromptVersion: resolvedContext.promptVersion,
+    userLocale,
   });
 
   // Link assessment back to the session doc so the session page can find it by direct read

@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { LANGUAGE_NAMES } from "./language-names";
 import { AI_MODEL } from "./ai-model";
+import { buildWritingLocaleBlock } from "./locale/prompt";
 
 // Dimensions that script changes can address vs. delivery-only improvements
 const SCRIPT_ADDRESSABLE = new Set(["clarity", "engagement", "understanding", "connection"]);
@@ -33,10 +34,14 @@ export async function generateScriptSuggestion(opts: {
   nextFocus: string[];
   takeNumber: number;
   locale?: string;
+  userLocale?: string;
+  contextId?: string;
 }): Promise<ScriptSuggestion> {
   const client = getClient();
 
-  const lang = LANGUAGE_NAMES[opts.locale ?? "en"] ?? "English";
+  const spokenLang = LANGUAGE_NAMES[opts.locale ?? "en"] ?? "English";
+  const lang = opts.userLocale === "fr" ? "French (français)" : spokenLang;
+  const writingLocaleBlock = buildWritingLocaleBlock(opts.userLocale ?? "en", opts.contextId);
 
   // Sort dimensions by score ascending — weakest first
   const sortedDims = Object.entries(opts.scores).sort((a, b) => a[1] - b[1]);
@@ -51,6 +56,7 @@ export async function generateScriptSuggestion(opts: {
   const prompt = `You are one of the world's foremost presentation coaches. A presenter has just completed Take ${opts.takeNumber} of a rehearsal session and received coaching feedback. They have asked you to suggest specific script improvements based on that feedback.
 
 LANGUAGE: Write all output fields in ${lang}.
+${writingLocaleBlock}
 
 YOUR COACHING FEEDBACK FROM THIS TAKE:
 "${opts.coachingNote}"

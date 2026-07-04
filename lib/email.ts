@@ -767,10 +767,12 @@ export async function sendOrgInviteEmail(
   orgName: string,
   inviterName: string,
   acceptUrl: string,
-  expiresAt: Date
+  expiresAt: Date,
+  locale?: string
 ): Promise<void> {
   const from = `"LearnFast" <${process.env.GMAIL_USER}>`;
-  const expiryStr = expiresAt.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  const isFr = locale === "fr";
+  const expiryStr = expiresAt.toLocaleDateString(isFr ? "fr-FR" : "en-GB", { day: "numeric", month: "long", year: "numeric" });
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -811,7 +813,9 @@ export async function sendOrgInviteEmail(
   await getTransporter().sendMail({
     from,
     to,
-    subject: `You've been invited to join ${orgName} on LearnFast`,
+    subject: isFr
+      ? `Vous avez été invité(e) à rejoindre ${orgName} sur LearnFast`
+      : `You've been invited to join ${orgName} on LearnFast`,
     html,
   });
 }
@@ -827,6 +831,7 @@ export interface SessionConfirmationOptions {
   timezone: string;
   feedbackCode: string;
   feedbackUrl: string;
+  locale?: string;
 }
 
 export async function sendSessionConfirmationEmail(opts: SessionConfirmationOptions): Promise<void> {
@@ -896,10 +901,13 @@ export async function sendSessionConfirmationEmail(opts: SessionConfirmationOpti
 </body>
 </html>`;
 
+  const isFr = opts.locale === "fr";
   await getTransporter().sendMail({
     from,
     to: opts.to,
-    subject: `Session scheduled: ${sessionTitle}`,
+    subject: isFr
+      ? `Session planifiée : ${sessionTitle}`
+      : `Session scheduled: ${sessionTitle}`,
     html,
   });
 }

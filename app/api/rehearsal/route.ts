@@ -3,7 +3,7 @@ import { Timestamp } from "firebase-admin/firestore";
 import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
 import { uploadAndSubmitTranscription } from "@/lib/assemblyai-client";
 import { uploadTakeAudio } from "@/lib/r2-client";
-import { getContext } from "@/lib/contexts/registry";
+import { getContext, getLocalizedContextLabel } from "@/lib/contexts/registry";
 
 export const dynamic = "force-dynamic";
 
@@ -126,8 +126,12 @@ export async function POST(req: NextRequest) {
     : gate.tier === "lite" ? LITE_TAKES_LIMIT
     : null; // null = unlimited
 
-  // Persist usage so that deleting a session cannot reset the entitlement
+  // Read user locale for AI pipeline cultural adaptation
   const presenterRef = db.collection("presenters").doc(uid);
+  const presenterSnap2 = await presenterRef.get();
+  const userLocale = (presenterSnap2.data()?.locale as string | undefined) ?? "en";
+
+  // Persist usage so that deleting a session cannot reset the entitlement
   if (gate.tier === "free") {
     await presenterRef.update({ freeRehearsalUsed: true });
   } else if (gate.tier === "lite") {
@@ -150,8 +154,9 @@ export async function POST(req: NextRequest) {
     promotedTakeId: null,
     promotedAssessmentId: null,
     contextId,
-    contextLabelAtTime,
+    contextLabelAtTime: getLocalizedContextLabel(contextId, userLocale),
     contextPromptVersion,
+    userLocale,
   });
 
   const mimeType = fileName.endsWith(".webm") ? "audio/webm" : "audio/mpeg";

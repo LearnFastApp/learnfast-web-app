@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { BarChart3, Brain, Grid3X3, LayoutDashboard, Plus, Settings, Trophy, Users, X } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useLocale } from "@/lib/i18n";
 
 interface Props {
   onCreateSession?: () => void;
@@ -11,8 +12,9 @@ interface Props {
 
 const MORE_PATHS = ["/feed", "/leaderboard", "/settings"];
 
-export default function MobileNav({ onCreateSession, locale = "en" }: Props) {
+export default function MobileNav({ onCreateSession }: Props) {
   const pathname = usePathname();
+  const locale = useLocale();
   const isFr = locale === "fr";
   const [showMore, setShowMore] = useState(false);
 
@@ -85,7 +87,7 @@ export default function MobileNav({ onCreateSession, locale = "en" }: Props) {
 
           <a href="/analytics" className={navClass("/analytics")}>
             <BarChart3 className="h-5 w-5" />
-            {isFr ? "Analytics" : "Analytics"}
+            Analytics
           </a>
 
           {onCreateSession && (

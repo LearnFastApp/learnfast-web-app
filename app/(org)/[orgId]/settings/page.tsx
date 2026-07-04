@@ -16,6 +16,7 @@ export default function OrgSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [orgName, setOrgName] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
+  const [defaultLocale, setDefaultLocale] = useState<"en" | "fr">("en");
   const [myRole, setMyRole] = useState<string | null>(null);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
@@ -33,6 +34,7 @@ export default function OrgSettingsPage() {
         const d = await res.json();
         setOrgName(d.name ?? "");
         setLogoUrl(d.logoUrl ?? "");
+        setDefaultLocale((d.defaultLocale as "en" | "fr") ?? "en");
         setMyRole(d.myRole ?? null);
       }
     } catch {
@@ -61,7 +63,7 @@ export default function OrgSettingsPage() {
       const res = await fetch(`/api/org/${orgId}/info`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name: orgName, logoUrl: logoUrl || null }),
+        body: JSON.stringify({ name: orgName, logoUrl: logoUrl || null, defaultLocale }),
       });
       if (res.ok) {
         setSuccess("Settings saved.");
@@ -151,6 +153,40 @@ export default function OrgSettingsPage() {
                   <p className="text-xs text-slate-400">Preview</p>
                 </div>
               )}
+            </div>
+
+            {/* Default member language */}
+            <div className="bg-[#0f172a] border border-[#1e293b] rounded-2xl p-6">
+              <label className="block text-sm font-semibold text-white mb-1">
+                Default member language
+              </label>
+              <p className="text-xs text-slate-500 mb-4">
+                New members inherit this language when they join. Existing members keep their own preference.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDefaultLocale("en")}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                    defaultLocale === "en"
+                      ? "bg-violet-600 border-violet-500 text-white"
+                      : "bg-[#0a0f1a] border-[#1e293b] text-slate-400 hover:border-slate-600"
+                  }`}
+                >
+                  <span>🇬🇧</span> English
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDefaultLocale("fr")}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                    defaultLocale === "fr"
+                      ? "bg-violet-600 border-violet-500 text-white"
+                      : "bg-[#0a0f1a] border-[#1e293b] text-slate-400 hover:border-slate-600"
+                  }`}
+                >
+                  <span>🇫🇷</span> Français
+                </button>
+              </div>
             </div>
 
             {/* Feedback */}
