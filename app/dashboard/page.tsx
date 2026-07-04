@@ -354,7 +354,7 @@ export default function Dashboard() {
     ...(canSeeLeaderboard ? [{ label: isFr ? "Classement" : "Leaderboard", icon: Trophy, href: "/leaderboard" }] : []),
     { label: isFr ? "Feed coaching" : "Coaching Feed", icon: Users, href: "/feed" },
     ...(orgId ? [{ label: "Organisation", icon: Building2, href: `/${orgId}/members` }] : []),
-    { label: isFr ? "Contenu éducatif" : "Educational Content", icon: BookOpen, href: "#", comingSoon: true },
+    { label: isFr ? "Contenu éducatif" : "Educational Content", icon: BookOpen, href: "/learning-hub" },
     { label: isFr ? "Paramètres" : "Settings", icon: Settings, href: "/settings" },
   ];
 
@@ -425,11 +425,6 @@ export default function Dashboard() {
                 >
                   <Icon className="h-5 w-5" />
                   <span className="flex-1">{item.label}</span>
-                  {item.comingSoon && (
-                    <span className="rounded-md bg-violet-500/20 px-2 py-0.5 text-xs text-violet-400">
-                      {t.comingSoon}
-                    </span>
-                  )}
                 </a>
               );
             })}
