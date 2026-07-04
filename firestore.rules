@@ -245,6 +245,30 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // ── Coach Roster ─────────────────────────────────────────────────────────
+    // coaches: full doc including email/meetingUrl — admin SDK only.
+    match /coaches/{coachId} {
+      allow read, write: if false;
+    }
+
+    // coachesPublic: stripped of sensitive fields; synced by admin API on write.
+    // Anyone (including unauthenticated) can read live coach cards for SEO.
+    match /coachesPublic/{coachId} {
+      allow read: if resource.data.status == 'live';
+      allow write: if false;
+    }
+
+    // discoveryCalls: all mutations via admin SDK; owner can read own calls.
+    match /discoveryCalls/{callId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow write: if false;
+    }
+
+    // coachApplications: submitted and read via admin SDK only.
+    match /coachApplications/{appId} {
+      allow read, write: if false;
+    }
+
   }
 
 }

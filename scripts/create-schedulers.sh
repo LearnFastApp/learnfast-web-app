@@ -102,6 +102,21 @@ gcloud scheduler jobs create http webinar-digest \
   2>&1 || echo "  (already exists — skipping)"
 
 echo ""
+echo "Creating: coach-lifecycle (hourly — reminders + expiry)"
+gcloud scheduler jobs create http coach-lifecycle \
+  --project="$PROJECT" \
+  --location="$REGION" \
+  --schedule="0 * * * *" \
+  --uri="$APP_URL/api/cron/coach-lifecycle" \
+  --http-method=POST \
+  --headers="Authorization=Bearer $CRON_SECRET,Content-Type=application/json" \
+  --message-body='{}' \
+  --time-zone="UTC" \
+  --attempt-deadline="5m" \
+  --description="Send 24h call reminders and expire stale discovery call requests" \
+  2>&1 || echo "  (already exists — skipping)"
+
+echo ""
 echo "Done. Current jobs:"
 gcloud scheduler jobs list --project="$PROJECT" --location="$REGION" \
   --format="table(name.basename(),schedule,state,lastAttemptTime)"

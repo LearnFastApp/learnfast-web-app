@@ -183,6 +183,102 @@ export type LibraryDimension =
   | "connection"
   | "general";
 
+// ── Coach Roster ─────────────────────────────────────────────────────────────
+
+export type CoachStatus = "draft" | "pending_review" | "live" | "paused";
+export type ListingTier = "founding" | "standard";
+export type CallStatus =
+  | "requested"
+  | "confirmed"
+  | "declined"
+  | "cancelled"
+  | "completed"
+  | "expired";
+
+export interface CoachMetrics {
+  profileViews: number;
+  bookingRequests: number;
+  confirmedCalls: number;
+}
+
+export interface Coach {
+  id: string;
+  slug: string;
+  status: CoachStatus;
+  name: string;
+  headshotUrl: string;
+  quote: string;
+  bioShort: string;
+  bioLong: string;
+  specialties: string[];
+  credentials: string;
+  linkedinUrl: string | null;
+  websiteUrl: string | null;
+  email: string;
+  timezone: string;
+  meetingUrl: string;
+  callDurationMins: number;
+  learnfastScore: number | null;
+  archetype: string | null;
+  introVideoId: string | null;
+  listingTier: ListingTier;
+  stripeCustomerId: string | null;
+  metrics: CoachMetrics;
+  featured: boolean;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export type CoachPublic = Omit<Coach, "email" | "stripeCustomerId" | "metrics" | "meetingUrl">;
+
+export interface CallSlot {
+  start: Timestamp;
+  end: Timestamp;
+}
+
+export interface DiscoveryCall {
+  id: string;
+  coachId: string;
+  coachSlug: string;
+  coachName: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  orgId: string | null;
+  source: "public" | "enterprise";
+  status: CallStatus;
+  requestedSlots: CallSlot[];
+  confirmedSlot: CallSlot | null;
+  userNote: string;
+  meetingUrl: string | null;
+  icsUid: string;
+  actionTokenHash: string;
+  actionTokenExpiresAt: Timestamp;
+  reminderSentAt: Timestamp | null;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface CoachApplication {
+  id: string;
+  name: string;
+  email: string;
+  linkedinUrl: string;
+  specialties: string;
+  pitch: string;
+  tryCompleted: boolean;
+  status: "new" | "accepted" | "rejected";
+  createdAt: Timestamp;
+}
+
+export interface OrgCoachRoster {
+  enabled: boolean;
+  mode: "all" | "approved_only";
+  approvedCoachIds: string[];
+}
+
+// ── Content library ─────────────────────────────────────────────────────────
+
 export interface LibraryContent {
   id: string;
   title: string;

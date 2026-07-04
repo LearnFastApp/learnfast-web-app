@@ -18,6 +18,8 @@ export default function OrgSettingsPage() {
   const [logoUrl, setLogoUrl] = useState("");
   const [defaultLocale, setDefaultLocale] = useState<"en" | "fr">("en");
   const [myRole, setMyRole] = useState<string | null>(null);
+  const [coachRosterEnabled, setCoachRosterEnabled] = useState(true);
+  const [coachRosterMode, setCoachRosterMode] = useState<"all" | "approved_only">("all");
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
@@ -36,6 +38,10 @@ export default function OrgSettingsPage() {
         setLogoUrl(d.logoUrl ?? "");
         setDefaultLocale((d.defaultLocale as "en" | "fr") ?? "en");
         setMyRole(d.myRole ?? null);
+        if (d.coachRoster) {
+          setCoachRosterEnabled(d.coachRoster.enabled ?? true);
+          setCoachRosterMode(d.coachRoster.mode ?? "all");
+        }
       }
     } catch {
       setError("Failed to load settings.");
@@ -63,7 +69,12 @@ export default function OrgSettingsPage() {
       const res = await fetch(`/api/org/${orgId}/info`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name: orgName, logoUrl: logoUrl || null, defaultLocale }),
+        body: JSON.stringify({
+          name: orgName,
+          logoUrl: logoUrl || null,
+          defaultLocale,
+          coachRoster: { enabled: coachRosterEnabled, mode: coachRosterMode, approvedCoachIds: [] },
+        }),
       });
       if (res.ok) {
         setSuccess("Settings saved.");
@@ -184,6 +195,49 @@ export default function OrgSettingsPage() {
                   <span>🇫🇷</span> Français
                 </button>
               </div>
+            </div>
+
+            {/* Coach roster */}
+            <div className="bg-[#0f172a] border border-[#1e293b] rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-sm font-semibold text-white">Coach roster</label>
+                <button
+                  type="button"
+                  onClick={() => setCoachRosterEnabled(!coachRosterEnabled)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${coachRosterEnabled ? "bg-violet-600" : "bg-slate-700"}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${coachRosterEnabled ? "translate-x-6" : "translate-x-1"}`} />
+                </button>
+              </div>
+              <p className="text-xs text-slate-500 mb-4">
+                Allow your team to browse and book discovery calls with executive coaches via /coaches.
+              </p>
+              {coachRosterEnabled && (
+                <div>
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Access mode</p>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setCoachRosterMode("all")}
+                      className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-colors ${coachRosterMode === "all" ? "bg-violet-600 border-violet-500 text-white" : "bg-[#0a0f1a] border-[#1e293b] text-slate-400 hover:border-slate-600"}`}
+                    >
+                      All coaches
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCoachRosterMode("approved_only")}
+                      className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-colors ${coachRosterMode === "approved_only" ? "bg-violet-600 border-violet-500 text-white" : "bg-[#0a0f1a] border-[#1e293b] text-slate-400 hover:border-slate-600"}`}
+                    >
+                      Approved only
+                    </button>
+                  </div>
+                  {coachRosterMode === "approved_only" && (
+                    <p className="text-xs text-slate-500 mt-3">
+                      Contact us to configure which specific coaches appear for your team.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Feedback */}

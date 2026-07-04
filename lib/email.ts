@@ -911,3 +911,314 @@ export async function sendSessionConfirmationEmail(opts: SessionConfirmationOpti
     html,
   });
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COACH ROSTER EMAILS  (A–G)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const COACH_FROM = `"LearnFast Coaching" <${process.env.GMAIL_USER}>`;
+
+function coachEmailShell(title: string, body: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#05070d;font-family:'Inter',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#05070d;padding:40px 0;">
+  <tr><td align="center">
+    <table width="560" cellpadding="0" cellspacing="0" style="background:#0f172a;border-radius:16px;border:1px solid #1e293b;overflow:hidden;max-width:560px;">
+      <tr><td style="background:linear-gradient(135deg,#6d28d9,#7c3aed);padding:28px 40px 24px;">
+        <p style="margin:0;color:#fff;font-size:20px;font-weight:700;">LearnFast</p>
+        <p style="margin:6px 0 0;color:#c4b5fd;font-size:13px;">${title}</p>
+      </td></tr>
+      <tr><td style="padding:32px 40px 28px;">${body}</td></tr>
+      <tr><td style="padding:0 40px 24px;text-align:center;">
+        <p style="margin:0;color:#334155;font-size:11px;">LearnFast · <a href="https://learnfastapp.com" style="color:#334155;">learnfastapp.com</a></p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+}
+
+function ctaButton(href: string, label: string, color = "#7c3aed"): string {
+  return `<table cellpadding="0" cellspacing="0" style="margin:12px 0;">
+    <tr><td style="background:${color};border-radius:10px;padding:11px 22px;">
+      <a href="${href}" style="color:#fff;font-size:14px;font-weight:600;text-decoration:none;">${label}</a>
+    </td></tr>
+  </table>`;
+}
+
+function slotLabel(start: Date, tz: string): string {
+  return start.toLocaleString("en-GB", {
+    timeZone: tz, weekday: "long", day: "numeric", month: "long",
+    hour: "2-digit", minute: "2-digit",
+  });
+}
+
+// Email A — to coach: new booking request
+export interface CoachEmailAOptions {
+  coachEmail: string;
+  coachName: string;
+  coachTimezone: string;
+  userName: string;
+  userNote: string;
+  slots: Date[];
+  callDurationMins: number;
+  callId: string;
+  actionBaseUrl: string; // e.g. https://learnfastapp.com/api/coaches/action
+  declineUrl: string;
+}
+
+export async function sendCoachNewRequestEmail(opts: CoachEmailAOptions): Promise<void> {
+  const { coachEmail, coachName, coachTimezone, userName, userNote, slots, callDurationMins, callId, actionBaseUrl, declineUrl } = opts;
+
+  const slotButtons = slots.map((slot, i) => {
+    const url = `${actionBaseUrl}?callId=${callId}&action=confirm&slot=${i}`;
+    return `<div style="margin-bottom:10px;">
+      <p style="margin:0 0 4px;color:#94a3b8;font-size:13px;">${slotLabel(slot, coachTimezone)} (${callDurationMins} min)</p>
+      ${ctaButton(url, `✓ Confirm slot ${i + 1}`)}
+    </div>`;
+  }).join("");
+
+  const body = `
+    <p style="margin:0 0 20px;color:#f1f5f9;font-size:16px;font-weight:600;">Hi ${coachName}, you have a new discovery call request!</p>
+    <p style="margin:0 0 4px;color:#64748b;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">From</p>
+    <p style="margin:0 0 16px;color:#e2e8f0;font-size:15px;font-weight:600;">${userName}</p>
+    ${userNote ? `<div style="background:#0a0f1a;border:1px solid #1e293b;border-radius:10px;padding:16px 20px;margin-bottom:20px;">
+      <p style="margin:0 0 6px;color:#64748b;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">What they'd like help with</p>
+      <p style="margin:0;color:#cbd5e1;font-size:14px;line-height:1.6;">${userNote}</p>
+    </div>` : ""}
+    <p style="margin:0 0 14px;color:#94a3b8;font-size:14px;">They've proposed the following times. Click to confirm one:</p>
+    ${slotButtons}
+    <div style="margin-top:20px;padding-top:20px;border-top:1px solid #1e293b;">
+      ${ctaButton(declineUrl, "✗ Decline this request", "#475569")}
+      <p style="margin:4px 0 0;color:#64748b;font-size:12px;">Links expire in 72 hours. The user's email is shared only after you confirm.</p>
+    </div>`;
+
+  await getTransporter().sendMail({
+    from: COACH_FROM,
+    to: coachEmail,
+    subject: `New discovery call request from ${userName} — LearnFast`,
+    html: coachEmailShell("New discovery call request", body),
+  });
+}
+
+// Email B — to user: request acknowledged
+export interface CoachEmailBOptions {
+  userEmail: string;
+  userName: string;
+  coachName: string;
+  dashboardUrl: string;
+}
+
+export async function sendCoachRequestAckEmail(opts: CoachEmailBOptions): Promise<void> {
+  const { userEmail, userName, coachName, dashboardUrl } = opts;
+  const body = `
+    <p style="margin:0 0 16px;color:#f1f5f9;font-size:16px;font-weight:600;">Request sent to ${coachName}!</p>
+    <p style="margin:0 0 16px;color:#94a3b8;font-size:14px;line-height:1.6;">Hi ${userName}, your discovery call request has been sent. ${coachName} typically responds within 48 hours. You'll receive an email and calendar invite once they confirm a time.</p>
+    <p style="margin:0 0 20px;color:#64748b;font-size:13px;font-style:italic;">Your email is shared with the coach only when they confirm.</p>
+    ${ctaButton(dashboardUrl, "View your calls →")}`;
+
+  await getTransporter().sendMail({
+    from: COACH_FROM,
+    to: userEmail,
+    subject: `Discovery call request sent to ${coachName} — LearnFast`,
+    html: coachEmailShell("Discovery call requested", body),
+  });
+}
+
+// Email C — to both parties: call confirmed + ICS attachment
+export interface CoachEmailCOptions {
+  toEmail: string;
+  toName: string;
+  otherName: string;
+  coachName: string;
+  userName: string;
+  confirmedStart: Date;
+  confirmedEnd: Date;
+  recipientTimezone: string;
+  meetingUrl: string;
+  userNote: string;
+  icsContent: string;
+  dashboardUrl: string;
+}
+
+export async function sendCoachConfirmedEmail(opts: CoachEmailCOptions): Promise<void> {
+  const { toEmail, toName, confirmedStart, confirmedEnd, recipientTimezone, meetingUrl, coachName, userName, userNote, icsContent, dashboardUrl } = opts;
+  const dateStr = slotLabel(confirmedStart, recipientTimezone);
+  const endStr = confirmedEnd.toLocaleString("en-GB", { timeZone: recipientTimezone, hour: "2-digit", minute: "2-digit" });
+
+  const body = `
+    <p style="margin:0 0 20px;color:#4ade80;font-size:16px;font-weight:700;">✓ Discovery call confirmed</p>
+    <p style="margin:0 0 6px;color:#94a3b8;font-size:14px;">Hi ${toName},</p>
+    <p style="margin:0 0 24px;color:#e2e8f0;font-size:14px;line-height:1.6;">Your discovery call between <strong>${coachName}</strong> and <strong>${userName}</strong> is confirmed.</p>
+    <div style="background:#0a0f1a;border:1px solid #1e293b;border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+      <p style="margin:0 0 6px;color:#64748b;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Date &amp; time</p>
+      <p style="margin:0 0 12px;color:#f1f5f9;font-size:15px;font-weight:600;">${dateStr} – ${endStr}</p>
+      <p style="margin:0 0 6px;color:#64748b;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Meeting link</p>
+      <a href="${meetingUrl}" style="color:#7c3aed;font-size:14px;word-break:break-all;">${meetingUrl}</a>
+    </div>
+    ${userNote ? `<p style="margin:0 0 4px;color:#64748b;font-size:12px;">Topic: <em>${userNote}</em></p>` : ""}
+    <p style="margin:16px 0 8px;color:#94a3b8;font-size:13px;">A calendar invite is attached — open it to add the event to your calendar automatically.</p>
+    ${ctaButton(meetingUrl, "Join meeting →")}
+    ${ctaButton(dashboardUrl, "Manage your calls →", "#1e293b")}`;
+
+  await getTransporter().sendMail({
+    from: COACH_FROM,
+    to: toEmail,
+    subject: `Discovery call confirmed: ${coachName} × ${userName} — ${dateStr}`,
+    html: coachEmailShell("Discovery call confirmed", body),
+    attachments: [{ filename: "invite.ics", content: icsContent, contentType: "text/calendar; method=REQUEST" }],
+  });
+}
+
+// Email D — to user: call declined
+export interface CoachEmailDOptions {
+  userEmail: string;
+  userName: string;
+  coachName: string;
+  rosterUrl: string;
+}
+
+export async function sendCoachDeclinedEmail(opts: CoachEmailDOptions): Promise<void> {
+  const { userEmail, userName, coachName, rosterUrl } = opts;
+  const body = `
+    <p style="margin:0 0 16px;color:#f1f5f9;font-size:15px;">Hi ${userName},</p>
+    <p style="margin:0 0 16px;color:#94a3b8;font-size:14px;line-height:1.6;">Unfortunately ${coachName} isn't available for a call right now. This sometimes happens when a coach's schedule changes — it's nothing personal.</p>
+    <p style="margin:0 0 20px;color:#94a3b8;font-size:14px;">Browse the full roster to find another coach who may be a great fit:</p>
+    ${ctaButton(rosterUrl, "Browse coaches →")}`;
+
+  await getTransporter().sendMail({
+    from: COACH_FROM,
+    to: userEmail,
+    subject: `Update on your discovery call request — LearnFast`,
+    html: coachEmailShell("Discovery call update", body),
+  });
+}
+
+// Email E — 24h reminder to both parties
+export interface CoachEmailEOptions {
+  toEmail: string;
+  toName: string;
+  coachName: string;
+  userName: string;
+  confirmedStart: Date;
+  recipientTimezone: string;
+  meetingUrl: string;
+}
+
+export async function sendCoachReminderEmail(opts: CoachEmailEOptions): Promise<void> {
+  const { toEmail, toName, coachName, userName, confirmedStart, recipientTimezone, meetingUrl } = opts;
+  const dateStr = slotLabel(confirmedStart, recipientTimezone);
+  const body = `
+    <p style="margin:0 0 16px;color:#f1f5f9;font-size:15px;">Hi ${toName} — your discovery call is tomorrow.</p>
+    <div style="background:#0a0f1a;border:1px solid #1e293b;border-radius:12px;padding:20px 24px;margin-bottom:20px;">
+      <p style="margin:0 0 4px;color:#64748b;font-size:12px;">Between</p>
+      <p style="margin:0 0 8px;color:#e2e8f0;font-size:15px;font-weight:600;">${coachName} &amp; ${userName}</p>
+      <p style="margin:0 0 4px;color:#64748b;font-size:12px;">When</p>
+      <p style="margin:0;color:#e2e8f0;font-size:14px;">${dateStr}</p>
+    </div>
+    ${ctaButton(meetingUrl, "Join meeting →")}`;
+
+  await getTransporter().sendMail({
+    from: COACH_FROM,
+    to: toEmail,
+    subject: `Reminder: Discovery call tomorrow — ${coachName} × ${userName}`,
+    html: coachEmailShell("Call reminder", body),
+  });
+}
+
+// Email F — to user: request expired
+export interface CoachEmailFOptions {
+  userEmail: string;
+  userName: string;
+  coachName: string;
+  rosterUrl: string;
+}
+
+export async function sendCoachExpiredEmail(opts: CoachEmailFOptions): Promise<void> {
+  const { userEmail, userName, coachName, rosterUrl } = opts;
+  const body = `
+    <p style="margin:0 0 16px;color:#f1f5f9;font-size:15px;">Hi ${userName},</p>
+    <p style="margin:0 0 16px;color:#94a3b8;font-size:14px;line-height:1.6;">Your discovery call request with ${coachName} has expired without a response. We're sorry about that — coaches sometimes have unexpected schedule changes.</p>
+    <p style="margin:0 0 20px;color:#94a3b8;font-size:14px;">You're welcome to browse the roster and send a request to another coach:</p>
+    ${ctaButton(rosterUrl, "Browse coaches →")}`;
+
+  await getTransporter().sendMail({
+    from: COACH_FROM,
+    to: userEmail,
+    subject: `Your discovery call request has expired — LearnFast`,
+    html: coachEmailShell("Request expired", body),
+  });
+}
+
+// Email G — to admin: new coach application
+export interface CoachEmailGOptions {
+  applicantName: string;
+  applicantEmail: string;
+  linkedinUrl: string;
+  specialties: string;
+  pitch: string;
+  tryCompleted: boolean;
+  adminUrl: string;
+}
+
+export async function sendCoachApplicationEmail(opts: CoachEmailGOptions): Promise<void> {
+  const { applicantName, applicantEmail, linkedinUrl, specialties, pitch, tryCompleted, adminUrl } = opts;
+  const body = `
+    <p style="margin:0 0 20px;color:#f1f5f9;font-size:15px;font-weight:600;">New coach application received</p>
+    <div style="background:#0a0f1a;border:1px solid #1e293b;border-radius:12px;padding:20px 24px;margin-bottom:20px;">
+      <p style="margin:0 0 4px;color:#64748b;font-size:12px;">Name</p>
+      <p style="margin:0 0 12px;color:#e2e8f0;font-size:14px;font-weight:600;">${applicantName}</p>
+      <p style="margin:0 0 4px;color:#64748b;font-size:12px;">Email</p>
+      <p style="margin:0 0 12px;color:#e2e8f0;font-size:14px;">${applicantEmail}</p>
+      <p style="margin:0 0 4px;color:#64748b;font-size:12px;">LinkedIn</p>
+      <p style="margin:0 0 12px;color:#7c3aed;font-size:14px;word-break:break-all;">${linkedinUrl || "—"}</p>
+      <p style="margin:0 0 4px;color:#64748b;font-size:12px;">Specialties</p>
+      <p style="margin:0 0 12px;color:#e2e8f0;font-size:14px;">${specialties}</p>
+      <p style="margin:0 0 4px;color:#64748b;font-size:12px;">/try completed?</p>
+      <p style="margin:0 0 12px;color:${tryCompleted ? "#4ade80" : "#f87171"};font-size:14px;font-weight:600;">${tryCompleted ? "Yes" : "No"}</p>
+      <p style="margin:0 0 4px;color:#64748b;font-size:12px;">Pitch</p>
+      <p style="margin:0;color:#cbd5e1;font-size:13px;line-height:1.6;">${pitch}</p>
+    </div>
+    ${ctaButton(adminUrl, "Review in admin →")}`;
+
+  await getTransporter().sendMail({
+    from: COACH_FROM,
+    to: process.env.GMAIL_USER ?? "physicalperformance@icloud.com",
+    subject: `New coach application: ${applicantName} — LearnFast`,
+    html: coachEmailShell("Coach application", body),
+  });
+}
+
+// Email — cancellation notification (to the other party)
+export interface CoachCancelEmailOptions {
+  toEmail: string;
+  toName: string;
+  cancelledByName: string;
+  coachName: string;
+  userName: string;
+  confirmedStart: Date;
+  recipientTimezone: string;
+  icsContent?: string; // METHOD:CANCEL ICS to remove calendar event
+  rosterUrl: string;
+}
+
+export async function sendCoachCancelledEmail(opts: CoachCancelEmailOptions): Promise<void> {
+  const { toEmail, toName, cancelledByName, coachName, userName, confirmedStart, recipientTimezone, icsContent, rosterUrl } = opts;
+  const dateStr = slotLabel(confirmedStart, recipientTimezone);
+  const body = `
+    <p style="margin:0 0 16px;color:#f1f5f9;font-size:15px;">Hi ${toName},</p>
+    <p style="margin:0 0 16px;color:#94a3b8;font-size:14px;line-height:1.6;">${cancelledByName} has cancelled the discovery call scheduled for <strong>${dateStr}</strong> between ${coachName} and ${userName}.</p>
+    ${icsContent ? `<p style="margin:0 0 20px;color:#64748b;font-size:13px;">A calendar cancellation is attached — open it to remove the event from your calendar.</p>` : ""}
+    ${ctaButton(rosterUrl, "Browse coaches →")}`;
+
+  await getTransporter().sendMail({
+    from: COACH_FROM,
+    to: toEmail,
+    subject: `Discovery call cancelled — LearnFast`,
+    html: coachEmailShell("Discovery call cancelled", body),
+    ...(icsContent ? { attachments: [{ filename: "cancel.ics", content: icsContent, contentType: "text/calendar; method=CANCEL" }] } : {}),
+  });
+}

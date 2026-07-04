@@ -63,6 +63,7 @@ export async function GET(
     myRole: ctx.role,
     logoUrl: org.logoUrl ?? null,
     defaultLocale: (org.defaultLocale as string | undefined) ?? "en",
+    coachRoster: org.coachRoster ?? { enabled: true, mode: "all", approvedCoachIds: [] },
   });
 }
 
@@ -83,7 +84,7 @@ export async function PATCH(
   }
 
   const body = await req.json().catch(() => ({}));
-  const updates: Record<string, string | null> = {};
+  const updates: Record<string, unknown> = {};
 
   if (typeof body.name === "string") {
     const name = body.name.trim();
@@ -107,6 +108,15 @@ export async function PATCH(
       return NextResponse.json({ error: "invalid_locale" }, { status: 400 });
     }
     updates.defaultLocale = dl;
+  }
+
+  if (body.coachRoster !== undefined) {
+    const cr = body.coachRoster as { enabled?: boolean; mode?: string; approvedCoachIds?: string[] };
+    updates.coachRoster = {
+      enabled: typeof cr.enabled === "boolean" ? cr.enabled : true,
+      mode: cr.mode === "approved_only" ? "approved_only" : "all",
+      approvedCoachIds: Array.isArray(cr.approvedCoachIds) ? cr.approvedCoachIds : [],
+    };
   }
 
   if (Object.keys(updates).length === 0) {

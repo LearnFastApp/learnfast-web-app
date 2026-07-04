@@ -33,6 +33,7 @@ import { ProfileCardCompact, type ProfileData } from "@/components/profile-card"
 import ProfileSetupModal from "@/components/profile-setup-modal";
 import { useLocale, useSetLocale, useTranslations } from "@/lib/i18n";
 import { trackLocaleSet } from "@/lib/locale/analytics";
+import { trackDashboardCoachWidgetClicked } from "@/lib/coach-analytics";
 
 
 interface Session {
@@ -107,6 +108,11 @@ export default function Dashboard() {
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [orgId, setOrgId] = useState<string | null>(null);
   const [orgRole, setOrgRole] = useState<string | null>(null);
+  const [activeCoachCall, setActiveCoachCall] = useState<{
+    status: string; coachName: string; coachSlug: string;
+    confirmedStart?: Date | null;
+  } | null>(null);
+  const [featuredCoaches, setFeaturedCoaches] = useState<{ slug: string; name: string; headshotUrl: string }[]>([]);
 
   useEffect(() => {
     if (loading) return;
@@ -135,6 +141,40 @@ export default function Dashboard() {
         if (!data.onboardingSeen) setShowOnboarding(true);
       }
     });
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    // Load active coaching call (confirmed or requested)
+    const coachQ = query(
+      collection(db, "discoveryCalls"),
+      where("userId", "==", user.uid),
+      orderBy("createdAt", "desc"),
+      limit(5)
+    );
+    getDocs(coachQ).then((snap) => {
+      const active = snap.docs
+        .map((d) => d.data())
+        .find((d) => d.status === "confirmed" || d.status === "requested");
+      if (active) {
+        setActiveCoachCall({
+          status: active.status as string,
+          coachName: active.coachName as string,
+          coachSlug: active.coachSlug as string,
+          confirmedStart: active.confirmedSlot?.start?.toDate?.() ?? null,
+        });
+      } else {
+        setActiveCoachCall(null);
+      }
+    }).catch(() => {});
+
+    // Load featured coaches for the promo widget
+    fetch("/api/coaches?featured=true")
+      .then((r) => r.json())
+      .then((d: { coaches?: { slug: string; name: string; headshotUrl: string }[] }) => {
+        setFeaturedCoaches((d.coaches ?? []).slice(0, 3));
+      })
+      .catch(() => {});
   }, [user]);
 
   useEffect(() => {
@@ -484,6 +524,43 @@ export default function Dashboard() {
               <p className="text-[10px] text-slate-600 text-center">{t.cancelAnytime}</p>
             </div>
           )}
+
+          {/* Coach roster widget */}
+          <a
+            href={activeCoachCall ? "/dashboard/coaching" : "/coaches"}
+            onClick={() => trackDashboardCoachWidgetClicked()}
+            className="mt-6 block rounded-xl border border-[#1e293b] bg-[#0a0f1a] p-4 hover:border-violet-500/40 transition-colors"
+          >
+            {activeCoachCall ? (
+              <div>
+                <p className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-1">
+                  {activeCoachCall.status === "confirmed" ? "Upcoming call" : "Call pending"}
+                </p>
+                <p className="text-white text-sm font-semibold">{activeCoachCall.coachName}</p>
+                {activeCoachCall.status === "confirmed" && activeCoachCall.confirmedStart && (
+                  <p className="text-slate-500 text-xs mt-0.5">
+                    {activeCoachCall.confirmedStart.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                  </p>
+                )}
+                <p className="text-violet-400 text-xs mt-2">View details →</p>
+              </div>
+            ) : (
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">1:1 Coaching</p>
+                {featuredCoaches.length > 0 && (
+                  <div className="flex -space-x-2 mb-2">
+                    {featuredCoaches.map((c) => (
+                      <div key={c.slug} className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-[#0a0f1a] bg-[#1e293b]">
+                        <Image src={c.headshotUrl} alt={c.name} fill sizes="32px" className="object-cover object-top" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p className="text-white text-sm font-medium">Work 1:1 on your score</p>
+                <p className="text-violet-400 text-xs mt-1">Browse coaches →</p>
+              </div>
+            )}
+          </a>
 
           <div className="mt-auto border-t border-white/10 pt-5 space-y-3">
             <ProfileCardCompact
