@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Mail, CheckCircle, XCircle, Clock, AlertCircle, Loader2 } from "lucide-react";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 
 type Stage = "loading" | "confirm" | "accepting" | "success" | "error";
@@ -44,6 +46,7 @@ export default function JoinPage() {
   const [stage, setStage] = useState<Stage>("loading");
   const [meta, setMeta] = useState<TokenMeta | null>(null);
   const [errorKind, setErrorKind] = useState<ErrorKind>("unknown");
+  const [invitedEmail, setInvitedEmail] = useState<string | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -93,6 +96,7 @@ export default function JoinPage() {
       const data = await res.json();
       if (!res.ok) {
         setErrorKind((data.error as ErrorKind) ?? "unknown");
+        if (data.invited) setInvitedEmail(data.invited as string);
         setStage("error");
         return;
       }
@@ -114,13 +118,39 @@ export default function JoinPage() {
 
   if (stage === "error") {
     const err = ERROR_COPY[errorKind];
+    const isMismatch = errorKind === "email_mismatch";
+
+    async function switchAccount() {
+      await signOut(auth);
+      window.localStorage.setItem("pendingOrgInviteToken", token);
+      window.location.href = `/auth/login?redirect=/org/join/${token}`;
+    }
+
     return (
       <main className="min-h-screen bg-[#05070d] flex items-center justify-center p-6">
         <div className="max-w-sm w-full bg-[#0f172a] border border-[#1e293b] rounded-2xl p-8 text-center">
           <XCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-white mb-2">{err.title}</h1>
-          <p className="text-slate-400 text-sm leading-relaxed mb-6">{err.body}</p>
-          <a href="/dashboard" className="text-violet-400 text-sm underline">Go to dashboard</a>
+          <p className="text-slate-400 text-sm leading-relaxed mb-2">{err.body}</p>
+          {isMismatch && invitedEmail && (
+            <p className="text-xs text-slate-500 mb-6">
+              This invite is for <span className="text-slate-300">{invitedEmail}</span>
+            </p>
+          )}
+          {!isMismatch && <div className="mb-6" />}
+          <div className="flex flex-col gap-3">
+            {isMismatch && (
+              <button
+                onClick={switchAccount}
+                className="w-full bg-violet-600 hover:bg-violet-500 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
+              >
+                Sign in with the right account
+              </button>
+            )}
+            <a href="/dashboard" className="text-violet-400 text-sm underline">
+              Go to dashboard
+            </a>
+          </div>
         </div>
       </main>
     );
