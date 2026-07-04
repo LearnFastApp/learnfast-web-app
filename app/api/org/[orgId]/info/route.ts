@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Timestamp } from "firebase-admin/firestore";
 import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
-import { getOrgContext } from "@/lib/org-context";
+import { getOrgContext, hasOrgPermission } from "@/lib/org-context";
 
 export const dynamic = "force-dynamic";
 
@@ -53,5 +53,51 @@ export async function GET(
     stripeCustomerId: org.stripeCustomerId ?? null,
     stripeSubscriptionId: org.stripeSubscriptionId ?? null,
     myRole: ctx.role,
+    logoUrl: org.logoUrl ?? null,
   });
+}
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ orgId: string }> }
+) {
+  const uid = await verifyAuthToken(req);
+  if (!uid) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const { orgId } = await params;
+  const ctx = await getOrgContext(uid);
+  if (!ctx || ctx.orgId !== orgId) {
+    return NextResponse.json({ error: "not_in_org" }, { status: 403 });
+  }
+  if (!hasOrgPermission(ctx.role, "admin")) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
+  const body = await req.json().catch(() => ({}));
+  const updates: Record<string, string | null> = {};
+
+  if (typeof body.name === "string") {
+    const name = body.name.trim();
+    if (name.length < 2) {
+      return NextResponse.json({ error: "invalid_name" }, { status: 400 });
+    }
+    updates.name = name;
+  }
+
+  if ("logoUrl" in body) {
+    const url = typeof body.logoUrl === "string" ? body.logoUrl.trim() : null;
+    if (url && !/^https?:\/\/.+/.test(url)) {
+      return NextResponse.json({ error: "invalid_logo_url" }, { status: 400 });
+    }
+    updates.logoUrl = url || null;
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: "no_fields" }, { status: 400 });
+  }
+
+  const db = getAdminDb();
+  await db.doc(`organizations/${orgId}`).update(updates);
+
+  return NextResponse.json({ ok: true });
 }
