@@ -11,10 +11,16 @@
  */
 
 import { createHash } from "crypto";
-import { initializeApp, cert, getApps } from "firebase-admin/app";
+import { readFileSync } from "fs";
+import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
-if (!getApps().length) initializeApp();
+const projectId =
+  process.env.GOOGLE_CLOUD_PROJECT ??
+  process.env.GCLOUD_PROJECT ??
+  JSON.parse(readFileSync(new URL("../.firebaserc", import.meta.url), "utf8")).projects.default;
+
+if (!getApps().length) initializeApp({ projectId });
 const db = getFirestore();
 
 // ── Current scoring version config ───────────────────────────────────────────

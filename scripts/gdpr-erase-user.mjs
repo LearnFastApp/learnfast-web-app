@@ -20,12 +20,18 @@
  * This is irreversible.
  */
 
-import { initializeApp, cert, getApps } from "firebase-admin/app";
+import { readFileSync } from "fs";
+import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import { S3Client, DeleteObjectsCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 
-if (!getApps().length) initializeApp();
+const projectId =
+  process.env.GOOGLE_CLOUD_PROJECT ??
+  process.env.GCLOUD_PROJECT ??
+  JSON.parse(readFileSync(new URL("../.firebaserc", import.meta.url), "utf8")).projects.default;
+
+if (!getApps().length) initializeApp({ projectId });
 const db = getFirestore();
 const auth = getAuth();
 
