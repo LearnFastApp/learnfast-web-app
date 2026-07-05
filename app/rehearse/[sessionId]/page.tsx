@@ -7,7 +7,7 @@ import { getDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
   ArrowLeft, Mic, UploadCloud, Square, RotateCcw, Loader2,
-  CheckCircle2, BookmarkCheck, Tag, AlertCircle, ChevronRight,
+  CheckCircle2, BookmarkCheck, Tag, AlertCircle, ChevronRight, Users,
 } from "lucide-react";
 import { Suspense } from "react";
 
@@ -45,6 +45,8 @@ interface Session {
   status: string;
   promotedAssessmentId?: string | null;
   tier?: string;
+  orgId?: string | null;
+  isPublic?: boolean;
 }
 
 type PageStage = "loading" | "polling" | "ready" | "recording" | "recorded" | "uploading" | "promoting" | "promoted" | "error";
@@ -199,6 +201,9 @@ function RehearsalPageInner() {
     errFormat: "Unsupported format.",
   };
 
+  const [isSharing, setIsSharing] = useState(false);
+  const [isShared, setIsShared] = useState(false);
+
   const [scriptStage, setScriptStage] = useState<"idle" | "loading" | "ready">("idle");
   const [scriptSuggestion, setScriptSuggestion] = useState<{
     coachNote: string;
@@ -228,7 +233,9 @@ function RehearsalPageInner() {
       });
       if (!res.ok) { setPageStage("error"); return; }
       const data = await res.json();
-      setSession(data.session as Session);
+      const loadedSession = data.session as Session;
+      setSession(loadedSession);
+      if (loadedSession.isPublic) setIsShared(true);
       const loadedTakes: Take[] = data.takes as Take[];
       setTakes(loadedTakes);
       return loadedTakes;
@@ -387,6 +394,22 @@ function RehearsalPageInner() {
       setErrorMsg(t.errNetwork);
       setPageStage("ready");
     }
+  }
+
+  async function shareToFeed() {
+    if (!user || isSharing) return;
+    setIsSharing(true);
+    try {
+      const token = await user.getIdToken();
+      await fetch(`/api/rehearsal/${sessionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ isPublic: true }),
+      });
+      setIsShared(true);
+      setSession((prev) => prev ? { ...prev, isPublic: true } : prev);
+    } catch { /* ignore */ }
+    finally { setIsSharing(false); }
   }
 
   async function promote() {
@@ -677,40 +700,72 @@ function RehearsalPageInner() {
 
             {/* Actions */}
             {pageStage === "promoted" ? (
-              <div className="rounded-xl border border-green-500/20 bg-green-500/5 p-4 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-green-400 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-white">{t.bestTakeSaved}</p>
-                    <p className="text-xs text-slate-400">{t.returnFromDashboard}</p>
+              <div className="space-y-2">
+                <div className="rounded-xl border border-green-500/20 bg-green-500/5 p-4 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-green-400 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-white">{t.bestTakeSaved}</p>
+                      <p className="text-xs text-slate-400">{t.returnFromDashboard}</p>
+                    </div>
                   </div>
-                </div>
-                <button
-                  onClick={() => router.push("/dashboard")}
-                  className="text-xs font-semibold text-slate-300 hover:text-white border border-white/20 hover:border-white/40 rounded-lg px-3 py-1.5 transition flex-shrink-0"
-                >
-                  {t.dashboard}
-                </button>
-              </div>
-            ) : (
-              <div className="flex gap-3">
-                {!activeTake.isPromoted && (
                   <button
-                    onClick={promote}
-                    disabled={pageStage === "promoting"}
-                    className="flex items-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition disabled:opacity-50"
+                    onClick={() => router.push("/dashboard")}
+                    className="text-xs font-semibold text-slate-300 hover:text-white border border-white/20 hover:border-white/40 rounded-lg px-3 py-1.5 transition flex-shrink-0"
                   >
-                    <BookmarkCheck className="h-4 w-4" />
-                    {pageStage === "promoting" ? t.saving : t.saveToHistory}
+                    {t.dashboard}
+                  </button>
+                </div>
+                {session?.orgId && (
+                  <button
+                    onClick={shareToFeed}
+                    disabled={isSharing || isShared}
+                    className={`w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition ${
+                      isShared
+                        ? "border border-violet-500/30 bg-violet-500/10 text-violet-300 cursor-default"
+                        : "border border-violet-500/40 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20 hover:border-violet-500/60 disabled:opacity-50"
+                    }`}
+                  >
+                    {isShared ? <CheckCircle2 className="h-4 w-4" /> : <Users className="h-4 w-4" />}
+                    {isShared ? "Shared to team feed" : isSharing ? "Sharing…" : "Share to team feed"}
                   </button>
                 )}
-                <button
-                  onClick={() => { setRecordedBlob(null); setUploadFile(null); setInputMode("record"); setPageStage("ready"); }}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition"
-                >
-                  <Mic className="h-4 w-4" />
-                  {t.recordTake((activeTake.takeNumber ?? 1) + 1)}
-                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex gap-3">
+                  {!activeTake.isPromoted && (
+                    <button
+                      onClick={promote}
+                      disabled={pageStage === "promoting"}
+                      className="flex items-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition disabled:opacity-50"
+                    >
+                      <BookmarkCheck className="h-4 w-4" />
+                      {pageStage === "promoting" ? t.saving : t.saveToHistory}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => { setRecordedBlob(null); setUploadFile(null); setInputMode("record"); setPageStage("ready"); }}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white hover:bg-violet-400 transition"
+                  >
+                    <Mic className="h-4 w-4" />
+                    {t.recordTake((activeTake.takeNumber ?? 1) + 1)}
+                  </button>
+                </div>
+                {session?.orgId && activeTake.isPromoted && (
+                  <button
+                    onClick={shareToFeed}
+                    disabled={isSharing || isShared}
+                    className={`w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition ${
+                      isShared
+                        ? "border border-violet-500/30 bg-violet-500/10 text-violet-300 cursor-default"
+                        : "border border-violet-500/40 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20 hover:border-violet-500/60 disabled:opacity-50"
+                    }`}
+                  >
+                    {isShared ? <CheckCircle2 className="h-4 w-4" /> : <Users className="h-4 w-4" />}
+                    {isShared ? "Shared to team feed" : isSharing ? "Sharing…" : "Share to team feed"}
+                  </button>
+                )}
               </div>
             )}
           </div>
