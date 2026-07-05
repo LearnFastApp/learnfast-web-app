@@ -32,7 +32,9 @@ async function getCachedPodcasts(dimension: string): Promise<PodcastResult[] | n
   const data = doc.data()!;
   const updatedAt: number = data.updatedAt?.toMillis?.() ?? 0;
   if (Date.now() - updatedAt > CACHE_TTL_MS) return null;
-  return data.podcasts as PodcastResult[];
+  const podcasts = data.podcasts as PodcastResult[];
+  if (!podcasts?.length) return null; // treat empty cache as a miss so fallback runs
+  return podcasts;
 }
 
 async function setCachedPodcasts(dimension: string, podcasts: PodcastResult[]) {
@@ -89,6 +91,28 @@ async function fetchFromPodcastIndex(dimension: string): Promise<PodcastResult[]
     }));
 }
 
+async function fetchFromItunes(dimension: string): Promise<PodcastResult[]> {
+  const query = QUERIES[dimension];
+  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=podcast&entity=podcast&limit=10&country=US`;
+
+  try {
+    const res = await fetch(url, { headers: { "User-Agent": "LearnFastApp/1.0" } });
+    if (!res.ok) return [];
+    const json = await res.json() as {
+      results?: { collectionName: string; artistName: string; artworkUrl100: string; trackViewUrl: string }[];
+    };
+    return (json.results ?? []).slice(0, 8).map((item) => ({
+      title: item.collectionName,
+      author: item.artistName || "Unknown host",
+      description: "",
+      image: item.artworkUrl100 ?? "",
+      link: item.trackViewUrl,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function GET(req: NextRequest) {
   const { allowed } = rateLimit(`podcasts:${getIp(req)}`, 30, 60_000);
   if (!allowed) {
@@ -102,10 +126,13 @@ export async function GET(req: NextRequest) {
 
   const uid = await verifyAuthToken(req);
 
-  // Fetch full pool from Firestore cache or Podcast Index API
+  // Fetch full pool from Firestore cache, then Podcast Index, then iTunes as fallback
   let pool = await getCachedPodcasts(dimension);
   if (!pool) {
     pool = await fetchFromPodcastIndex(dimension);
+    if (pool.length === 0) {
+      pool = await fetchFromItunes(dimension);
+    }
     if (pool.length > 0) {
       await setCachedPodcasts(dimension, pool);
     }
