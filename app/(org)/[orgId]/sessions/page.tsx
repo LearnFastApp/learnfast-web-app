@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import {
   Calendar, CalendarPlus, Clock, Download, Loader2, Pencil, Play,
-  Plus, QrCode, Save, Trash2, Users, X, ChevronDown, Radio,
+  Plus, QrCode, Save, Trash2, Users, X, ChevronDown, Radio, Zap,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import OrgSidebar from "@/components/org-sidebar";
@@ -172,6 +172,12 @@ export default function SessionsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const redirectingRef = useRef(false);
 
+  const [showQuickStart, setShowQuickStart] = useState(false);
+  const [quickTitle, setQuickTitle] = useState("");
+  const [quickType, setQuickType] = useState<OrgSessionType>("presentation");
+  const [quickCreating, setQuickCreating] = useState(false);
+  const [quickError, setQuickError] = useState("");
+
   const fetchSessions = useCallback(async () => {
     if (!user) return;
     try {
@@ -237,6 +243,35 @@ export default function SessionsPage() {
       setFormError("Network error. Please try again.");
     } finally {
       setCreating(false);
+    }
+  }
+
+  async function startSessionNow(e: React.FormEvent) {
+    e.preventDefault();
+    if (!user || quickCreating) return;
+    setQuickCreating(true);
+    setQuickError("");
+    try {
+      const token = await user.getIdToken();
+      const title = quickTitle.trim() || `Session — ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`;
+      const res = await fetch(`/api/org/${orgId}/sessions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ title, type: quickType, startNow: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setQuickError(data.error ?? "Failed to start session."); return; }
+      if (data.linkedConsumerSessionId) {
+        router.push(`/sessions/${data.linkedConsumerSessionId}`);
+      } else {
+        setShowQuickStart(false);
+        setQuickTitle("");
+        await fetchSessions();
+      }
+    } catch {
+      setQuickError("Network error. Please try again.");
+    } finally {
+      setQuickCreating(false);
     }
   }
 
@@ -308,24 +343,33 @@ export default function SessionsPage() {
               Sessions
             </h1>
           </div>
-          <button
-            onClick={() => {
-              setShowForm(true);
-              if (orgMembers.length === 0) {
-                setMembersLoading(true);
-                user!.getIdToken().then(token =>
-                  fetch(`/api/org/${orgId}/members-list`, { headers: { Authorization: `Bearer ${token}` } })
-                    .then(r => r.ok ? r.json() : null)
-                    .then(d => { if (d?.members) setOrgMembers(d.members.filter((m: { status: string }) => m.status === "active")); })
-                    .finally(() => setMembersLoading(false))
-                );
-              }
-            }}
-            className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            New session
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { setShowQuickStart(true); setQuickError(""); }}
+              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
+            >
+              <Zap className="w-4 h-4" />
+              Start now
+            </button>
+            <button
+              onClick={() => {
+                setShowForm(true);
+                if (orgMembers.length === 0) {
+                  setMembersLoading(true);
+                  user!.getIdToken().then(token =>
+                    fetch(`/api/org/${orgId}/members-list`, { headers: { Authorization: `Bearer ${token}` } })
+                      .then(r => r.ok ? r.json() : null)
+                      .then(d => { if (d?.members) setOrgMembers(d.members.filter((m: { status: string }) => m.status === "active")); })
+                      .finally(() => setMembersLoading(false))
+                  );
+                }
+              }}
+              className="flex items-center gap-2 bg-white/[0.06] hover:bg-white/[0.10] text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Schedule
+            </button>
+          </div>
         </div>
 
         {/* Onboarding checklist — shown to admins until all steps complete */}
@@ -380,6 +424,56 @@ export default function SessionsPage() {
                   )}
                 </a>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Quick-start modal */}
+        {showQuickStart && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+            <div className="w-full max-w-sm bg-[#0f172a] border border-[#1e293b] rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-sm font-semibold text-white">Start session now</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">Your session goes live immediately.</p>
+                </div>
+                <button onClick={() => setShowQuickStart(false)} className="text-slate-500 hover:text-white transition">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <form onSubmit={startSessionNow} className="space-y-4">
+                <input
+                  type="text"
+                  value={quickTitle}
+                  onChange={(e) => setQuickTitle(e.target.value)}
+                  placeholder={`Session — ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`}
+                  className="w-full bg-[#0a0f1a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-violet-500 transition-colors"
+                />
+                <div className="relative">
+                  <select
+                    value={quickType}
+                    onChange={(e) => setQuickType(e.target.value as OrgSessionType)}
+                    className="w-full appearance-none bg-[#0a0f1a] border border-[#1e293b] rounded-xl px-4 py-2.5 pr-8 text-white text-sm focus:outline-none focus:border-violet-500 transition-colors"
+                  >
+                    <option value="presentation">Presentation</option>
+                    <option value="rehearsal">Rehearsal</option>
+                    <option value="meeting">Meeting</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
+                </div>
+                {quickError && <p className="text-sm text-red-400">{quickError}</p>}
+                <button
+                  type="submit"
+                  disabled={quickCreating}
+                  className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
+                >
+                  {quickCreating ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Starting…</>
+                  ) : (
+                    <><Zap className="w-4 h-4" /> Start session</>
+                  )}
+                </button>
+              </form>
             </div>
           </div>
         )}

@@ -98,20 +98,28 @@ export async function POST(req: NextRequest, { params }: Params) {
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "invalid_body" }, { status: 400 });
 
-  const { title, type, scheduledStart, scheduledEnd, timezone, copresenterUids } = body;
+  const { title, type, scheduledStart, scheduledEnd, timezone, copresenterUids, startNow } = body;
 
   if (!title?.trim()) return NextResponse.json({ error: "title_required" }, { status: 400 });
   if (!VALID_TYPES.includes(type)) return NextResponse.json({ error: "invalid_type" }, { status: 400 });
-  if (!scheduledStart || !scheduledEnd) return NextResponse.json({ error: "dates_required" }, { status: 400 });
-  if (!timezone?.trim()) return NextResponse.json({ error: "timezone_required" }, { status: 400 });
 
-  const start = new Date(scheduledStart);
-  const end = new Date(scheduledEnd);
-  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-    return NextResponse.json({ error: "invalid_dates" }, { status: 400 });
-  }
-  if (end <= start) {
-    return NextResponse.json({ error: "end_before_start" }, { status: 400 });
+  let start: Date;
+  let end: Date;
+
+  if (startNow) {
+    start = new Date();
+    end = new Date(start.getTime() + 60 * 60 * 1000); // default 1 hour
+  } else {
+    if (!scheduledStart || !scheduledEnd) return NextResponse.json({ error: "dates_required" }, { status: 400 });
+    if (!timezone?.trim()) return NextResponse.json({ error: "timezone_required" }, { status: 400 });
+    start = new Date(scheduledStart);
+    end = new Date(scheduledEnd);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return NextResponse.json({ error: "invalid_dates" }, { status: 400 });
+    }
+    if (end <= start) {
+      return NextResponse.json({ error: "end_before_start" }, { status: 400 });
+    }
   }
 
   const { FieldValue, Timestamp } = await import("firebase-admin/firestore");
@@ -186,7 +194,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     presenterId: uid,
     scheduledStart: Timestamp.fromDate(start),
     scheduledEnd: Timestamp.fromDate(end),
-    timezone: timezone.trim(),
+    timezone: startNow ? "UTC" : timezone.trim(),
     feedbackCode,
     feedbackUrl,
     linkedConsumerSessionId: consumerSessionRef.id,
@@ -194,7 +202,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     copresenters,
     copresenterIds,
     qrGenerated: false,
-    status: "scheduled",
+    status: startNow ? "live" : "scheduled",
+    ...(startNow ? { liveAt: FieldValue.serverTimestamp() } : {}),
     linkedRecordingId: null,
     calendarEventCreated: false,
     orgId,
@@ -212,29 +221,31 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   await batch.commit();
 
-  // Confirmation email (non-blocking)
-  try {
-    const { getAdminAuth } = await import("@/lib/firebase-admin");
-    const userRecord = await getAdminAuth().getUser(uid);
-    const presSnap = await db.doc(`presenters/${uid}`).get();
-    const displayName = presSnap.data()?.displayName ?? userRecord.displayName ?? "Presenter";
-    const orgSnap = await db.doc(`organizations/${orgId}`).get();
-    const orgName = orgSnap.data()?.name ?? "Your organisation";
-    if (userRecord.email) {
-      sendSessionConfirmationEmail({
-        to: userRecord.email,
-        presenterName: displayName,
-        sessionTitle: title.trim(),
-        sessionType: type,
-        orgName,
-        scheduledStart: start,
-        scheduledEnd: end,
-        timezone: timezone.trim(),
-        feedbackCode,
-        feedbackUrl,
-      }).catch(() => {});
-    }
-  } catch {}
+  // Confirmation email — skip for instant-start sessions (already live)
+  if (!startNow) {
+    try {
+      const { getAdminAuth } = await import("@/lib/firebase-admin");
+      const userRecord = await getAdminAuth().getUser(uid);
+      const presSnap = await db.doc(`presenters/${uid}`).get();
+      const displayName = presSnap.data()?.displayName ?? userRecord.displayName ?? "Presenter";
+      const orgSnap = await db.doc(`organizations/${orgId}`).get();
+      const orgName = orgSnap.data()?.name ?? "Your organisation";
+      if (userRecord.email) {
+        sendSessionConfirmationEmail({
+          to: userRecord.email,
+          presenterName: displayName,
+          sessionTitle: title.trim(),
+          sessionType: type,
+          orgName,
+          scheduledStart: start,
+          scheduledEnd: end,
+          timezone: timezone.trim(),
+          feedbackCode,
+          feedbackUrl,
+        }).catch(() => {});
+      }
+    } catch {}
+  }
 
   return NextResponse.json({
     id: orgSessionRef.id,
@@ -244,5 +255,6 @@ export async function POST(req: NextRequest, { params }: Params) {
     linkedConsumerCode: consumerCode,
     scheduledStart: start.toISOString(),
     scheduledEnd: end.toISOString(),
+    live: !!startNow,
   }, { status: 201 });
 }
