@@ -30,6 +30,20 @@ export async function POST(
     return NextResponse.json({ error: "take_not_ready" }, { status: 400 });
   }
 
+  // Fetch previous takes in this session to extract prior suggestions
+  const prevTakesSnap = await sessionRef.collection("takes")
+    .where("status", "==", "complete")
+    .get();
+
+  const previousSuggestions: string[] = prevTakesSnap.docs
+    .filter((d) => d.id !== takeId && d.data().scriptSuggestionSections)
+    .sort((a, b) => (a.data().takeNumber ?? 0) - (b.data().takeNumber ?? 0))
+    .flatMap((d) =>
+      (d.data().scriptSuggestionSections ?? []).map(
+        (s: { reason: string }) => s.reason
+      )
+    );
+
   // Need the transcript — re-fetch from AssemblyAI if not stored
   const { getTranscription } = await import("@/lib/assemblyai-client");
   let transcriptText = take.transcriptText as string | undefined;
@@ -57,7 +71,13 @@ export async function POST(
       locale: (take.languageCode as string) ?? "en",
       userLocale: sessionUserLocale,
       contextId: sessionContextId,
+      previousSuggestions,
     });
+
+    // Store sections on the take so future takes can avoid repeating them
+    takeSnap.ref.update({
+      scriptSuggestionSections: suggestion.sections,
+    }).catch(() => {});
 
     return NextResponse.json(suggestion);
   } catch (err) {
