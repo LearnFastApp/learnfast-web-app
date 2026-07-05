@@ -9,6 +9,10 @@
       "rules": "storage.rules"
     }
   ],
+  "extensions": {
+    "firestore-bigquery-scoring-versions": "firebase/firestore-bigquery-export@0.3.2",
+    "firestore-bigquery-interventions": "firebase/firestore-bigquery-export@0.3.2"
+  },
   "emulators": {
     "firestore": {
       "port": 8080,

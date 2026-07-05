@@ -57,6 +57,7 @@ export async function analyseTranscript(opts: {
   locale?: string;
   industry?: string | null;
   priorAssessments?: PriorAssessmentContext[];
+  previousTips?: string[];
   contextId?: string;
   userLocale?: string;
 }): Promise<AssessmentAnalysis> {
@@ -80,6 +81,12 @@ export async function analyseTranscript(opts: {
     ? `\nPRESENTER CONTEXT: Industry/sector — ${opts.industry}. Tailor coaching language and examples to this professional context where relevant.\n`
     : "";
 
+  const prevTips = opts.previousTips ?? [];
+  const previousTipsBlock = prevTips.length > 0
+    ? `\nPREVIOUS TIPS ALREADY GIVEN (do NOT repeat these — vary the coaching angle, use different examples, or target a different aspect of the same dimension):
+${prevTips.map((t, i) => `${i + 1}. ${t}`).join("\n")}\n`
+    : "";
+
   const prior = opts.priorAssessments ?? [];
   const historyBlock = prior.length > 0
     ? `\nDEVELOPMENT HISTORY (most recent first — use this to write comparative commentary):
@@ -98,7 +105,7 @@ In the summary, include ONE sentence noting the most significant change since th
 
   const prompt = `You are an expert presentation coach scoring a presenter across five core communication dimensions.
 LANGUAGE: Write all text fields (rationale, highlights, tips, summary) in ${feedbackLang}.
-${localeBlock}${contextBlock}${mixedLangNote}${industryCtx}${historyBlock}
+${localeBlock}${contextBlock}${mixedLangNote}${industryCtx}${historyBlock}${previousTipsBlock}
 
 SCORING CALIBRATION — apply this strictly. Scores reflect professional presentation standards, not personal encouragement:
 - 85–100: Exceptional. Conference keynote or TED-talk quality. Rare — only award when the evidence strongly supports it.
@@ -151,6 +158,7 @@ Include 3–5 highlights (mix of strengths and opportunities) and exactly 3 tips
   const message = await client.messages.create({
     model: AI_MODEL,
     max_tokens: 4096,
+    temperature: 0.8,
     messages: [{ role: "user", content: prompt }],
   });
 

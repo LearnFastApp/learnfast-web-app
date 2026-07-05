@@ -49,22 +49,27 @@ export async function GET(
     .get();
 
   const now = Date.now();
-  const priorAssessments: PriorAssessmentContext[] = priorSnap.docs
+  const sortedPrior = priorSnap.docs
     .filter((d) => d.id !== id && d.data().scores)
     .sort((a, b) => {
       const aTs = a.data().createdAt?.toDate?.()?.getTime() ?? 0;
       const bTs = b.data().createdAt?.toDate?.()?.getTime() ?? 0;
       return bTs - aTs; // most recent first
     })
-    .slice(0, 3)
-    .map((d) => {
-      const createdAt: Date | undefined = d.data().createdAt?.toDate?.();
-      const diffDays = createdAt ? Math.round((now - createdAt.getTime()) / (1000 * 60 * 60 * 24)) : 0;
-      const label = diffDays < 14
-        ? `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`
-        : `${Math.round(diffDays / 7)} week${Math.round(diffDays / 7) !== 1 ? "s" : ""} ago`;
-      return { label, scores: d.data().scores as AssessmentScores };
-    });
+    .slice(0, 3);
+
+  const priorAssessments: PriorAssessmentContext[] = sortedPrior.map((d) => {
+    const createdAt: Date | undefined = d.data().createdAt?.toDate?.();
+    const diffDays = createdAt ? Math.round((now - createdAt.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+    const label = diffDays < 14
+      ? `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`
+      : `${Math.round(diffDays / 7)} week${Math.round(diffDays / 7) !== 1 ? "s" : ""} ago`;
+    return { label, scores: d.data().scores as AssessmentScores };
+  });
+
+  const previousTips: string[] = sortedPrior.flatMap((d) =>
+    (d.data().tips ?? []).map((t: { tip: string }) => t.tip)
+  );
 
   // Check AssemblyAI status
   let transcript;
@@ -123,6 +128,7 @@ export async function GET(
       userLocale: (data.userLocale as string | undefined) ?? "en",
       industry: (data.industry as string | undefined) ?? null,
       priorAssessments,
+      previousTips,
       contextId: (data.contextId as string | undefined) ?? "general",
     });
   } catch (err) {

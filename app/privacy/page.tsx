@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: "How LearnFast collects, uses, and protects your personal data.",
 };
 
-const LAST_UPDATED = "26 June 2026";
+const LAST_UPDATED = "5 July 2026";
 
 const sections = [
   {
@@ -47,9 +47,10 @@ Usage data — session activity and engagement, used to improve the platform.`,
 — Send you session summary emails and account-related notifications
 — Process subscription payments and manage your account
 — Improve the platform through aggregated, anonymised analytics
+— Use pseudonymised records of your presentation scores and improvement patterns to improve our scoring algorithms and develop personalised recommendations. This data cannot be linked back to you once your account is deleted.
 — Comply with legal obligations
 
-Our lawful basis for processing is: contract performance (providing the service you have signed up for), legitimate interests (improving the platform), and legal obligation where required.`,
+Our lawful basis for processing is: contract performance (providing the service you have signed up for), legitimate interests (improving the platform and developing better scoring models), and legal obligation where required.`,
   },
   {
     title: "4. Third-Party Services",
@@ -62,6 +63,14 @@ Stripe Inc. — payment processing. Your payment card details go directly to Str
 Twilio Inc. — SMS notifications. Only used for account-related alerts.
 
 YouTube Data API (Google LLC) — surfacing relevant video resources based on your session results. No personal data is shared with YouTube.
+
+AssemblyAI — speech-to-text transcription of your recorded presentations. Audio is processed transiently and not retained by AssemblyAI beyond the transcription window.
+
+Anthropic (Claude) — AI analysis of transcripts to generate your performance scores and coaching feedback. Transcript text is processed to produce your report and is not used to train Anthropic's models under our API agreement.
+
+Cloudflare — transcript and analysis data is stored in Cloudflare R2 (EU region) as part of your performance record. Deleted on account erasure.
+
+Google BigQuery — pseudonymised analytical data (scores, improvement patterns — no PII) is streamed to BigQuery for product analytics and scoring model improvement.
 
 Podcast Index — sourcing podcast recommendations. No personal data is shared.
 
@@ -85,7 +94,9 @@ We do not use advertising, tracking, or analytics cookies. We do not use third-p
   },
   {
     title: "7. Data Retention",
-    body: `We retain your personal data for as long as your account is active. If you delete your account, your data is deleted from our systems within 30 days, except where we are required to retain it for legal or financial compliance purposes (e.g. Stripe billing records, which are retained for up to 7 years in accordance with financial regulations).
+    body: `We retain your personal data for as long as your account is active. If you delete your account, your personally identifiable data (name, email, audio transcripts) is deleted from our systems within 30 days, except where we are required to retain it for legal or financial compliance purposes (e.g. Stripe billing records, which are retained for up to 7 years in accordance with financial regulations).
+
+Pseudonymised analytical records — performance scores, improvement patterns, and session context — are retained after account deletion in a form that cannot be linked back to you. Once the mapping between your identity and your analytical record is destroyed, this data is no longer personal data under GDPR Article 4(1) and Recital 26.
 
 Anonymised, aggregated analytics data may be retained indefinitely.`,
   },

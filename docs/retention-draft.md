@@ -54,35 +54,18 @@ the data subject is not or no longer identifiable."
 | Pseudonymised event log for product improvement | Legitimate interests (Article 6(1)(f)) | LIA: improvement of service quality; low privacy risk due to pseudonymisation |
 | Scoring version registry | Legitimate interests | No personal data involved |
 
-⚠️ **DECISION NEEDED — Research/training use:**
-If LearnFast intends to use pseudonymised measurement data to train or fine-tune AI models
-(including future recommendation engine development), this likely requires explicit consent
-OR a separate legitimate interests assessment specifically covering research/training use.
-The current privacy policy does not include a research-use clause.
-
-**Recommended action:** Add a clause to the privacy policy such as:
-*"We may use anonymised and pseudonymised records of your presentation scores and
-improvement patterns to improve our scoring algorithms and develop personalised
-recommendations. This data cannot be linked back to you once your account is deleted."*
-
-Do not ship this clause without your review. Flag to legal if required.
+✅ **RESOLVED (2026-07-05) — Research/training use:**
+Clause added to privacy policy sections 3 (How We Use Your Data) and 7 (Data Retention).
+Lawful basis: legitimate interests. Decision made by Ollie Richardson.
 
 ---
 
 ### Audio and Media Retention
 
-⚠️ **DECISION NEEDED — Audio retention for model training:**
-Current behaviour: audio files are not retained by LearnFast beyond the transcription
-window (Bunny.net CDN, short TTL). Transcript text is retained in raw artifact bundles.
-
-If LearnFast later wants to train on audio (prosody, tone, voice characteristics), it will
-need to:
-1. Retain audio files explicitly.
-2. Obtain specific consent (audio biometric data may be sensitive personal data in some
-   jurisdictions).
-3. Update the privacy policy and DPA.
-
-This is a future decision. Current implementation does NOT retain audio.
+✅ **RESOLVED (2026-07-05) — Audio retention for model training:**
+Decision: do NOT retain audio. Current implementation does not retain audio beyond the
+transcription window. Revisit only with explicit opt-in consent flow and legal review.
+Decision made by Ollie Richardson.
 
 ---
 
