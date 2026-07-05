@@ -81,6 +81,7 @@ export default function Dashboard() {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<"free" | "active" | "pilot">("free");
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const [pilotExpiresAt, setPilotExpiresAt] = useState<Date | null>(null);
   const [pilotOrgName, setPilotOrgName] = useState<string | null>(null);
   const PAGE_SIZE = 10;
@@ -134,13 +135,14 @@ export default function Dashboard() {
           }
         }
         if (data.orgId) {
-          // Org members live in the org dashboard — redirect immediately
+          // Org members live in the org dashboard — redirect immediately (no state update needed)
           router.replace(`/${data.orgId}/dashboard`);
           return;
         }
         if (!data.onboardingSeen) setShowOnboarding(true);
       }
-    });
+      setSubscriptionLoading(false);
+    }).catch(() => setSubscriptionLoading(false));
   }, [user]);
 
   useEffect(() => {
@@ -369,7 +371,7 @@ export default function Dashboard() {
     window.location.reload();
   }
 
-  if (loading || !user) {
+  if (loading || !user || subscriptionLoading) {
     return (
       <main className="min-h-screen bg-[#05070d] flex items-center justify-center">
         <p className="text-slate-600 animate-pulse">Loading…</p>
