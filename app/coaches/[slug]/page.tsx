@@ -188,7 +188,10 @@ export default function CoachProfilePage({ params }: { params: Promise<{ slug: s
           <Link href="/coaches" className="inline-flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
             <ArrowLeft className="w-4 h-4" /> All coaches
           </Link>
-          <Link href="/" className="text-white font-bold text-lg">LearnFast</Link>
+          <Link href="/" className="flex items-center gap-2">
+              <Image src="/icon-mark.png" alt="LearnFast" width={28} height={20} />
+              <span className="text-sm font-bold tracking-tight" style={{ color: "#5bb8f5" }}>LEARN<span className="font-light">FAST</span></span>
+            </Link>
         </div>
       </div>
 
