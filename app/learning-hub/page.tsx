@@ -103,6 +103,7 @@ export default function LearningHubPage() {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10 pt-20 md:pt-10">
         {/* Header */}
         <div className="mb-8">
+          <a href="/dashboard" className="text-sm text-slate-400 hover:text-white transition-colors mb-3 inline-block">← Dashboard</a>
           <div className="flex items-center gap-3 mb-2">
             <BookOpen className="w-6 h-6 text-violet-400" />
             <h1 className="text-2xl font-bold">

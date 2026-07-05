@@ -129,6 +129,7 @@ export default function AdminPilotPage() {
     <main className="min-h-screen bg-[#05070d] text-white p-8">
       <div className="max-w-3xl mx-auto">
         <div className="mb-8">
+          <a href="/dashboard" className="text-sm text-slate-400 hover:text-white transition-colors mb-3 inline-block">← Dashboard</a>
           <h1 className="text-2xl font-bold mb-1">Pilot Code Manager</h1>
           <p className="text-slate-400 text-sm">Generate and manage 1-month free pilot access for organisations.</p>
         </div>

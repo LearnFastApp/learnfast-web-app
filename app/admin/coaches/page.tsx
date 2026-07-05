@@ -300,6 +300,7 @@ export default function AdminCoachesPage() {
             <h1 className="text-2xl font-bold">Coach Roster</h1>
           </div>
           <div className="flex items-center gap-3">
+            <a href="/dashboard" className="text-sm text-slate-400 hover:text-white transition-colors">← Dashboard</a>
             <a href="/admin/content" className="text-sm text-slate-400 hover:text-white transition-colors">← Content</a>
             <button
               onClick={openCreate}

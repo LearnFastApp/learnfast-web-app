@@ -91,6 +91,15 @@ export default async function PublicProfilePage({
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-4 py-16" style={{ backgroundColor: "#05070d" }}>
+      {/* Back link */}
+      <a
+        href="/dashboard"
+        className="self-start mb-6 text-xs transition"
+        style={{ color: "rgba(148,163,184,0.5)" }}
+      >
+        ← Dashboard
+      </a>
+
       {/* Wordmark */}
       <a href="/" className="mb-10 block">
         <p

@@ -198,6 +198,7 @@ export default function AdminContentPage() {
             </h1>
             <p className="text-sm text-slate-400 mt-1">Content visible to all paid and enterprise users.</p>
             <div className="flex items-center gap-4 mt-2">
+              <a href="/dashboard" className="text-sm text-slate-400 hover:text-white transition-colors">← Dashboard</a>
               <a href="/admin/pilot" className="text-sm text-slate-400 hover:text-slate-200 transition-colors">Pilot Admin</a>
               <span className="text-sm text-violet-400 font-medium">Content</span>
             </div>
