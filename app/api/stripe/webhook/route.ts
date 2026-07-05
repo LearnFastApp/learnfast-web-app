@@ -3,6 +3,7 @@ import { getStripe } from "@/lib/stripe-server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import type Stripe from "stripe";
+import { logEvent } from "@/lib/telemetry";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +60,11 @@ export async function POST(req: NextRequest) {
             createdAt: FieldValue.serverTimestamp(),
           });
 
+          logEvent("funnel.subscription_started", {
+            org_id: orgId,
+            payload: { plan: "enterprise", seats, stripe_event_id: event.id },
+          });
+
           // P2-6: Team→Enterprise upgrade — if the owner had a consumer Pro
           // subscription, cancel it and tag the presenter doc.
           const firebaseUid = session.metadata?.firebaseUid;
@@ -89,6 +95,14 @@ export async function POST(req: NextRequest) {
             },
             { merge: true }
           );
+          // Look up user_key for the event log (fire-and-forget)
+          adminDb.collection("presenters").doc(uid).get().then((snap) => {
+            const user_key = snap.data()?.user_key as string | undefined;
+            logEvent("funnel.subscription_started", {
+              user_key: user_key ?? null,
+              payload: { plan: "lite", stripe_event_id: event.id },
+            });
+          }).catch(() => {});
         }
         break;
       }
@@ -141,6 +155,10 @@ export async function POST(req: NextRequest) {
             stripeEventId: event.id,
             createdAt: FieldValue.serverTimestamp(),
           });
+          logEvent("funnel.subscription_cancelled", {
+            org_id: orgId,
+            payload: { plan: "enterprise", stripe_event_id: event.id },
+          });
         } else {
           // Consumer subscription cancelled
           const snap = await adminDb
@@ -150,6 +168,11 @@ export async function POST(req: NextRequest) {
             .get();
           if (!snap.empty) {
             await snap.docs[0].ref.update({ subscriptionStatus: "free" });
+            const user_key = snap.docs[0].data().user_key as string | undefined;
+            logEvent("funnel.subscription_cancelled", {
+              user_key: user_key ?? null,
+              payload: { plan: "lite", stripe_event_id: event.id },
+            });
           }
         }
         break;

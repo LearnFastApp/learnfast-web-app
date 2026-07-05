@@ -129,6 +129,17 @@ function LoginForm() {
           },
           { merge: true }
         );
+        // Generate user_key and fire funnel.signup event (fire-and-forget)
+        try {
+          const idToken = await result.user.getIdToken();
+          fetch("/api/auth/complete-signup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+            body: JSON.stringify({ locale: detectedLocale, industry }),
+          }).catch(() => {});
+        } catch {
+          // non-fatal
+        }
         const claimToken = searchParams.get("claim");
         const verifyRedirect = claimToken
           ? `${window.location.origin}/auth/login?claim=${claimToken}`

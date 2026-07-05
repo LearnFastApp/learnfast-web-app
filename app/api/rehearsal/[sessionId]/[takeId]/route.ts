@@ -4,6 +4,10 @@ import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
 import { getTranscription, countFillerWords } from "@/lib/assemblyai-client";
 import { coachRehearsalTake } from "@/lib/rehearsal-coaching";
 import type { AssessmentScores } from "@/lib/ai-assessment-analysis";
+import { logEvent } from "@/lib/telemetry";
+import { getOrCreateUserKey } from "@/lib/user-key";
+import { writeMeasurement } from "@/lib/measurement-writer";
+import { uploadRawRehearsalBundle } from "@/lib/r2-client";
 
 export const dynamic = "force-dynamic";
 
@@ -161,5 +165,57 @@ export async function GET(
   };
 
   await takeRef.update(update);
+
+  // ── Data Foundation: measurement record + event (fire-and-forget) ────────────
+  (async () => {
+    try {
+      const user_key = await getOrCreateUserKey(uid);
+      const orgId = (sessionData.orgId as string | undefined) ?? null;
+
+      // Raw artifact bundle
+      let raw_ref: string | null = null;
+      try {
+        const bundle_id = `${takeId}-${Date.now()}`;
+        raw_ref = await uploadRawRehearsalBundle(user_key, bundle_id, {
+          transcript_text: transcript.text ?? "",
+          assemblyai_response: transcript as unknown as Record<string, unknown>,
+          coaching_response: coaching as unknown as Record<string, unknown>,
+        });
+      } catch (storageErr) {
+        console.error("[data-foundation] rehearsal raw bundle upload failed:", storageErr);
+      }
+
+      const measurement_id = await writeMeasurement({
+        user_key,
+        org_id: orgId,
+        kind: "rehearsal_take",
+        context: {
+          assessment_type: (sessionData.contextId as string | undefined) ?? "general",
+          duration_seconds: audioDurationSeconds,
+          locale: languageCode,
+          take_number: takeNumber,
+        },
+        scores: coaching.scores as { clarity: number; energy: number; engagement: number; understanding: number; connection: number },
+        signal: "ai",
+        raw_ref,
+      });
+      logEvent("measurement.rehearsal_take_completed", {
+        user_key,
+        org_id: orgId,
+        payload: {
+          measurement_id,
+          session_id: sessionId,
+          take_id: takeId,
+          take_number: takeNumber,
+          duration_seconds: audioDurationSeconds,
+          scores: coaching.scores,
+        },
+      });
+    } catch (err) {
+      console.error("[data-foundation] rehearsal take post-processing failed:", err);
+    }
+  })();
+  // ─────────────────────────────────────────────────────────────────────────────
+
   return NextResponse.json({ ...update, takeId });
 }

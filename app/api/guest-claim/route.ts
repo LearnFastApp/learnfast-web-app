@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
+import { getOrCreateUserKey } from "@/lib/user-key";
+import { logEvent } from "@/lib/telemetry";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +47,18 @@ export async function POST(req: NextRequest) {
     isGuest: false,
     claimedAt: new Date(),
   });
+
+  // Log claim event — links guest funnel to authenticated user (fire-and-forget)
+  try {
+    const user_key = await getOrCreateUserKey(uid);
+    const guestAssessmentId = docRef.id;
+    logEvent("funnel.guest_claimed", {
+      user_key,
+      payload: { assessment_id: guestAssessmentId, guest_token: guestToken },
+    });
+  } catch {
+    // non-fatal
+  }
 
   return NextResponse.json({ success: true, assessmentId });
 }

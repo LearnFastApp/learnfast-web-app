@@ -4,6 +4,11 @@ import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
 import { getTranscription, countFillerWords } from "@/lib/assemblyai-client";
 import { analyseTranscript, PriorAssessmentContext, AssessmentScores } from "@/lib/ai-assessment-analysis";
 import { dispatchSessionSummary } from "@/lib/session-summary";
+import { logEvent } from "@/lib/telemetry";
+import { getOrCreateUserKey } from "@/lib/user-key";
+import { writeMeasurement } from "@/lib/measurement-writer";
+import { prescribeIntervention } from "@/lib/intervention-writer";
+import { uploadRawAssessmentBundle } from "@/lib/r2-client";
 
 export const dynamic = "force-dynamic";
 
@@ -142,6 +147,90 @@ export async function GET(
   };
 
   await docRef.update(update);
+
+  // ── Data Foundation: events, measurements, raw artifacts, interventions ──────
+  // All writes are fire-and-forget — failures logged but never block the response.
+  (async () => {
+    try {
+      const user_key = await getOrCreateUserKey(uid);
+      const isGuest = !!(data.isGuest);
+
+      // 1. Raw artifact bundle — upload first so measurement gets raw_ref
+      const orgId = (data.orgId as string | undefined) ?? null;
+      const measurement_id_for_bundle = `${docRef.id}-${Date.now()}`;
+      let raw_ref: string | null = null;
+      try {
+        raw_ref = await uploadRawAssessmentBundle(user_key, measurement_id_for_bundle, {
+          transcript_text: transcript.text ?? "",
+          assemblyai_response: transcript as unknown as Record<string, unknown>,
+          analysis_response: analysis as unknown as Record<string, unknown>,
+        });
+      } catch (storageErr) {
+        console.error("[data-foundation] raw bundle upload failed:", storageErr);
+      }
+
+      // 2. Measurement record
+      const measurement_id = await writeMeasurement({
+        user_key,
+        org_id: orgId,
+        kind: "ai_assessment",
+        context: {
+          assessment_type: (data.contextId as string | undefined) ?? "general",
+          duration_seconds: audioDurationSeconds,
+          locale: locale,
+        },
+        scores: update.scores as { clarity: number; energy: number; engagement: number; understanding: number; connection: number },
+        signal: "ai",
+        raw_ref,
+      });
+
+      // 3. Funnel / measurement event
+      const eventType = isGuest ? "funnel.try_completed" : "measurement.assessment_completed";
+      logEvent(eventType, {
+        user_key,
+        org_id: orgId,
+        context: { surface: "web", source: isGuest ? "try" : "dashboard" },
+        payload: {
+          measurement_id,
+          assessment_id: docRef.id,
+          context_id: (data.contextId as string | undefined) ?? "general",
+          duration_seconds: audioDurationSeconds,
+          words_per_minute: update.wordsPerMinute,
+          scores: update.scores,
+        },
+      });
+
+      // 4. Prescribe interventions from tips (lowest-scoring dimensions)
+      const tips = (analysis.tips ?? []) as Array<{ dimension: string; tip: string }>;
+      for (const tip of tips.slice(0, 3)) {
+        prescribeIntervention({
+          user_key,
+          kind: "archetype_tip",
+          target_dimension: tip.dimension as "clarity" | "energy" | "engagement" | "understanding" | "connection" | "general",
+          source: "ai_report",
+          content_ref: tip.tip.slice(0, 120),
+          triggered_by_measurement: `measurements/${measurement_id}`,
+        }).catch(() => {});
+      }
+
+      // Lowest dimension → improvement_focus intervention
+      const scores = update.scores as unknown as Record<string, number>;
+      const dims = ["clarity", "energy", "engagement", "understanding", "connection"] as const;
+      const lowest = dims.reduce((a, b) => (scores[a] ?? 100) < (scores[b] ?? 100) ? a : b);
+      prescribeIntervention({
+        user_key,
+        kind: "improvement_focus",
+        target_dimension: lowest,
+        source: "ai_report",
+        content_ref: lowest,
+        triggered_by_measurement: `measurements/${measurement_id}`,
+      }).catch(() => {});
+
+    } catch (err) {
+      console.error("[data-foundation] assessment post-processing failed:", err);
+    }
+  })();
+  // ────────────────────────────────────────────────────────────────────────────
 
   // If this assessment is linked to a session that has a pending or unsent summary,
   // send it now that we have the AI insights ready.

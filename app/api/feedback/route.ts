@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { rateLimit, getIp } from "@/lib/rate-limit";
+import { logEvent } from "@/lib/telemetry";
 
 export const dynamic = "force-dynamic";
 
@@ -71,6 +72,17 @@ export async function POST(req: NextRequest) {
             commenterName: anonymous ? null : (commenterName?.trim() || null),
           }
         : {}),
+    });
+
+    // Log to canonical event spine — audience member is anonymous, log against session
+    logEvent("measurement.audience_score_submitted", {
+      context: { surface: "web", source: "audience_loop" },
+      payload: {
+        session_id: sessionId,
+        presenter_id: resolvedPresenterId,
+        scores,
+        has_comment: !!(comment?.trim()),
+      },
     });
 
     return NextResponse.json({ success: true });

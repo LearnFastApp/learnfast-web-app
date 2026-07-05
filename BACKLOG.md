@@ -1,5 +1,51 @@
 # LearnFast Enterprise v1 — Build Backlog
 
+---
+
+## DATA FOUNDATION — Communication Intelligence V1
+
+> Status: **Phase 1–3 built** (2026-07-05). Phase 4 (backfill + BigQuery activation) pending.
+> Spec: `LEARNFAST_DATA_FOUNDATION_SPEC.md` (Ollie's Downloads)
+
+### Phase 1 — Spine ✅
+- [x] `lib/telemetry.ts` — append-only event log helper (fire-and-forget)
+- [x] `lib/user-key.ts` — pseudonymous user_key management (stored on presenter doc)
+- [x] `app/api/auth/complete-signup/route.ts` — signup hook: creates user_key, fires funnel.signup
+- [x] `funnel.try_started` wired in `/api/guest-assessment`
+- [x] `funnel.guest_claimed` wired in `/api/guest-claim`
+- [x] `funnel.signup` wired via complete-signup endpoint (called from login page)
+- [x] `funnel.subscription_started` / `funnel.subscription_cancelled` wired in Stripe webhook
+- [x] `measurement.assessment_completed` / `funnel.try_completed` wired in `/api/ai-assessment/[id]`
+- [x] `measurement.rehearsal_take_completed` wired in `/api/rehearsal/[sessionId]/[takeId]`
+- [x] `measurement.audience_score_submitted` wired in `/api/feedback`
+- [x] CLAUDE.md updated with 5 standing conventions
+
+### Phase 2 — Scientific layer ✅
+- [x] `lib/scoring-version.ts` — active version registry, warns if doc missing
+- [x] `lib/measurement-writer.ts` — measurement doc helper with transactional sequence_index
+- [x] `lib/r2-client.ts` extended with `uploadRawAssessmentBundle` + `uploadRawRehearsalBundle`
+- [x] Raw artifacts (transcript + AssemblyAI JSON + analysis JSON) written after assessment + rehearsal
+- [x] `scripts/seed-scoring-version.mjs` — run once to register sv_2026_07_v1
+- [x] Measurement write wired into assessment + rehearsal completion routes
+
+### Phase 3 — Loop layer ✅
+- [x] `lib/intervention-writer.ts` — prescribeIntervention + updateInterventionStatus
+- [x] `lib/intervention-outcome.ts` — getInterventionOutcomeWindow (proves schema join)
+- [x] `app/api/intel/outcome-window/[interventionId]` — admin endpoint for outcome queries
+- [x] Archetype tips prescribed as interventions after each assessment
+- [x] Improvement focus (lowest dimension) prescribed after each assessment
+
+### Phase 4 — Compliance & backfill (PENDING)
+- [ ] Run `node scripts/seed-scoring-version.mjs` in production Firebase project
+- [ ] Run `node scripts/backfill-measurements.mjs --dry-run` then without --dry-run
+- [ ] Install Firestore → BigQuery extension for: events, measurements, interventions, scoring_versions (EU region, dataset: learnfast_intelligence) — see `docs/bigquery-setup.md`
+- [ ] Verify 5 saved BigQuery queries return sensible results — see `docs/bigquery-setup.md`
+- [ ] **Ollie review:** `docs/retention-draft.md` — approve/amend before publishing to privacy policy
+- [ ] **Ollie decision:** research/training use privacy policy clause (flagged in retention-draft.md)
+- [ ] **Ollie decision:** audio/media retention for future model training (flagged in retention-draft.md)
+
+---
+
 > Phases worked in strict order. A phase is complete only when its acceptance tests pass AND consumer-product regression checks pass (signup, /try, recording upload, analysis, Pro checkout). All enterprise paths are behind `isEnterpriseEnabled()` until Phase 6 GA.
 
 ---

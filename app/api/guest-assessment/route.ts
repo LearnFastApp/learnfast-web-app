@@ -4,6 +4,7 @@ import { Timestamp } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { uploadAndSubmitTranscription } from "@/lib/assemblyai-client";
 import { getContext } from "@/lib/contexts/registry";
+import { logEvent } from "@/lib/telemetry";
 
 export const dynamic = "force-dynamic";
 
@@ -88,6 +89,13 @@ export async function POST(req: NextRequest) {
   await db.collection("guest_token_index").doc(guestToken).set({
     assessmentId: ref.id,
     createdAt: now,
+  });
+
+  // Log funnel entry (fire-and-forget — never blocks submission)
+  logEvent("funnel.try_started", {
+    guest_key: guestToken,
+    context: { surface: "web", source: "try" },
+    payload: { contextId, file_size_bytes: fileBuffer.length },
   });
 
   // Upload buffer directly to AssemblyAI and submit (no Firebase Storage needed)
