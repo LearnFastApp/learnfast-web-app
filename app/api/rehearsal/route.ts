@@ -66,13 +66,19 @@ export async function GET(req: NextRequest) {
   const uid = await verifyAuthToken(req);
   if (!uid) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
+  const { searchParams } = new URL(req.url);
+  const orgId = searchParams.get("orgId");
+
   const db = getAdminDb();
-  const snap = await db
+  let query = db
     .collection("rehearsal_sessions")
-    .where("presenterId", "==", uid)
-    .orderBy("createdAt", "desc")
-    .limit(20)
-    .get();
+    .where("presenterId", "==", uid) as FirebaseFirestore.Query;
+
+  if (orgId) {
+    query = query.where("orgId", "==", orgId);
+  }
+
+  const snap = await query.orderBy("createdAt", "desc").limit(20).get();
 
   const sessions = snap.docs.map((d) => {
     const data = d.data();

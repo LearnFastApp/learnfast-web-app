@@ -130,7 +130,7 @@ export default function MySessionsPage() {
         fetch(`/api/org/${orgId}/info`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch("/api/rehearsal", { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`/api/rehearsal?orgId=${orgId}`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       if (myRes.status === 401) {
         router.replace("/auth/login");
