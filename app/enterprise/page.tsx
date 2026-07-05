@@ -316,13 +316,13 @@ export default function EnterprisePage() {
       {/* Product stats */}
       <section className="border-b border-[#1e293b]">
         <div className="mx-auto max-w-6xl px-6 py-12">
-          <div className="grid grid-cols-3 divide-x divide-[#1e293b] text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[#1e293b] text-center">
             {[
               { stat: "< 1 min", label: "for an audience member to submit feedback — no app, no login" },
               { stat: "5 dimensions", label: "every session scored across the same structured framework, every time" },
               { stat: "0 installs", label: "audience scans a QR code and rates — works on any phone" },
             ].map(({ stat, label }) => (
-              <div key={stat} className="px-8 py-4">
+              <div key={stat} className="px-4 sm:px-8 py-6 sm:py-4">
                 <p className="text-3xl font-black text-violet-400 mb-2">{stat}</p>
                 <p className="text-sm text-slate-400 leading-relaxed">{label}</p>
               </div>
@@ -370,21 +370,23 @@ export default function EnterprisePage() {
           </div>
 
           {/* Comparison table */}
-          <div className="overflow-hidden rounded-2xl border border-[#1e293b] bg-[#0f172a]">
-            <div className="grid grid-cols-3 border-b border-[#1e293b] bg-[#0a0f1a] px-6 py-4">
-              <p className="text-sm font-semibold text-slate-400">Feature</p>
-              <p className="text-sm font-semibold text-violet-400">LearnFast Enterprise</p>
-              <p className="text-sm font-semibold text-slate-400">Yoodli / Orai</p>
-            </div>
+          <div className="overflow-x-auto rounded-2xl border border-[#1e293b]">
+            <div className="min-w-[520px] bg-[#0f172a]">
+              <div className="grid grid-cols-3 border-b border-[#1e293b] bg-[#0a0f1a] px-6 py-4">
+                <p className="text-sm font-semibold text-slate-400">Feature</p>
+                <p className="text-sm font-semibold text-violet-400">LearnFast Enterprise</p>
+                <p className="text-sm font-semibold text-slate-400">Yoodli / Orai</p>
+              </div>
 
-            <div className="divide-y divide-[#1e293b]">
-              {COMPARISON_ROWS.map((row) => (
-                <div key={row.feature} className="grid grid-cols-3 items-center gap-4 px-6 py-4">
-                  <p className="text-sm text-slate-300">{row.feature}</p>
-                  <CellIcon type={row.learnfast.type} label={row.learnfast.label} />
-                  <CellIcon type={row.competitor.type} label={row.competitor.label} />
-                </div>
-              ))}
+              <div className="divide-y divide-[#1e293b]">
+                {COMPARISON_ROWS.map((row) => (
+                  <div key={row.feature} className="grid grid-cols-3 items-center gap-4 px-6 py-4">
+                    <p className="text-sm text-slate-300">{row.feature}</p>
+                    <CellIcon type={row.learnfast.type} label={row.learnfast.label} />
+                    <CellIcon type={row.competitor.type} label={row.competitor.label} />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
