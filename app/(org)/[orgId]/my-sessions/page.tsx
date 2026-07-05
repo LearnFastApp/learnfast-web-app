@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { TrendingUp, Users, Mic, Loader2, Calendar, ChevronRight, CheckCircle2 } from "lucide-react";
+import { TrendingUp, Users, Mic, Loader2, Calendar, ChevronRight, CheckCircle2, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import OrgSidebar from "@/components/org-sidebar";
 import {
@@ -101,6 +101,22 @@ export default function MySessionsPage() {
   const [myRole, setMyRole] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function deleteRehearsal(sessionId: string) {
+    if (!user || deletingId) return;
+    if (!confirm("Delete this rehearsal session? This cannot be undone.")) return;
+    setDeletingId(sessionId);
+    try {
+      const token = await user.getIdToken();
+      await fetch(`/api/rehearsal/${sessionId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setRehearsals((prev) => prev.filter((r) => r.id !== sessionId));
+    } catch { /* ignore */ }
+    finally { setDeletingId(null); }
+  }
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -329,28 +345,40 @@ export default function MySessionsPage() {
             <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Rehearsals</h2>
             <div className="space-y-2">
               {rehearsals.map((r) => (
-                <a
-                  key={r.id}
-                  href={`/rehearse/${r.id}`}
-                  className="flex items-center justify-between bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-3 hover:border-violet-500/30 hover:bg-white/[0.02] transition-all group"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-medium text-white truncate">{r.title}</span>
-                      {r.promotedAssessmentId && (
-                        <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
-                          <CheckCircle2 className="w-3 h-3" />
-                          Promoted
-                        </span>
-                      )}
+                <div key={r.id} className="relative group">
+                  <a
+                    href={`/rehearse/${r.id}`}
+                    className="flex items-center justify-between bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-3 hover:border-violet-500/30 hover:bg-white/[0.02] transition-all"
+                  >
+                    <div className="min-w-0 pr-8">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-medium text-white truncate">{r.title}</span>
+                        {r.promotedAssessmentId && (
+                          <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Promoted
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {r.takeCount} {r.takeCount === 1 ? "take" : "takes"}
+                        {r.createdAt ? ` · ${formatDate(r.createdAt)}` : ""}
+                      </p>
                     </div>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      {r.takeCount} {r.takeCount === 1 ? "take" : "takes"}
-                      {r.createdAt ? ` · ${formatDate(r.createdAt)}` : ""}
-                    </p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors shrink-0 ml-4" />
-                </a>
+                    <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors shrink-0" />
+                  </a>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); deleteRehearsal(r.id); }}
+                    disabled={deletingId === r.id}
+                    className="absolute right-10 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-all disabled:opacity-50"
+                    aria-label="Delete rehearsal"
+                  >
+                    {deletingId === r.id
+                      ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      : <Trash2 className="w-3.5 h-3.5" />
+                    }
+                  </button>
+                </div>
               ))}
             </div>
           </div>
