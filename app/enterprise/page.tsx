@@ -417,12 +417,15 @@ export default function EnterprisePage() {
       </section>
 
       {/* CTA */}
-      <section className="mx-auto max-w-6xl px-6 py-24 text-center">
-        <h2 className="mb-4 text-3xl font-bold sm:text-4xl">
-          Your best presenters are already using it.
+      <section className="mx-auto max-w-3xl px-6 py-28 text-center">
+        <p className="mb-5 text-xs font-semibold uppercase tracking-widest text-violet-400">
+          The bottom line
+        </p>
+        <h2 className="mb-5 text-4xl font-bold leading-tight sm:text-5xl">
+          Your ideas are only as good<br className="hidden sm:block" /> as how they&apos;re delivered.
         </h2>
-        <p className="mb-10 text-lg text-slate-400">
-          Bring the whole team. 14-day free trial — no card required.
+        <p className="mb-10 text-lg text-slate-400 leading-relaxed">
+          LearnFast gives every presenter on your team the feedback they need to close the gap — without the overhead of coaching programmes or the guesswork of self-assessment.
         </p>
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
@@ -439,6 +442,7 @@ export default function EnterprisePage() {
             Book a call instead →
           </a>
         </div>
+        <p className="mt-6 text-sm text-slate-600">14-day free trial · No card required · Cancel any time</p>
       </section>
 
       {/* Footer */}
