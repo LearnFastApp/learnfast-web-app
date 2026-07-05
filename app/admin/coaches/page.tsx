@@ -43,7 +43,13 @@ interface Application {
   name: string;
   email: string;
   linkedinUrl: string;
+  websiteUrl: string;
+  credentials: string;
+  timezone: string;
   specialties: string;
+  quote: string;
+  bioShort: string;
+  bioLong: string;
   pitch: string;
   tryCompleted: boolean;
   status: "new" | "accepted" | "rejected";
@@ -183,9 +189,13 @@ export default function AdminCoachesPage() {
       email: a.email ?? "",
       slug,
       linkedinUrl: a.linkedinUrl ?? "",
+      websiteUrl: a.websiteUrl ?? "",
+      credentials: a.credentials ?? "",
+      timezone: a.timezone ?? "Europe/London",
       specialties: a.specialties ?? "",
-      bioShort: (a.pitch ?? "").slice(0, 280),
-      bioLong: a.pitch ?? "",
+      quote: a.quote ?? "",
+      bioShort: a.bioShort || (a.pitch ?? "").slice(0, 280),
+      bioLong: a.bioLong || a.pitch || "",
     });
     setFormError("");
     setTab("coaches");

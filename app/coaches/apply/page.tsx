@@ -16,13 +16,40 @@ const SPECIALTIES = [
   "Negotiation",
 ];
 
+const TIMEZONES = [
+  "Europe/London",
+  "Europe/Paris",
+  "Europe/Berlin",
+  "Europe/Amsterdam",
+  "Europe/Madrid",
+  "Europe/Rome",
+  "America/New_York",
+  "America/Chicago",
+  "America/Denver",
+  "America/Los_Angeles",
+  "America/Toronto",
+  "America/Vancouver",
+  "Asia/Dubai",
+  "Asia/Singapore",
+  "Asia/Tokyo",
+  "Asia/Hong_Kong",
+  "Australia/Sydney",
+  "Australia/Melbourne",
+  "Pacific/Auckland",
+];
+
 export default function CoachApplyPage() {
   const [form, setForm] = useState({
     name: "",
     email: "",
     linkedinUrl: "",
+    websiteUrl: "",
+    credentials: "",
+    timezone: "Europe/London",
     specialties: [] as string[],
-    pitch: "",
+    quote: "",
+    bioShort: "",
+    bioLong: "",
     tryCompleted: false,
   });
   const [submitting, setSubmitting] = useState(false);
@@ -42,7 +69,7 @@ export default function CoachApplyPage() {
     e.preventDefault();
     setError("");
 
-    if (!form.name.trim() || !form.email.trim() || !form.pitch.trim()) {
+    if (!form.name.trim() || !form.email.trim() || !form.credentials.trim() || !form.bioShort.trim() || !form.bioLong.trim()) {
       setError("Please fill in all required fields.");
       return;
     }
@@ -89,10 +116,7 @@ export default function CoachApplyPage() {
           <p className="text-slate-400 text-sm leading-relaxed mb-8">
             Thanks {form.name.split(" ")[0]}! We review applications on a rolling basis and will be in touch within 2 weeks if we think you&apos;re a great fit.
           </p>
-          <Link
-            href="/coaches"
-            className="inline-flex items-center gap-2 text-violet-400 hover:text-violet-300 text-sm transition-colors"
-          >
+          <Link href="/coaches" className="inline-flex items-center gap-2 text-violet-400 hover:text-violet-300 text-sm transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back to roster
           </Link>
         </div>
@@ -102,7 +126,6 @@ export default function CoachApplyPage() {
 
   return (
     <div className="min-h-screen bg-[#05070d] text-white">
-      {/* Nav */}
       <div className="border-b border-[#1e293b]">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/coaches" className="inline-flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
@@ -120,123 +143,177 @@ export default function CoachApplyPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Name */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">
-              Full name <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className="w-full bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/50"
-              placeholder="Jane Smith"
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-8">
 
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">
-              Email address <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-              className="w-full bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/50"
-              placeholder="jane@example.com"
-            />
-          </div>
+          {/* ── Section 1: About you ── */}
+          <div className="space-y-5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">About you</p>
 
-          {/* LinkedIn */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">
-              LinkedIn profile URL
-            </label>
-            <input
-              type="url"
-              value={form.linkedinUrl}
-              onChange={(e) => setForm((f) => ({ ...f, linkedinUrl: e.target.value }))}
-              className="w-full bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/50"
-              placeholder="https://linkedin.com/in/yourprofile"
-            />
-          </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Full name <span className="text-red-400">*</span></label>
+                <input
+                  type="text" required value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  className="w-full bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/50"
+                  placeholder="Jane Smith"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Email address <span className="text-red-400">*</span></label>
+                <input
+                  type="email" required value={form.email}
+                  onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                  className="w-full bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/50"
+                  placeholder="jane@example.com"
+                />
+              </div>
+            </div>
 
-          {/* Specialties */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-3">
-              Areas of specialty <span className="text-red-400">*</span>
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {SPECIALTIES.map((s) => {
-                const selected = form.specialties.includes(s);
-                return (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => toggleSpecialty(s)}
-                    className={`text-sm px-3.5 py-1.5 rounded-full border transition-colors ${
-                      selected
-                        ? "bg-violet-600 border-violet-500 text-white"
-                        : "bg-[#0f172a] border-[#1e293b] text-slate-400 hover:border-violet-500/40"
-                    }`}
-                  >
-                    {s}
-                  </button>
-                );
-              })}
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">LinkedIn profile URL</label>
+                <input
+                  type="url" value={form.linkedinUrl}
+                  onChange={(e) => setForm((f) => ({ ...f, linkedinUrl: e.target.value }))}
+                  className="w-full bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/50"
+                  placeholder="https://linkedin.com/in/yourprofile"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Website URL</label>
+                <input
+                  type="url" value={form.websiteUrl}
+                  onChange={(e) => setForm((f) => ({ ...f, websiteUrl: e.target.value }))}
+                  className="w-full bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/50"
+                  placeholder="https://yourwebsite.com"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">Your timezone</label>
+              <select
+                value={form.timezone}
+                onChange={(e) => setForm((f) => ({ ...f, timezone: e.target.value }))}
+                className="w-full bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500/50"
+              >
+                {TIMEZONES.map((tz) => (
+                  <option key={tz} value={tz}>{tz.replace("_", " ")}</option>
+                ))}
+              </select>
             </div>
           </div>
 
-          {/* Have you tried LearnFast */}
+          {/* ── Section 2: Expertise ── */}
+          <div className="space-y-5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Your expertise</p>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                Credentials & qualifications <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="text" required value={form.credentials}
+                onChange={(e) => setForm((f) => ({ ...f, credentials: e.target.value }))}
+                className="w-full bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/50"
+                placeholder="ICF PCC, 15 yrs C-suite coaching"
+              />
+              <p className="text-xs text-slate-600 mt-1">Shown on your public profile card.</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-3">
+                Areas of specialty <span className="text-red-400">*</span>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {SPECIALTIES.map((s) => {
+                  const selected = form.specialties.includes(s);
+                  return (
+                    <button
+                      key={s} type="button" onClick={() => toggleSpecialty(s)}
+                      className={`text-sm px-3.5 py-1.5 rounded-full border transition-colors ${
+                        selected
+                          ? "bg-violet-600 border-violet-500 text-white"
+                          : "bg-[#0f172a] border-[#1e293b] text-slate-400 hover:border-violet-500/40"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* ── Section 3: Your profile ── */}
+          <div className="space-y-5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Your profile</p>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                Pull quote <span className="text-slate-500 font-normal">(optional, max 140 chars)</span>
+              </label>
+              <input
+                type="text" maxLength={140} value={form.quote}
+                onChange={(e) => setForm((f) => ({ ...f, quote: e.target.value }))}
+                className="w-full bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/50"
+                placeholder="&ldquo;Great communication isn't born — it's built.&rdquo;"
+              />
+              <p className="text-xs text-slate-600 mt-1 text-right">{form.quote.length} / 140</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                Short bio <span className="text-red-400">*</span>{" "}
+                <span className="text-slate-500 font-normal">(max 280 chars — shown on your roster card)</span>
+              </label>
+              <textarea
+                rows={3} required maxLength={280} value={form.bioShort}
+                onChange={(e) => setForm((f) => ({ ...f, bioShort: e.target.value }))}
+                className="w-full bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/50 resize-none"
+                placeholder="A punchy summary of who you coach and what makes your approach distinctive."
+              />
+              <p className="text-xs text-slate-600 mt-1 text-right">{form.bioShort.length} / 280</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                Full bio <span className="text-red-400">*</span>{" "}
+                <span className="text-slate-500 font-normal">(shown on your full profile page)</span>
+              </label>
+              <textarea
+                rows={7} required maxLength={3000} value={form.bioLong}
+                onChange={(e) => setForm((f) => ({ ...f, bioLong: e.target.value }))}
+                className="w-full bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/50 resize-none"
+                placeholder="Your background, methodology, notable client results, and what excites you about working with LearnFast clients…"
+              />
+              <p className="text-xs text-slate-600 mt-1 text-right">{form.bioLong.length} / 3000</p>
+            </div>
+          </div>
+
+          {/* ── LearnFast experience ── */}
           <div className="flex items-start gap-3 bg-[#0f172a] border border-[#1e293b] rounded-xl p-4">
             <input
-              type="checkbox"
-              id="tryCompleted"
-              checked={form.tryCompleted}
+              type="checkbox" id="tryCompleted" checked={form.tryCompleted}
               onChange={(e) => setForm((f) => ({ ...f, tryCompleted: e.target.checked }))}
               className="mt-0.5 w-4 h-4 accent-violet-600 cursor-pointer"
             />
             <label htmlFor="tryCompleted" className="text-sm text-slate-300 cursor-pointer">
               I&apos;ve completed a LearnFast rehearsal (create one from your{" "}
-              <Link href="/dashboard" className="text-violet-400 hover:text-violet-300">
-                dashboard
-              </Link>
-              )
+              <Link href="/dashboard" className="text-violet-400 hover:text-violet-300">dashboard</Link>)
             </label>
           </div>
 
-          {/* Pitch */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">
-              Tell us about yourself and why you&apos;d be a great fit <span className="text-red-400">*</span>
-            </label>
-            <textarea
-              rows={6}
-              maxLength={2000}
-              value={form.pitch}
-              onChange={(e) => setForm((f) => ({ ...f, pitch: e.target.value }))}
-              className="w-full bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/50 resize-none"
-              placeholder="Your background, methodology, notable client results, and what excites you about working with LearnFast clients…"
-            />
-            <p className="text-slate-600 text-xs mt-1 text-right">{form.pitch.length} / 2000</p>
-          </div>
-
-          {error && (
-            <p className="text-red-400 text-sm">{error}</p>
-          )}
+          {error && <p className="text-red-400 text-sm">{error}</p>}
 
           <button
-            type="submit"
-            disabled={submitting}
+            type="submit" disabled={submitting}
             className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
           >
             {submitting ? (
               <><Loader2 className="w-4 h-4 animate-spin" /> Submitting…</>
-            ) : (
-              "Submit application"
-            )}
+            ) : "Submit application"}
           </button>
 
           <p className="text-slate-600 text-xs text-center">

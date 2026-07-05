@@ -11,14 +11,19 @@ export async function POST(req: NextRequest) {
     name?: string;
     email?: string;
     linkedinUrl?: string;
+    websiteUrl?: string;
+    credentials?: string;
+    timezone?: string;
     specialties?: string;
-    pitch?: string;
+    quote?: string;
+    bioShort?: string;
+    bioLong?: string;
     tryCompleted?: boolean;
   };
 
-  const { name, email, linkedinUrl, specialties, pitch, tryCompleted } = body;
+  const { name, email, linkedinUrl, websiteUrl, credentials, timezone, specialties, quote, bioShort, bioLong, tryCompleted } = body;
 
-  if (!name || !email || !pitch) {
+  if (!name || !email || !bioShort || !bioLong) {
     return NextResponse.json({ error: "missing_required_fields" }, { status: 400 });
   }
 
@@ -45,8 +50,13 @@ export async function POST(req: NextRequest) {
     name,
     email,
     linkedinUrl: linkedinUrl ?? "",
+    websiteUrl: websiteUrl ?? "",
+    credentials: credentials ?? "",
+    timezone: timezone ?? "Europe/London",
     specialties: specialties ?? "",
-    pitch,
+    quote: (quote ?? "").slice(0, 140),
+    bioShort: (bioShort ?? "").slice(0, 280),
+    bioLong: bioLong ?? "",
     tryCompleted: tryCompleted ?? false,
     status: "new",
     createdAt: now,
@@ -59,7 +69,7 @@ export async function POST(req: NextRequest) {
     applicantEmail: email,
     linkedinUrl: linkedinUrl ?? "",
     specialties: specialties ?? "",
-    pitch,
+    pitch: bioLong ?? "",
     tryCompleted: tryCompleted ?? false,
     adminUrl,
   }).catch(() => {});
