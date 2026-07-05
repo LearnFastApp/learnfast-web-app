@@ -695,6 +695,8 @@ export default function LandingPage() {
           <div className="flex gap-6">
             <a href="/privacy" className="hover:text-slate-400 transition">Privacy Policy</a>
             <a href="/terms" className="hover:text-slate-400 transition">Terms &amp; Conditions</a>
+            <a href="/security" className="hover:text-slate-400 transition">Security</a>
+            <a href="/dpa" className="hover:text-slate-400 transition">DPA</a>
           </div>
         </div>
       </footer>

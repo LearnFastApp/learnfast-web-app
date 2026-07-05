@@ -452,6 +452,8 @@ export default function EnterprisePage() {
           <div className="flex items-center gap-6">
             <Link href="/privacy" className="transition hover:text-slate-300">Privacy</Link>
             <Link href="/terms" className="transition hover:text-slate-300">Terms</Link>
+            <Link href="/security" className="transition hover:text-slate-300">Security</Link>
+            <Link href="/dpa" className="transition hover:text-slate-300">DPA</Link>
             <a href="mailto:info@learnfastapp.com" className="transition hover:text-slate-300">
               info@learnfastapp.com
             </a>
