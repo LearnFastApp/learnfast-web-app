@@ -204,6 +204,10 @@ export default function SessionsPage() {
         setOrgName(d.name ?? "");
         setMyRole(d.myRole ?? null);
         setLogoUrl(d.logoUrl ?? null);
+        if (d.subscriptionStatus === "expired" || d.subscriptionStatus === "cancelled") {
+          router.replace(`/${orgId}/billing`);
+          return;
+        }
       }
       if (onboardingRes.ok) {
         const d = await onboardingRes.json();

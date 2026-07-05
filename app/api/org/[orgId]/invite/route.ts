@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Timestamp } from "firebase-admin/firestore";
 import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
-import { getOrgContext, hasOrgPermission } from "@/lib/org-context";
+import { getOrgContext, hasOrgPermission, requireActiveSubscription } from "@/lib/org-context";
 import { sendOrgInviteEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +29,8 @@ export async function POST(
   if (!hasOrgPermission(ctx.role, "admin")) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
+  const subErr = requireActiveSubscription(ctx);
+  if (subErr) return subErr;
 
   const body = await req.json().catch(() => ({}));
   const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : null;

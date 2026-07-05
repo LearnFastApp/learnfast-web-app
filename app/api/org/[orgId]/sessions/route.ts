@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
-import { getOrgContext } from "@/lib/org-context";
+import { getOrgContext, requireActiveSubscription } from "@/lib/org-context";
 import { generateUniqueFeedbackCode } from "@/lib/feedback-code";
 import { sendSessionConfirmationEmail } from "@/lib/email";
 import type { OrgSessionType } from "@/types/enterprise";
@@ -98,6 +98,8 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const ctx = await getOrgContext(uid);
   if (!ctx || ctx.orgId !== orgId) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const subErr = requireActiveSubscription(ctx);
+  if (subErr) return subErr;
 
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "invalid_body" }, { status: 400 });

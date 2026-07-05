@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
   }
 
   const org = ctx.org;
-  if (!["trialing", "active"].includes(org.subscriptionStatus)) {
+  const eligibleStatuses = ["trialing", "active", "expired", "cancelled"];
+  if (!eligibleStatuses.includes(org.subscriptionStatus as string)) {
     return NextResponse.json({ error: "org_not_eligible" }, { status: 409 });
   }
 
@@ -53,6 +54,14 @@ export async function POST(req: NextRequest) {
       metadata: { orgId, seats: String(org.seats.purchased), interval },
       subscription_data: {
         metadata: { orgId, seats: String(org.seats.purchased) },
+        // Honour the remaining trial period if it hasn't expired yet
+        ...(() => {
+          const trialEndsAt = (org.trialEndsAt as { toDate?: () => Date } | null)?.toDate?.();
+          if (trialEndsAt && trialEndsAt > new Date()) {
+            return { trial_end: Math.floor(trialEndsAt.getTime() / 1000) };
+          }
+          return {};
+        })(),
       },
     });
   } catch (err) {

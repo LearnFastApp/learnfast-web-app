@@ -11,7 +11,8 @@ export type OrgSubscriptionStatus =
   | "active"
   | "past_due"
   | "cancelled"
-  | "incomplete";
+  | "incomplete"
+  | "expired";
 
 export type OrgMemberStatus = "active" | "suspended";
 

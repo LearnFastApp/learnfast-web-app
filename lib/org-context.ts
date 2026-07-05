@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import type { OrgContext, OrgMember, OrgRole, Organization } from "@/types/enterprise";
 
@@ -7,12 +8,7 @@ const ROLE_HIERARCHY: OrgRole[] = ["member", "coach", "admin", "owner"];
  * Resolves the full org context for a given user UID.
  * Performs three Firestore reads: presenter doc → member doc → org doc.
  * Returns null if the user has no active org membership.
- *
- * Use in API route handlers to gate enterprise features:
- *
- *   const ctx = await getOrgContext(uid);
- *   if (!ctx) return NextResponse.json({ error: 'not_in_org' }, { status: 403 });
- *   if (!hasOrgPermission(ctx.role, 'admin')) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+ * Automatically transitions expired trials to "expired" status.
  */
 export async function getOrgContext(uid: string): Promise<OrgContext | null> {
   const db = getAdminDb();
@@ -32,12 +28,43 @@ export async function getOrgContext(uid: string): Promise<OrgContext | null> {
   const orgSnap = await db.doc(`organizations/${orgId}`).get();
   if (!orgSnap.exists) return null;
 
+  const orgData = { ...orgSnap.data()! };
+
+  // 4. Auto-expire trial if trialEndsAt has passed
+  if (orgData.subscriptionStatus === "trialing") {
+    const trialEndsAt = orgData.trialEndsAt?.toDate?.() as Date | undefined;
+    if (trialEndsAt && trialEndsAt < new Date()) {
+      orgData.subscriptionStatus = "expired";
+      orgSnap.ref.update({ subscriptionStatus: "expired" }).catch(() => {});
+    }
+  }
+
   return {
     orgId,
     role: memberData.role as OrgRole,
-    org: { id: orgId, ...orgSnap.data() } as Organization,
+    org: { id: orgId, ...orgData } as Organization,
     member: { id: uid, ...memberData } as OrgMember,
   };
+}
+
+/**
+ * Returns a 402 NextResponse if the org's subscription is not active.
+ * Pass `allowExpired: true` for billing-related routes that must stay
+ * accessible so expired orgs can resubscribe.
+ * Returns null when access should be allowed.
+ */
+export function requireActiveSubscription(
+  ctx: OrgContext,
+  opts?: { allowExpired?: boolean },
+): NextResponse | null {
+  const status = ctx.org.subscriptionStatus as string;
+  if (!opts?.allowExpired && (status === "expired" || status === "cancelled")) {
+    return NextResponse.json(
+      { error: "subscription_inactive", status, billingPath: `/${ctx.orgId}/billing` },
+      { status: 402 },
+    );
+  }
+  return null;
 }
 
 /**

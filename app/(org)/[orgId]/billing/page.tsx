@@ -39,11 +39,15 @@ interface ProratedPreview {
 }
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
-  trialing:  { label: "Trial",    color: "text-amber-400 bg-amber-400/10 border-amber-400/20" },
-  active:    { label: "Active",   color: "text-green-400 bg-green-400/10 border-green-400/20" },
-  past_due:  { label: "Past due", color: "text-red-400 bg-red-400/10 border-red-400/20" },
-  cancelled: { label: "Cancelled",color: "text-slate-400 bg-slate-400/10 border-slate-400/20" },
+  trialing:  { label: "Trial",         color: "text-amber-400 bg-amber-400/10 border-amber-400/20" },
+  active:    { label: "Active",         color: "text-green-400 bg-green-400/10 border-green-400/20" },
+  past_due:  { label: "Past due",       color: "text-red-400 bg-red-400/10 border-red-400/20" },
+  cancelled: { label: "Cancelled",      color: "text-slate-400 bg-slate-400/10 border-slate-400/20" },
+  expired:   { label: "Trial expired",  color: "text-red-400 bg-red-400/10 border-red-400/20" },
 };
+
+const MONTHLY_PRICE_PER_SEAT = 15;
+const ANNUAL_PRICE_PER_SEAT  = 12;
 
 export default function BillingPage() {
   const router = useRouter();
@@ -302,7 +306,7 @@ export default function BillingPage() {
           </div>
 
           <p className="text-2xl font-bold text-white mb-1">Enterprise</p>
-          <p className="text-slate-400 text-sm mb-4">£15/seat/month · billed monthly</p>
+          <p className="text-slate-400 text-sm mb-4">£{MONTHLY_PRICE_PER_SEAT}/seat/month · billed monthly</p>
 
           {orgInfo.subscriptionStatus === "trialing" && trialDaysLeft !== null && (
             <div className="flex items-center gap-2 text-amber-300 text-sm mb-4">
@@ -311,10 +315,17 @@ export default function BillingPage() {
             </div>
           )}
 
-          {/* Checkout CTA — shown when trialing and owner */}
-          {orgInfo.subscriptionStatus === "trialing" && isOwner && (
+          {/* Checkout CTA — shown when trialing or expired, owner only */}
+          {(orgInfo.subscriptionStatus === "trialing" || orgInfo.subscriptionStatus === "expired") && isOwner && (
             <div className="border-t border-[#1e293b] pt-4 mt-4">
-              <p className="text-sm text-slate-400 mb-3">Subscribe now to avoid interruption when your trial ends.</p>
+              {orgInfo.subscriptionStatus === "expired" ? (
+                <div className="flex items-start gap-2 mb-3 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-300">Your trial has ended. Subscribe to restore full access — creating sessions and inviting members is paused until then.</p>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-400 mb-3">Subscribe now to avoid interruption when your trial ends.</p>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <button
                   onClick={() => setCheckoutInterval("monthly")}
@@ -324,7 +335,7 @@ export default function BillingPage() {
                       : "bg-transparent border-[#1e293b] text-slate-400"
                   }`}
                 >
-                  Monthly · £15/seat
+                  Monthly · £{MONTHLY_PRICE_PER_SEAT}/seat
                 </button>
                 <button
                   onClick={() => setCheckoutInterval("annual")}
@@ -334,7 +345,7 @@ export default function BillingPage() {
                       : "bg-transparent border-[#1e293b] text-slate-400"
                   }`}
                 >
-                  Annual · £12/seat <span className="text-green-400">Save 20%</span>
+                  Annual · £{ANNUAL_PRICE_PER_SEAT}/seat <span className="text-green-400">Save 20%</span>
                 </button>
               </div>
               <button
@@ -342,7 +353,7 @@ export default function BillingPage() {
                 disabled={checkingOut}
                 className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors"
               >
-                {checkingOut ? "Redirecting to checkout…" : `Subscribe — £${checkoutInterval === "monthly" ? orgInfo.seats.purchased * 15 : orgInfo.seats.purchased * 12 * 12}/` + (checkoutInterval === "monthly" ? "mo" : "yr")}
+                {checkingOut ? "Redirecting to checkout…" : `Subscribe — £${checkoutInterval === "monthly" ? orgInfo.seats.purchased * MONTHLY_PRICE_PER_SEAT : orgInfo.seats.purchased * ANNUAL_PRICE_PER_SEAT * 12}/` + (checkoutInterval === "monthly" ? "mo" : "yr")}
               </button>
               {checkoutError && (
                 <p className="mt-2 text-sm text-red-400 flex items-center gap-1.5">
