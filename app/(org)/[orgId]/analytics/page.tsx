@@ -422,7 +422,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Table header */}
-          <div className="hidden sm:grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 px-4 sm:px-6 py-3 border-b border-[#1e293b]">
+          <div className="hidden sm:grid grid-cols-[1fr_100px_72px_84px_72px_116px] gap-4 px-4 sm:px-6 py-3 border-b border-[#1e293b]">
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
               Name
             </span>
@@ -518,7 +518,7 @@ export default function AnalyticsPage() {
                   </div>
                 </>
                 );
-                const rowClass = "px-4 sm:px-6 py-4 flex flex-col sm:grid sm:grid-cols-[1fr_auto_auto_auto_auto_auto] sm:gap-4 sm:items-center gap-2";
+                const rowClass = "px-4 sm:px-6 py-4 flex flex-col sm:grid sm:grid-cols-[1fr_100px_72px_84px_72px_116px] sm:gap-4 sm:items-center gap-2";
                 return canViewIndividual ? (
                   <a
                     key={m.id}
