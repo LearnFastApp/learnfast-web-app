@@ -308,14 +308,20 @@ export default function OrgCommunityPage() {
         {/* Feed */}
         {filteredItems.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-slate-500 text-sm">No shared rehearsals yet.</p>
-            <p className="text-slate-700 text-xs mt-1">
-              Share one from the{" "}
-              <a href={`/${orgId}/rehearse`} className="text-violet-400 underline">
-                Rehearse page
-              </a>{" "}
-              to appear here.
-            </p>
+            {dimFilter !== "" && items.length > 0 ? (
+              <p className="text-slate-500 text-sm">No rehearsals matching this filter yet.</p>
+            ) : (
+              <>
+                <p className="text-slate-500 text-sm">No shared rehearsals yet.</p>
+                <p className="text-slate-700 text-xs mt-1">
+                  Share one from the{" "}
+                  <a href={`/${orgId}/rehearse`} className="text-violet-400 underline">
+                    Rehearse page
+                  </a>{" "}
+                  to appear here.
+                </p>
+              </>
+            )}
           </div>
         ) : (
           <div className="space-y-3">

@@ -155,6 +155,7 @@ export default function MembersPage() {
         return;
       }
       setInviteSuccess(`Invitation sent to ${inviteEmail}`);
+      setTimeout(() => setInviteSuccess(""), 5000);
       setInviteEmail("");
       setInviteRole("member");
       fetchData();

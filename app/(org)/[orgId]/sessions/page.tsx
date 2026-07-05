@@ -590,7 +590,7 @@ export default function SessionsPage() {
           </h2>
           {upcoming.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-slate-500 text-sm">
-              No upcoming sessions — click <strong className="text-slate-300">New session</strong> to schedule one.
+              No upcoming sessions — click <strong className="text-slate-300">Schedule</strong> to create one.
             </div>
           ) : (
             <div className="space-y-3">

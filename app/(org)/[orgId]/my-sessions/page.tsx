@@ -109,10 +109,11 @@ export default function MySessionsPage() {
     setDeletingId(sessionId);
     try {
       const token = await user.getIdToken();
-      await fetch(`/api/rehearsal/${sessionId}`, {
+      const res = await fetch(`/api/rehearsal/${sessionId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (!res.ok) return;
       setRehearsals((prev) => prev.filter((r) => r.id !== sessionId));
     } catch { /* ignore */ }
     finally { setDeletingId(null); }
@@ -370,7 +371,7 @@ export default function MySessionsPage() {
                   <button
                     onClick={(e) => { e.stopPropagation(); deleteRehearsal(r.id); }}
                     disabled={deletingId === r.id}
-                    className="absolute right-10 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-all disabled:opacity-50"
+                    className="absolute right-10 top-1/2 -translate-y-1/2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg text-slate-600 hover:text-red-400 hover:bg-red-400/10 transition-all disabled:opacity-50"
                     aria-label="Delete rehearsal"
                   >
                     {deletingId === r.id

@@ -126,7 +126,7 @@ export default function LiveSessionPage() {
   const router = useRouter();
 
   const [session, setSession] = useState<{ title: string; code: string } | null>(null);
-  const [sessionStatus, setSessionStatus] = useState<"active" | "closed">("active");
+  const [sessionStatus, setSessionStatus] = useState<"active" | "closed" | "not_found">("active");
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [ending, setEnding] = useState(false);
   const [responses, setResponses] = useState<FeedbackResponse[]>([]);
@@ -294,7 +294,7 @@ export default function LiveSessionPage() {
     if (!user) { router.replace("/auth/login"); return; }
 
     getDoc(doc(db, "sessions", id)).then(async (snap) => {
-      if (!snap.exists()) return;
+      if (!snap.exists()) { setSessionStatus("not_found"); return; }
       const data = snap.data();
       setSession({ title: data.title, code: data.code });
       if (data.status === "closed") setSessionStatus("closed");
@@ -474,12 +474,20 @@ export default function LiveSessionPage() {
     setTimeout(() => setCommitmentSaved(false), 2000);
   }
 
-  const feedbackUrl = session ? `${window.location.origin}/session/${session.code}` : "";
+  const feedbackUrl = session ? `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/session/${session.code}` : "";
 
   function copyUrl() {
     navigator.clipboard.writeText(feedbackUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  if (sessionStatus === "not_found") {
+    return (
+      <main className="min-h-screen bg-[#05070d] flex items-center justify-center">
+        <p className="text-slate-400">Session not found.</p>
+      </main>
+    );
   }
 
   if (authLoading || !session) {

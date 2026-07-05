@@ -416,7 +416,7 @@ export default function FeedViewerPage() {
           ) : (
             <div className="rounded-xl p-4 text-center" style={{ backgroundColor: "#0d1117", border: "1px solid rgba(255,255,255,0.06)" }}>
               <p className="text-sm text-slate-500">
-                <a href="/signin" className="text-violet-400 hover:text-violet-300">Sign in</a> to leave coaching feedback
+                <a href="/auth/login" className="text-violet-400 hover:text-violet-300">Sign in</a> to leave coaching feedback
               </p>
             </div>
           )}

@@ -93,31 +93,38 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   if (!Object.keys(updates).length) return NextResponse.json({ error: "no_changes" }, { status: 400 });
 
+  // Stamp liveAt when transitioning to live
+  if (updates.status === "live") updates.liveAt = FieldValue.serverTimestamp();
+
   await doc.ref.update({ ...updates, updatedAt: FieldValue.serverTimestamp() });
 
   const linkedId = doc.data()?.linkedConsumerSessionId as string | undefined;
   const db2 = getAdminDb();
 
-  // Sync date changes to consumer session
-  if (linkedId && (newStart || newEnd)) {
+  if (linkedId) {
     const consumerUpdates: Record<string, unknown> = {};
+
+    // Sync date changes
     if (newStart) consumerUpdates.scheduledStart = Timestamp.fromDate(newStart);
     if (newEnd) consumerUpdates.scheduledEnd = Timestamp.fromDate(newEnd);
-    await db2.doc(`sessions/${linkedId}`).update(consumerUpdates).catch(() => {});
-  }
 
-  // Sync co-presenter changes to consumer session
-  if (linkedId && copresUpdates) {
-    await db2.doc(`sessions/${linkedId}`).update(copresUpdates).catch(() => {});
-  }
+    // Sync title changes
+    if (updates.title) consumerUpdates.title = updates.title;
 
-  // When org session ends, close the linked consumer session so the feedback form closes
-  if (updates.status === "completed" || updates.status === "cancelled") {
-    if (linkedId) {
-      await db2.doc(`sessions/${linkedId}`).update({
-        status: "closed",
-        endedAt: FieldValue.serverTimestamp(),
-      }).catch(() => {});
+    // Sync co-presenter changes
+    if (copresUpdates) {
+      consumerUpdates.copresenters = copresUpdates.copresenters;
+      consumerUpdates.copresenterIds = copresUpdates.copresenterIds;
+    }
+
+    // Close consumer session when org session ends
+    if (updates.status === "completed" || updates.status === "cancelled") {
+      consumerUpdates.status = "closed";
+      consumerUpdates.endedAt = FieldValue.serverTimestamp();
+    }
+
+    if (Object.keys(consumerUpdates).length) {
+      await db2.doc(`sessions/${linkedId}`).update(consumerUpdates).catch(() => {});
     }
   }
 
@@ -136,13 +143,16 @@ export async function DELETE(req: NextRequest, { params }: Params) {
   const doc = await getSessionDoc(orgId, sessionId);
   if (!doc) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
-  // Remove feedback code index entry too
   const feedbackCode = doc.data()?.feedbackCode as string | undefined;
+  const linkedConsumerSessionId = doc.data()?.linkedConsumerSessionId as string | undefined;
   const db = getAdminDb();
   const batch = db.batch();
   batch.delete(doc.ref);
   if (feedbackCode) {
     batch.delete(db.collection("session_feedback_codes").doc(feedbackCode));
+  }
+  if (linkedConsumerSessionId) {
+    batch.delete(db.collection("sessions").doc(linkedConsumerSessionId));
   }
   await batch.commit();
 

@@ -48,30 +48,34 @@ export async function GET(req: NextRequest, { params }: Params) {
   );
   if (liveDocs.length > 0) {
     const { FieldValue } = await import("firebase-admin/firestore");
+    const updatedIds = new Set<string>();
     await Promise.all(
       liveDocs.map(async (d) => {
         const consumerSnap = await db.doc(`sessions/${d.data().linkedConsumerSessionId}`).get();
         if (consumerSnap.data()?.status === "closed") {
           await d.ref.update({ status: "completed", updatedAt: FieldValue.serverTimestamp() });
+          updatedIds.add(d.id);
         }
       }),
     );
-    // Re-fetch after potential updates
-    const refreshed = await db
-      .collection(`organizations/${orgId}/sessions`)
-      .orderBy("scheduledStart", "desc")
-      .limit(100)
-      .get();
-    const sessions = refreshed.docs.map((d) => {
-      const data = d.data();
-      return {
-        id: d.id,
-        ...data,
-        scheduledStart: data.scheduledStart?.toDate?.()?.toISOString() ?? null,
-        scheduledEnd: data.scheduledEnd?.toDate?.()?.toISOString() ?? null,
-      };
-    });
-    return NextResponse.json({ sessions });
+    if (updatedIds.size > 0) {
+      // Only re-fetch when at least one session was actually updated
+      const refreshed = await db
+        .collection(`organizations/${orgId}/sessions`)
+        .orderBy("scheduledStart", "desc")
+        .limit(100)
+        .get();
+      const sessions = refreshed.docs.map((d) => {
+        const data = d.data();
+        return {
+          id: d.id,
+          ...data,
+          scheduledStart: data.scheduledStart?.toDate?.()?.toISOString() ?? null,
+          scheduledEnd: data.scheduledEnd?.toDate?.()?.toISOString() ?? null,
+        };
+      });
+      return NextResponse.json({ sessions });
+    }
   }
 
   const sessions = snap.docs.map((d) => {

@@ -261,7 +261,10 @@ function RehearsalPageInner() {
         setPageStage("polling");
       }
     });
-  }, [user, loadSession, activeTakeId]);
+  // activeTakeId intentionally omitted — including it causes an infinite loop
+  // because setActiveTakeId inside the effect would re-trigger it.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, loadSession]);
 
   const pollActiveTake = useCallback(async () => {
     if (!user || !activeTakeId) return;
@@ -396,19 +399,23 @@ function RehearsalPageInner() {
     }
   }
 
+  const [shareError, setShareError] = useState("");
+
   async function shareToFeed() {
     if (!user || isSharing) return;
     setIsSharing(true);
+    setShareError("");
     try {
       const token = await user.getIdToken();
-      await fetch(`/api/rehearsal/${sessionId}`, {
+      const res = await fetch(`/api/rehearsal/${sessionId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ isPublic: true }),
       });
+      if (!res.ok) { setShareError("Failed to share. Please try again."); return; }
       setIsShared(true);
       setSession((prev) => prev ? { ...prev, isPublic: true } : prev);
-    } catch { /* ignore */ }
+    } catch { setShareError("Network error. Please try again."); }
     finally { setIsSharing(false); }
   }
 
@@ -717,18 +724,21 @@ function RehearsalPageInner() {
                   </button>
                 </div>
                 {session?.orgId && (
-                  <button
-                    onClick={shareToFeed}
-                    disabled={isSharing || isShared}
-                    className={`w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition ${
-                      isShared
-                        ? "border border-violet-500/30 bg-violet-500/10 text-violet-300 cursor-default"
-                        : "border border-violet-500/40 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20 hover:border-violet-500/60 disabled:opacity-50"
-                    }`}
-                  >
-                    {isShared ? <CheckCircle2 className="h-4 w-4" /> : <Users className="h-4 w-4" />}
-                    {isShared ? "Shared to team feed" : isSharing ? "Sharing…" : "Share to team feed"}
-                  </button>
+                  <div>
+                    <button
+                      onClick={shareToFeed}
+                      disabled={isSharing || isShared}
+                      className={`w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition ${
+                        isShared
+                          ? "border border-violet-500/30 bg-violet-500/10 text-violet-300 cursor-default"
+                          : "border border-violet-500/40 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20 hover:border-violet-500/60 disabled:opacity-50"
+                      }`}
+                    >
+                      {isShared ? <CheckCircle2 className="h-4 w-4" /> : <Users className="h-4 w-4" />}
+                      {isShared ? "Shared to team feed" : isSharing ? "Sharing…" : "Share to team feed"}
+                    </button>
+                    {shareError && <p className="text-xs text-red-400 mt-1 text-center">{shareError}</p>}
+                  </div>
                 )}
               </div>
             ) : (

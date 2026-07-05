@@ -23,6 +23,7 @@ export default function OrgSettingsPage() {
   const [myRole, setMyRole] = useState<string | null>(null);
   const [coachRosterEnabled, setCoachRosterEnabled] = useState(true);
   const [coachRosterMode, setCoachRosterMode] = useState<"all" | "approved_only">("all");
+  const [approvedCoachIds, setApprovedCoachIds] = useState<string[]>([]);
   const [managerCanViewSessions, setManagerCanViewSessions] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
@@ -50,6 +51,7 @@ export default function OrgSettingsPage() {
         if (d.coachRoster) {
           setCoachRosterEnabled(d.coachRoster.enabled ?? true);
           setCoachRosterMode(d.coachRoster.mode ?? "all");
+          setApprovedCoachIds(d.coachRoster.approvedCoachIds ?? []);
         }
         setManagerCanViewSessions(d.settings?.managerCanViewIndividualSessions ?? false);
       }
@@ -124,7 +126,7 @@ export default function OrgSettingsPage() {
           logoUrl: logoUrl || null,
           brandColor: brandColor || null,
           defaultLocale,
-          coachRoster: { enabled: coachRosterEnabled, mode: coachRosterMode, approvedCoachIds: [] },
+          coachRoster: { enabled: coachRosterEnabled, mode: coachRosterMode, approvedCoachIds },
           settings: { managerCanViewIndividualSessions: managerCanViewSessions },
         }),
       });

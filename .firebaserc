@@ -1,5 +1,16 @@
 {
   "projects": {
     "default": "learnfast-app-cc98c"
+  },
+  "targets": {},
+  "etags": {
+    "learnfast-app-cc98c": {
+      "extensionInstances": {
+        "firestore-bigquery-export": "648a6b45db3165739367a158384fdff0f95ad96aa5638d04bf2b918917e45e27",
+        "firestore-bigquery-interventions": "befd79ddf6c0e83bf2114f54e4de455f4e6ce79fd5155f7bbf521b759087e13d",
+        "firestore-bigquery-scoring-versions": "7012a3e31d5812a9860e50cba7364cc09a709c54efe20126774baafdc459964c",
+        "measurements": "bc4894e3b5bf33bf8273aa873420c2b53c109d1cc0fd4d23f44286c10a852c31"
+      }
+    }
   }
 }
