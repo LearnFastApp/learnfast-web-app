@@ -84,7 +84,7 @@ export default function BillingPage() {
         fetch(`/api/org/${orgId}/members-list`, { headers }),
       ]);
       if (infoRes.status === 401) { router.replace("/auth/login"); return; }
-      if (!orgRes.ok && orgRes.status === 403) { router.replace("/dashboard"); return; }
+      if (!infoRes.ok && infoRes.status === 403) { router.replace("/dashboard"); return; }
       if (!infoRes.ok) {
         const errData = await infoRes.json().catch(() => ({}));
         // If the URL orgId is wrong, redirect to the correct org's billing page

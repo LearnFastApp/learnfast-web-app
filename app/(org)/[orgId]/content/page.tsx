@@ -72,7 +72,7 @@ export default function OrgContentPage() {
       fetch(`/api/org/${orgId}/info`, { headers: { Authorization: `Bearer ${token}` } }),
     ]);
     if (contentRes.status === 401) { router.replace("/auth/login"); return; }
-      if (!orgRes.ok && orgRes.status === 403) { router.replace("/dashboard"); return; }
+    if (!infoRes.ok && infoRes.status === 403) { router.replace("/dashboard"); return; }
     if (!contentRes.ok) { setError("Unable to load content library."); setLoading(false); return; }
     const data = await contentRes.json();
     setItems(data.items ?? []);
