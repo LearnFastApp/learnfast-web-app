@@ -215,7 +215,7 @@ export default function FeedViewerPage() {
         backdropFilter: "blur(8px)",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}>
-        <button onClick={() => router.push("/feed")} className="text-slate-500 hover:text-white transition">
+        <button onClick={() => router.back()} className="text-slate-500 hover:text-white transition">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex-1 min-w-0">
