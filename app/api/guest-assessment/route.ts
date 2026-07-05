@@ -90,11 +90,6 @@ export async function POST(req: NextRequest) {
     createdAt: now,
   });
 
-  // Consume rate limit slot before AssemblyAI so failures still use the quota (skip for admins)
-  if (!isAdmin) {
-    await db.collection("guest_rate_limits").doc(emailHash).set({ emailHash, createdAt: now });
-  }
-
   // Upload buffer directly to AssemblyAI and submit (no Firebase Storage needed)
   try {
     const transcriptId = await uploadAndSubmitTranscription(fileBuffer, { audioEndAt: 90 * 1000 });
@@ -103,6 +98,11 @@ export async function POST(req: NextRequest) {
     console.error("[guest-assessment] AssemblyAI upload/submit failed:", err);
     await ref.update({ status: "failed", error: String(err) });
     return NextResponse.json({ error: "transcription_failed" }, { status: 500 });
+  }
+
+  // Consume rate limit slot only after successful submission so transient AI failures don't block retries
+  if (!isAdmin) {
+    await db.collection("guest_rate_limits").doc(emailHash).set({ emailHash, createdAt: now });
   }
 
   // Return the token so the client can redirect straight to the results page

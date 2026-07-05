@@ -501,6 +501,7 @@ export default function OrgDashboardPage() {
       // Always fetch org info first to get role
       const orgRes = await fetch(`/api/org/${orgId}/info`, { headers: h });
       if (orgRes.status === 401) { router.replace("/auth/login"); return; }
+      if (orgRes.status === 403) { router.replace("/dashboard"); return; }
       if (!orgRes.ok) return;
 
       const orgData = await orgRes.json();

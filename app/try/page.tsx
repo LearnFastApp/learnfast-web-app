@@ -415,7 +415,7 @@ export default function TryPage() {
         {/* Tabs */}
         <div className="flex rounded-xl bg-white/[0.04] border border-white/[0.06] p-1 mb-6">
           <button
-            onClick={() => { setTab("record"); setUploadFile(null); }}
+            onClick={() => { setTab("record"); setUploadFile(null); setErrorMsg(""); setPageStage("form"); }}
             className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition ${
               tab === "record"
                 ? "bg-[#1e293b] text-white shadow-sm"
@@ -426,7 +426,7 @@ export default function TryPage() {
             Record
           </button>
           <button
-            onClick={() => { setTab("upload"); resetRecording(); }}
+            onClick={() => { setTab("upload"); resetRecording(); setErrorMsg(""); setPageStage("form"); }}
             className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition ${
               tab === "upload"
                 ? "bg-[#1e293b] text-white shadow-sm"

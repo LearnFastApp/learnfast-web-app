@@ -72,6 +72,7 @@ export default function MembersPage() {
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
 
   // Invite form
   const [inviteEmail, setInviteEmail] = useState("");
@@ -167,15 +168,20 @@ export default function MembersPage() {
   async function removeMember(userId: string, displayName: string) {
     if (!user) return;
     if (!confirm(`Remove ${displayName} from the organisation?`)) return;
+    setActionError("");
     try {
       const idToken = await user.getIdToken();
-      await fetch(`/api/org/${orgId}/members/${userId}`, {
+      const res = await fetch(`/api/org/${orgId}/members/${userId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${idToken}` },
       });
+      if (!res.ok) {
+        setActionError("Failed to remove member. Please try again.");
+        return;
+      }
       fetchData();
     } catch {
-      /* ignore */
+      setActionError("Network error. Please try again.");
     }
   }
 
@@ -183,15 +189,20 @@ export default function MembersPage() {
     if (!user) return;
     if (!confirm(`Revoke invite for ${email}?`)) return;
     setRevokingId(inviteId);
+    setActionError("");
     try {
       const idToken = await user.getIdToken();
-      await fetch(`/api/org/${orgId}/invite/${inviteId}`, {
+      const res = await fetch(`/api/org/${orgId}/invite/${inviteId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${idToken}` },
       });
+      if (!res.ok) {
+        setActionError("Failed to revoke invite. Please try again.");
+        return;
+      }
       fetchData();
     } catch {
-      /* ignore */
+      setActionError("Network error. Please try again.");
     } finally {
       setRevokingId(null);
     }
@@ -199,16 +210,21 @@ export default function MembersPage() {
 
   async function changeRole(userId: string, newRole: OrgRole) {
     if (!user) return;
+    setActionError("");
     try {
       const idToken = await user.getIdToken();
-      await fetch(`/api/org/${orgId}/members/${userId}`, {
+      const res = await fetch(`/api/org/${orgId}/members/${userId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
         body: JSON.stringify({ role: newRole }),
       });
+      if (!res.ok) {
+        setActionError("Failed to update role. Please try again.");
+        return;
+      }
       fetchData();
     } catch {
-      /* ignore */
+      setActionError("Network error. Please try again.");
     }
   }
 
@@ -260,6 +276,15 @@ export default function MembersPage() {
             </div>
           </div>
         </div>
+
+        {/* Action error */}
+        {actionError && (
+          <div className="mb-4 flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
+            <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+            <p className="text-sm text-red-400 flex-1">{actionError}</p>
+            <button onClick={() => setActionError("")} className="text-slate-500 hover:text-white transition text-xs">✕</button>
+          </div>
+        )}
 
         {/* Past-due banner */}
         {orgInfo && (

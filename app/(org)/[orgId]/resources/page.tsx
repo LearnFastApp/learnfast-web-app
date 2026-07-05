@@ -74,6 +74,7 @@ export default function ResourceHubPage() {
         fetch(`/api/library`, { headers: h }),
       ]);
       if (orgRes.status === 401) { router.replace("/auth/login"); return; }
+      if (!orgRes.ok && orgRes.status === 403) { router.replace("/dashboard"); return; }
       if (orgRes.ok) { const d = await orgRes.json(); setOrgName(d.name ?? ""); setMyRole(d.myRole ?? null); setLogoUrl(d.logoUrl ?? null); }
       if (libRes.ok) { const d = await libRes.json(); setItems(d.items ?? []); }
     } catch {

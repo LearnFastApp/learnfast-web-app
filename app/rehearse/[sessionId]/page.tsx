@@ -241,7 +241,7 @@ function RehearsalPageInner() {
   useEffect(() => {
     if (!user) return;
     loadSession().then((loadedTakes) => {
-      if (!loadedTakes?.length) { setPageStage("error"); return; }
+      if (!loadedTakes?.length) { setPageStage("ready"); return; }
       const active = activeTakeId
         ? loadedTakes.find((t) => t.id === activeTakeId) ?? loadedTakes[loadedTakes.length - 1]
         : loadedTakes[loadedTakes.length - 1];

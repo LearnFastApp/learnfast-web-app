@@ -39,6 +39,10 @@ const PROTECTED_PREFIXES = [
   "/sessions",
   "/learning-hub",
   "/pricing",
+  "/leaderboard",
+  "/ai-assessment",
+  "/rehearse",
+  "/admin",
 ];
 
 export function middleware(req: NextRequest) {
@@ -104,5 +108,11 @@ export const config = {
     "/sessions/:path*",
     "/learning-hub/:path*",
     "/pricing/:path*",
+    "/leaderboard/:path*",
+    "/leaderboard",
+    "/ai-assessment/:path*",
+    "/ai-assessment",
+    "/rehearse/:path*",
+    "/admin/:path*",
   ],
 };

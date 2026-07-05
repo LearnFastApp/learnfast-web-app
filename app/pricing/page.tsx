@@ -138,7 +138,7 @@ export default function PricingPage() {
             <h1 className="text-2xl font-bold">Choose your plan</h1>
             <p className="text-sm text-slate-400">Unlock the full power of LearnFast</p>
           </div>
-          <a href="/" className="text-sm text-slate-400 hover:text-white transition">
+          <a href="/dashboard" className="text-sm text-slate-400 hover:text-white transition">
             ← Dashboard
           </a>
         </div>
@@ -150,7 +150,7 @@ export default function PricingPage() {
             <p className="font-semibold text-green-300">You&apos;re now on Lite — welcome aboard!</p>
             <p className="mt-1 text-sm text-slate-400">
               All features are unlocked.{" "}
-              <a href="/" className="text-violet-400 underline">
+              <a href="/dashboard" className="text-violet-400 underline">
                 Go to dashboard →
               </a>
             </p>

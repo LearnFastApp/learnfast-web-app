@@ -102,7 +102,7 @@ export default function OrgSignupPage() {
         }
         return;
       }
-      router.replace(`/${data.orgId}/members`);
+      router.replace(`/${data.orgId}/dashboard`);
     } catch {
       setOrgError("Network error. Please try again.");
     } finally {
