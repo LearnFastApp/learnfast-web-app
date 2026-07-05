@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import {
   BarChart2, Brain, BookOpen, CalendarDays, Loader2, Mic, ArrowRight,
   TrendingUp, MessageSquare, CheckCircle2, Circle, Users, Search,
-  Settings, ChevronRight, Lock,
+  Settings, ChevronRight, Lock, ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import OrgSidebar from "@/components/org-sidebar";
@@ -73,6 +73,8 @@ function ScoreBar({ label, value, color }: { label: string; value: number; color
 
 // ─── Admin / owner view ──────────────────────────────────────────────────────
 
+const PLATFORM_ADMIN = "physicalperformance@icloud.com";
+
 function AdminDashboard({
   orgId, orgName, overview, members, onboarding, canViewIndividual,
 }: {
@@ -80,6 +82,8 @@ function AdminDashboard({
   overview: TeamOverview | null; members: MemberRow[];
   onboarding: OnboardingStatus | null; canViewIndividual: boolean;
 }) {
+  const { user } = useAuth();
+  const isPlatformAdmin = user?.email === PLATFORM_ADMIN;
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
@@ -106,6 +110,7 @@ function AdminDashboard({
         <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">Admin view</p>
         <h1 className="text-2xl font-bold">{orgName || "Team Dashboard"}</h1>
       </div>
+
 
       {/* Onboarding */}
       {onboarding && !onboardingComplete && (
@@ -286,6 +291,23 @@ function AdminDashboard({
           </a>
         ))}
       </div>
+
+      {isPlatformAdmin && (
+        <div className="mt-3">
+          <a
+            href="/admin/coaches"
+            className="flex items-start gap-3 bg-[#0f172a] border border-amber-500/20 hover:border-amber-500/40 rounded-2xl p-5 transition-colors group"
+          >
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 transition-colors">
+              <ShieldCheck className="w-4 h-4 text-amber-400" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white">Admin Panel</p>
+              <p className="text-xs text-slate-500 mt-0.5">Coaches &amp; applications</p>
+            </div>
+          </a>
+        </div>
+      )}
     </div>
   );
 }
@@ -298,6 +320,8 @@ function MemberDashboard({
   orgId: string; displayName: string;
   dash: DashData | null; rehearsals: RehearsalSession[];
 }) {
+  const { user } = useAuth();
+  const isPlatformAdmin = user?.email === PLATFORM_ADMIN;
   const recentSessions = dash?.sessions.slice(0, 3) ?? [];
   const avg = dash?.overallAvg ?? null;
   const mean = overallMean(avg);
@@ -422,6 +446,23 @@ function MemberDashboard({
           </a>
         ))}
       </div>
+
+      {isPlatformAdmin && (
+        <div className="mt-3">
+          <a
+            href="/admin/coaches"
+            className="flex items-start gap-3 bg-[#0f172a] border border-amber-500/20 hover:border-amber-500/40 rounded-2xl p-5 transition-colors group"
+          >
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 transition-colors">
+              <ShieldCheck className="w-4 h-4 text-amber-400" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white">Admin Panel</p>
+              <p className="text-xs text-slate-500 mt-0.5">Coaches &amp; applications</p>
+            </div>
+          </a>
+        </div>
+      )}
     </div>
   );
 }
@@ -528,6 +569,7 @@ export default function OrgDashboardPage() {
             members={members}
             onboarding={onboarding}
             canViewIndividual={canViewIndividual}
+
           />
         ) : (
           <MemberDashboard
@@ -535,6 +577,7 @@ export default function OrgDashboardPage() {
             displayName={displayName}
             dash={dash}
             rehearsals={rehearsals}
+
           />
         )}
       </main>

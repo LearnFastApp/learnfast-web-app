@@ -190,8 +190,8 @@ export default function EnterprisePage() {
 
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-6 pb-20 pt-24 text-center">
-        <p className="mb-6 text-xs font-semibold uppercase tracking-widest text-slate-400">
-          AI-Powered Presentation Intelligence
+        <p className="mb-6 text-sm font-semibold uppercase tracking-widest text-violet-400">
+          Presentation &amp; Communication Skills — For Your Whole Team
         </p>
 
         {/* Personal / Business toggle */}
@@ -212,7 +212,7 @@ export default function EnterprisePage() {
           <span className="text-violet-400">ONE FEEDBACK PLATFORM.</span>
         </h1>
         <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-slate-300">
-          Live audience feedback, AI coaching, performance tracking over time, assignment management and a curated resource library — all in one platform your L&amp;D team controls. Buy seats in minutes. No sales call, no procurement cycle.
+          Most L&amp;D teams have no visibility into how their people communicate. Presenters walk out of the room and get nothing actionable — no scores, no trends, no way to know if they&apos;re improving. LearnFast fixes that. Live audience feedback, AI rehearsal coaching and measurable performance tracking for every presenter on your team — in one platform you control.
         </p>
 
         <div className="mb-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -240,6 +240,34 @@ export default function EnterprisePage() {
               {label}
             </span>
           ))}
+        </div>
+      </section>
+
+      {/* Problem band */}
+      <section className="border-t border-[#1e293b]">
+        <div className="mx-auto max-w-6xl px-6 py-16">
+          <p className="text-center text-xs font-semibold uppercase tracking-widest text-slate-500 mb-10">Sound familiar?</p>
+          <div className="grid gap-6 sm:grid-cols-3">
+            {[
+              {
+                quote: "Our presenters get feedback after every session — it's just 'great job' and nothing measurable.",
+                fix: "LearnFast replaces vague praise with real-time scores across five structured dimensions.",
+              },
+              {
+                quote: "We invest in coaching, but we have no way to tell if it's actually working.",
+                fix: "Performance over time — line charts and trend data for every member, every session.",
+              },
+              {
+                quote: "I can't see how my team communicates without sitting in every meeting.",
+                fix: "A manager dashboard that shows individual and team-wide patterns — without you being in the room.",
+              },
+            ].map(({ quote, fix }) => (
+              <div key={fix} className="rounded-2xl border border-[#1e293b] bg-[#0f172a] p-6">
+                <p className="text-sm text-slate-400 italic leading-relaxed mb-4">&ldquo;{quote}&rdquo;</p>
+                <p className="text-xs font-semibold text-violet-400 leading-relaxed">{fix}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -279,6 +307,24 @@ export default function EnterprisePage() {
                 </div>
                 <h3 className="mb-2 text-lg font-bold">{title}</h3>
                 <p className="text-sm leading-relaxed text-slate-400">{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Product stats */}
+      <section className="border-b border-[#1e293b]">
+        <div className="mx-auto max-w-6xl px-6 py-12">
+          <div className="grid grid-cols-3 divide-x divide-[#1e293b] text-center">
+            {[
+              { stat: "< 1 min", label: "for an audience member to submit feedback — no app, no login" },
+              { stat: "5 dimensions", label: "every session scored across the same structured framework, every time" },
+              { stat: "0 installs", label: "audience scans a QR code and rates — works on any phone" },
+            ].map(({ stat, label }) => (
+              <div key={stat} className="px-8 py-4">
+                <p className="text-3xl font-black text-violet-400 mb-2">{stat}</p>
+                <p className="text-sm text-slate-400 leading-relaxed">{label}</p>
               </div>
             ))}
           </div>

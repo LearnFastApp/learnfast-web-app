@@ -65,6 +65,7 @@ export async function GET(
     brandColor: (org.brandColor as string | undefined) ?? null,
     defaultLocale: (org.defaultLocale as string | undefined) ?? "en",
     coachRoster: org.coachRoster ?? { enabled: true, mode: "all", approvedCoachIds: [] },
+    isPlatformAdmin: presSnap.data()?.isPlatformAdmin === true,
   });
 }
 

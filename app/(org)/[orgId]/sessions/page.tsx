@@ -416,7 +416,7 @@ export default function SessionsPage() {
               </div>
               {/* Co-presenters */}
               <div>
-                <label className="block text-xs text-slate-400 mb-2">Co-presenters <span className="text-slate-600">(optional)</span></label>
+                <label className="block text-xs text-slate-400 mb-2">Presenters <span className="text-slate-600">(optional)</span></label>
                 {membersLoading ? (
                   <p className="text-xs text-slate-500">Loading members…</p>
                 ) : orgMembers.length === 0 ? (
@@ -612,7 +612,7 @@ function SessionCard({
             {session.copresenters && session.copresenters.length > 0 && (
               <span className="text-[10px] text-slate-500 flex items-center gap-1">
                 <Users className="w-3 h-3" />
-                +{session.copresenters.length} co-presenter{session.copresenters.length > 1 ? "s" : ""}
+                +{session.copresenters.length} presenter{session.copresenters.length > 1 ? "s" : ""}
               </span>
             )}
           </div>

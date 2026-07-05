@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { storage } from "@/lib/firebase";
 import {
-  Users, Plus, Edit2, Trash2, Eye, EyeOff, Star, StarOff,
-  Loader2, CheckCircle, XCircle, ChevronDown, AlertCircle,
+  Users, Plus, Edit2, Trash2, Eye, Star, StarOff,
+  Loader2, CheckCircle, XCircle, ChevronDown, AlertCircle, Upload,
 } from "lucide-react";
 import type { CoachStatus, ListingTier } from "@/types/enterprise";
 
@@ -102,6 +104,37 @@ export default function AdminCoachesPage() {
   const [form, setForm] = useState(BLANK_FORM);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+  const [headshotUploading, setHeadshotUploading] = useState(false);
+  const [headshotProgress, setHeadshotProgress] = useState(0);
+  const headshotInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleHeadshotUpload(file: File) {
+    setHeadshotUploading(true);
+    setHeadshotProgress(0);
+    try {
+      const ext = file.name.split(".").pop() ?? "jpg";
+      const path = `coach-headshots/${Date.now()}.${ext}`;
+      const sRef = storageRef(storage, path);
+      await new Promise<void>((resolve, reject) => {
+        const task = uploadBytesResumable(sRef, file);
+        task.on(
+          "state_changed",
+          (snap) => setHeadshotProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
+          reject,
+          async () => {
+            const url = await getDownloadURL(task.snapshot.ref);
+            setForm((f) => ({ ...f, headshotUrl: url }));
+            resolve();
+          }
+        );
+      });
+    } catch {
+      setFormError("Headshot upload failed. Please try again.");
+    } finally {
+      setHeadshotUploading(false);
+      setHeadshotProgress(0);
+    }
+  }
 
   const fetchCoaches = useCallback(async (token: string) => {
     const res = await fetch("/api/admin/coaches", { headers: { Authorization: `Bearer ${token}` } });
@@ -137,6 +170,25 @@ export default function AdminCoachesPage() {
     setEditingId(null);
     setForm(BLANK_FORM);
     setFormError("");
+    setShowForm(true);
+  }
+
+  function openFromApplication(a: Application) {
+    setEditingId(null);
+    const name = a.name ?? "";
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    setForm({
+      ...BLANK_FORM,
+      name,
+      email: a.email ?? "",
+      slug,
+      linkedinUrl: a.linkedinUrl ?? "",
+      specialties: a.specialties ?? "",
+      bioShort: (a.pitch ?? "").slice(0, 280),
+      bioLong: a.pitch ?? "",
+    });
+    setFormError("");
+    setTab("coaches");
     setShowForm(true);
   }
 
@@ -385,6 +437,16 @@ export default function AdminCoachesPage() {
                     </button>
                   </div>
                 )}
+                {a.status === "accepted" && (
+                  <div className="mt-3">
+                    <button
+                      onClick={() => openFromApplication(a)}
+                      className="flex items-center gap-1.5 text-xs text-violet-400 bg-violet-400/10 hover:bg-violet-400/20 px-3 py-1.5 rounded-lg transition-colors font-medium"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Create coach profile
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -437,7 +499,6 @@ export default function AdminCoachesPage() {
                 { key: "name", label: "Full name", required: true },
                 { key: "slug", label: "Slug (URL-safe)", required: true, placeholder: "jane-smith" },
                 { key: "email", label: "Email (private — not shown publicly)", required: true, type: "email" },
-                { key: "headshotUrl", label: "Headshot URL (800×800 square recommended)", required: true },
                 { key: "credentials", label: "Credentials line", required: true, placeholder: "ICF PCC, 15 yrs C-suite coaching" },
                 { key: "quote", label: "Pull quote (max 140 chars)", required: true },
                 { key: "bioShort", label: "Short bio (max 280 chars, shown on card)", required: true },
@@ -461,6 +522,47 @@ export default function AdminCoachesPage() {
                   />
                 </div>
               ))}
+
+              {/* Headshot upload */}
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1">Headshot (800×800 square recommended)</label>
+                <input
+                  ref={headshotInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleHeadshotUpload(file);
+                  }}
+                />
+                <div className="flex items-center gap-3">
+                  {form.headshotUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={form.headshotUrl} alt="Headshot preview" className="w-16 h-16 rounded-xl object-cover shrink-0 border border-[#1e293b]" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl bg-[#0a0f1a] border border-[#1e293b] flex items-center justify-center shrink-0">
+                      <Upload className="w-5 h-5 text-slate-600" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <button
+                      type="button"
+                      onClick={() => headshotInputRef.current?.click()}
+                      disabled={headshotUploading}
+                      className="flex items-center gap-2 text-sm bg-[#0a0f1a] border border-[#1e293b] hover:border-violet-500/50 text-slate-300 hover:text-white px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      {headshotUploading ? `Uploading… ${headshotProgress}%` : form.headshotUrl ? "Replace photo" : "Upload photo"}
+                    </button>
+                    {headshotUploading && (
+                      <div className="mt-2 h-1 bg-[#1e293b] rounded-full overflow-hidden">
+                        <div className="h-full bg-violet-500 transition-all" style={{ width: `${headshotProgress}%` }} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
 
               {/* Long bio */}
               <div>
