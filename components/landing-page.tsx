@@ -165,9 +165,9 @@ export default function LandingPage() {
             Business
           </a>
         </div>
-        <h1 className="relative text-3xl sm:text-6xl md:text-7xl lg:text-8xl font-light leading-tight tracking-tight text-slate-400 mb-1">
-          INTRODUCING
-        </h1>
+        <p className="relative max-w-3xl mx-auto text-base sm:text-lg md:text-xl text-slate-400 font-light italic mb-4 leading-snug">
+          never walk out of another meeting wondering if your message has landed
+        </p>
         <h1 className="relative text-3xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-tight tracking-tight mb-6">
           THE LEARNFAST APP
         </h1>
