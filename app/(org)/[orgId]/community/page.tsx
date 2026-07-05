@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import OrgSidebar from "@/components/org-sidebar";
 import { DIM_COLOURS, DIMS, type Dim, type RankInfo } from "@/lib/rank";
-import { Loader2, MessageSquare, Play, Users } from "lucide-react";
+import { Loader2, MessageSquare, Play, Users, X } from "lucide-react";
 
 interface FeedItem {
   id: string;
@@ -80,7 +80,17 @@ function RankChip({ rank }: { rank: RankInfo }) {
   );
 }
 
-function FeedCard({ item, onClick }: { item: FeedItem; onClick: () => void }) {
+function FeedCard({
+  item,
+  onClick,
+  canRemove,
+  onRemove,
+}: {
+  item: FeedItem;
+  onClick: () => void;
+  canRemove: boolean;
+  onRemove: () => void;
+}) {
   const accentColour = item.rank.colour;
   const overallScore = item.featuredTake?.scores
     ? Math.round(
@@ -115,12 +125,23 @@ function FeedCard({ item, onClick }: { item: FeedItem; onClick: () => void }) {
             )}
           </div>
         </div>
-        {overallScore !== null && (
-          <div className="text-right flex-shrink-0">
-            <p className="text-lg font-black font-mono text-white">{overallScore}</p>
-            <p className="text-[9px] text-slate-600">/100</p>
-          </div>
-        )}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {overallScore !== null && (
+            <div className="text-right">
+              <p className="text-lg font-black font-mono text-white">{overallScore}</p>
+              <p className="text-[9px] text-slate-600">/100</p>
+            </div>
+          )}
+          {canRemove && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onRemove(); }}
+              title="Remove from feed"
+              className="opacity-40 hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/10"
+            >
+              <X className="h-3.5 w-3.5 text-slate-400" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Title + tags */}
@@ -187,6 +208,7 @@ export default function OrgCommunityPage() {
   const [orgName, setOrgName] = useState("");
   const [myRole, setMyRole] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -233,6 +255,23 @@ export default function OrgCommunityPage() {
     }
     fetchData();
   }, [user, authLoading, fetchData]);
+
+  const removeFromFeed = useCallback(async (rehearsalId: string) => {
+    if (!user) return;
+    setRemovingId(rehearsalId);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/org/${orgId}/feed/${rehearsalId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setItems((prev) => prev.filter((i) => i.id !== rehearsalId));
+      }
+    } finally {
+      setRemovingId(null);
+    }
+  }, [user, orgId]);
 
   const filteredItems =
     dimFilter === ""
@@ -329,7 +368,13 @@ export default function OrgCommunityPage() {
               <FeedCard
                 key={item.id}
                 item={item}
-                onClick={() => router.push(`/feed/${item.id}`)}
+                onClick={() => removingId !== item.id && router.push(`/feed/${item.id}`)}
+                canRemove={
+                  item.presenterId === user?.uid ||
+                  myRole === "admin" ||
+                  myRole === "owner"
+                }
+                onRemove={() => removeFromFeed(item.id)}
               />
             ))}
           </div>
