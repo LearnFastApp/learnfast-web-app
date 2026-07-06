@@ -162,10 +162,6 @@ export default function OrgSettingsPage() {
           <Settings className="w-6 h-6 text-violet-400" />
           <h1 className="text-2xl font-bold">Organisation settings</h1>
         </div>
-        <div className="mb-4 text-xs text-slate-500 font-mono">
-          isAdmin: {String(isAdmin)} · role: {myRole ?? "null"}
-        </div>
-
         {!isAdmin ? (
           <div className="bg-[#0f172a] border border-[#1e293b] rounded-2xl p-8 text-center">
             <AlertCircle className="w-8 h-8 text-slate-500 mx-auto mb-3" />
@@ -231,7 +227,6 @@ export default function OrgSettingsPage() {
                         key={fileInputKey}
                         type="file"
                         accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                        onClick={() => setError("DEBUG: click reached file input — file picker should be open")}
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) handleLogoUpload(file);
