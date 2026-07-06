@@ -211,24 +211,31 @@ export default function OrgSettingsPage() {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <input
-                    key={fileInputKey}
-                    id={`logo-upload-${orgId}`}
-                    type="file"
-                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleLogoUpload(file);
-                    }}
-                  />
-                  <label
-                    htmlFor={logoUploading ? undefined : `logo-upload-${orgId}`}
-                    className={`inline-flex items-center gap-2 bg-[#0a0f1a] hover:bg-white/5 border border-[#1e293b] hover:border-slate-500 text-slate-300 text-sm font-medium px-4 py-2 rounded-xl transition-colors ${logoUploading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                  {/* Wrapper is the visible button; the invisible file input overlays it so the
+                      user clicks the input directly — no ref, no label-for, no JS trigger */}
+                  <div
+                    className={`relative inline-flex items-center gap-2 bg-[#0a0f1a] border border-[#1e293b] hover:border-slate-500 text-slate-300 text-sm font-medium px-4 py-2 rounded-xl transition-colors select-none ${
+                      logoUploading ? "opacity-50 cursor-not-allowed" : "hover:bg-white/5 cursor-pointer"
+                    }`}
                   >
-                    <Upload className="w-4 h-4" />
-                    {logoUploading ? `Uploading ${logoUploadProgress}%…` : logoUrl ? "Change logo" : "Upload logo"}
-                  </label>
+                    <Upload className="w-4 h-4 pointer-events-none" />
+                    <span className="pointer-events-none">
+                      {logoUploading ? `Uploading ${logoUploadProgress}%…` : logoUrl ? "Change logo" : "Upload logo"}
+                    </span>
+                    {!logoUploading && (
+                      <input
+                        key={fileInputKey}
+                        type="file"
+                        accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleLogoUpload(file);
+                        }}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        title=""
+                      />
+                    )}
+                  </div>
                   {logoUrl && !logoUploading && (
                     <div className="flex items-center gap-3 mt-2">
                       <button
