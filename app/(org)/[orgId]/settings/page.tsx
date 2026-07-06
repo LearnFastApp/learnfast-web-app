@@ -5,8 +5,6 @@ import { useRouter, useParams } from "next/navigation";
 import { Settings, Loader2, CheckCircle, AlertCircle, ImageIcon, Upload, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import OrgSidebar from "@/components/org-sidebar";
-import { ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { storage } from "@/lib/firebase";
 import { getColorSync } from "colorthief";
 
 export default function OrgSettingsPage() {
@@ -29,7 +27,6 @@ export default function OrgSettingsPage() {
   const [error, setError] = useState("");
   const [brandColor, setBrandColor] = useState("#8b5cf6");
   const [logoUploading, setLogoUploading] = useState(false);
-  const [logoUploadProgress, setLogoUploadProgress] = useState(0);
   const [fileInputKey, setFileInputKey] = useState(0);
 
   const fetchData = useCallback(async () => {
@@ -73,41 +70,34 @@ export default function OrgSettingsPage() {
   async function handleLogoUpload(file: File) {
     if (!user) { setError("Not authenticated — please refresh the page and try again."); return; }
     setLogoUploading(true);
-    setLogoUploadProgress(0);
     setError("");
     try {
-      const ext = file.name.split(".").pop() ?? "png";
-      const path = `org-logos/${orgId}/${Date.now()}.${ext}`;
-      const sRef = storageRef(storage, path);
-      await new Promise<void>((resolve, reject) => {
-        const task = uploadBytesResumable(sRef, file);
-        task.on(
-          "state_changed",
-          (snap) => setLogoUploadProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
-          reject,
-          async () => {
-            const url = await getDownloadURL(task.snapshot.ref);
-            setLogoUrl(url);
-            // Extract dominant color from the uploaded image
-            try {
-              const img = new Image();
-              img.crossOrigin = "anonymous";
-              img.onload = () => {
-                const color = getColorSync(img);
-                if (color) setBrandColor(color.hex());
-              };
-              img.src = url;
-            } catch { /* ignore — user can set manually */ }
-            resolve();
-          }
-        );
+      const token = await user.getIdToken();
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch(`/api/org/${orgId}/upload-logo`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body,
       });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setError(`Upload failed: ${d.error ?? "server error"}`);
+        return;
+      }
+      const { url } = await res.json();
+      setLogoUrl(url);
+      try {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => { const color = getColorSync(img); if (color) setBrandColor(color.hex()); };
+        img.src = url;
+      } catch { /* ignore */ }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : JSON.stringify(err);
       setError(`Upload failed: ${msg}`);
     } finally {
       setLogoUploading(false);
-      setLogoUploadProgress(0);
     }
   }
 
@@ -220,7 +210,7 @@ export default function OrgSettingsPage() {
                   >
                     <Upload className="w-4 h-4 pointer-events-none" />
                     <span className="pointer-events-none">
-                      {logoUploading ? `Uploading ${logoUploadProgress}%…` : logoUrl ? "Change logo" : "Upload logo"}
+                      {logoUploading ? "Uploading…" : logoUrl ? "Change logo" : "Upload logo"}
                     </span>
                     {!logoUploading && (
                       <input
@@ -247,11 +237,6 @@ export default function OrgSettingsPage() {
                         Remove logo
                       </button>
                       <span className="text-xs text-amber-400">Click Save settings below to apply</span>
-                    </div>
-                  )}
-                  {logoUploading && (
-                    <div className="mt-2 h-1 bg-[#1e293b] rounded-full overflow-hidden w-32">
-                      <div className="h-full bg-violet-500 transition-all" style={{ width: `${logoUploadProgress}%` }} />
                     </div>
                   )}
                 </div>
