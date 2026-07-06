@@ -102,8 +102,9 @@ export default function OrgSettingsPage() {
           }
         );
       });
-    } catch {
-      setError("Logo upload failed. Please try again.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : JSON.stringify(err);
+      setError(`Upload failed: ${msg}`);
     } finally {
       setLogoUploading(false);
       setLogoUploadProgress(0);
@@ -231,14 +232,17 @@ export default function OrgSettingsPage() {
                     {logoUploading ? `Uploading ${logoUploadProgress}%…` : logoUrl ? "Change logo" : "Upload logo"}
                   </button>
                   {logoUrl && !logoUploading && (
-                    <button
-                      type="button"
-                      onClick={() => { setLogoUrl(""); if (logoInputRef.current) logoInputRef.current.value = ""; }}
-                      className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-400 mt-2 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                      Remove logo
-                    </button>
+                    <div className="flex items-center gap-3 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => { setLogoUrl(""); if (logoInputRef.current) logoInputRef.current.value = ""; }}
+                        className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-400 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                        Remove logo
+                      </button>
+                      <span className="text-xs text-amber-400">Click Save settings below to apply</span>
+                    </div>
                   )}
                   {logoUploading && (
                     <div className="mt-2 h-1 bg-[#1e293b] rounded-full overflow-hidden w-32">
