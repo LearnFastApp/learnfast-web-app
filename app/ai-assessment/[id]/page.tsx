@@ -6,7 +6,7 @@ import { collection, doc, getDoc, getDocs, query, where } from "firebase/firesto
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, Legend } from "recharts";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
-import { Brain, Loader2, CheckCircle, AlertCircle, ChevronRight, Lightbulb, Star, TrendingUp } from "lucide-react";
+import { Brain, Loader2, CheckCircle, AlertCircle, ChevronRight, Lightbulb, Star, TrendingUp, Download } from "lucide-react";
 import { classifyArchetype, ARCHETYPE_DEFS } from "@/lib/archetypes";
 
 const DIMENSIONS = ["clarity", "energy", "engagement", "understanding", "connection"] as const;
@@ -132,6 +132,7 @@ export default function AiAssessmentResultsPage() {
   const [audienceScores, setAudienceScores] = useState<Record<Dimension, number> | null>(null);
   const [reflectionScores, setReflectionScores] = useState<Record<Dimension, number> | null>(null);
   const [locale, setLocale] = useState<"en" | "fr">("en");
+  const [pdfExporting, setPdfExporting] = useState(false);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch presenter locale
@@ -247,6 +248,49 @@ export default function AiAssessmentResultsPage() {
   const lowestDim = sortedDims[0];
   const durationMins = assessment.audioDurationSeconds ? Math.round(assessment.audioDurationSeconds / 60) : null;
 
+  async function handleDownloadAiPdf() {
+    if (!assessment?.scores) return;
+    const currentAssessment = assessment;
+    setPdfExporting(true);
+    try {
+      const archetypeKey = classifyArchetype(currentAssessment.scores!, reflectionScores);
+      const arch = ARCHETYPE_DEFS[archetypeKey];
+      const [{ pdf }, { AiReportDocument }] = await Promise.all([
+        import("@react-pdf/renderer"),
+        import("@/components/pdf/ai-report"),
+      ]);
+      const blob = await pdf(
+        AiReportDocument({
+          sessionTitle: currentAssessment.fileName?.replace(/\.[^.]+$/, "") ?? "Presentation Analysis",
+          createdAt: new Date().toISOString(),
+          summary: currentAssessment.summary,
+          aiScores: currentAssessment.scores as Record<"clarity" | "energy" | "engagement" | "understanding" | "connection", number>,
+          audienceScores,
+          reflectionScores,
+          rationale: currentAssessment.rationale,
+          highlights: currentAssessment.highlights,
+          tips: currentAssessment.tips,
+          audioDurationSeconds: currentAssessment.audioDurationSeconds,
+          wordCount: currentAssessment.wordCount,
+          wordsPerMinute: currentAssessment.wordsPerMinute,
+          fillerWordCount: currentAssessment.fillerWordCount,
+          archetypeName: arch.name[locale],
+          archetypeStrength: arch.strength[locale],
+          archetypeDevelopment: arch.development[locale],
+          locale,
+        })
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `learnfast-ai-analysis-${id}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setPdfExporting(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#05070d] text-white pb-16">
       {/* Header */}
@@ -257,7 +301,17 @@ export default function AiAssessmentResultsPage() {
             <CheckCircle className="h-4 w-4 text-green-400" />
             <span className="text-sm font-semibold text-white">{s.navComplete}</span>
           </div>
-          <a href="/dashboard" className="text-sm text-slate-400 hover:text-white transition">{s.navDash}</a>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleDownloadAiPdf}
+              disabled={pdfExporting}
+              className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm text-slate-400 hover:text-white hover:bg-white/5 transition disabled:opacity-50"
+            >
+              {pdfExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              <span className="hidden sm:inline">{locale === "fr" ? "Exporter PDF" : "Export PDF"}</span>
+            </button>
+            <a href="/dashboard" className="text-sm text-slate-400 hover:text-white transition">{s.navDash}</a>
+          </div>
         </div>
       </header>
 

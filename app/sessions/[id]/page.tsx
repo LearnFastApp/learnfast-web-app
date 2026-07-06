@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { QRCodeCanvas } from "qrcode.react";
-import { ArrowLeft, Copy, Check, Users, PenLine, PlayCircle, TrendingUp, Lock, StopCircle, CalendarDays, Mic, Loader2 } from "lucide-react";
+import { ArrowLeft, Copy, Check, Users, PenLine, PlayCircle, TrendingUp, Lock, StopCircle, CalendarDays, Mic, Loader2, Download } from "lucide-react";
 import { useLiveRecorder } from "@/hooks/use-live-recorder";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
@@ -132,7 +132,8 @@ export default function LiveSessionPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
-  const [session, setSession] = useState<{ title: string; code: string } | null>(null);
+  const [session, setSession] = useState<{ title: string; code: string; createdAt: string } | null>(null);
+  const [pdfExporting, setPdfExporting] = useState(false);
   const [sessionStatus, setSessionStatus] = useState<"active" | "closed" | "not_found">("active");
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [ending, setEnding] = useState(false);
@@ -309,7 +310,7 @@ export default function LiveSessionPage() {
     getDoc(doc(db, "sessions", id)).then(async (snap) => {
       if (!snap.exists()) { setSessionStatus("not_found"); return; }
       const data = snap.data();
-      setSession({ title: data.title, code: data.code });
+      setSession({ title: data.title, code: data.code, createdAt: data.createdAt?.toDate?.()?.toISOString() ?? new Date().toISOString() });
       if (data.status === "closed") setSessionStatus("closed");
       if (data.commitment) {
         setSavedCommitment({ dimension: data.commitment.dimension, text: data.commitment.text });
@@ -453,6 +454,39 @@ export default function LiveSessionPage() {
     fullMark: 100,
   }));
 
+  async function handleDownloadSessionPdf() {
+    if (!session) return;
+    setPdfExporting(true);
+    try {
+      const [{ pdf }, { SessionReportDocument }] = await Promise.all([
+        import("@react-pdf/renderer"),
+        import("@/components/pdf/session-report"),
+      ]);
+      const blob = await pdf(
+        SessionReportDocument({
+          sessionTitle: session.title,
+          sessionCode: session.code,
+          createdAt: session.createdAt,
+          audienceScores: audienceAverages as Record<"clarity" | "engagement" | "energy" | "understanding" | "connection", number>,
+          reflectionScores: reflection,
+          comments: responses,
+          presenterNotes: notes,
+          commitment: savedCommitment,
+          responseCount: responses.length,
+          locale,
+        })
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `learnfast-session-${session.code}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setPdfExporting(false);
+    }
+  }
+
   async function saveNotes() {
     try {
       await setDoc(doc(db, "session_notes", id), { notes, updatedAt: serverTimestamp() }, { merge: true });
@@ -581,6 +615,17 @@ export default function LiveSessionPage() {
             <Users className="h-4 w-4" />
             <span className="text-sm font-semibold text-white">{responses.length}</span>
           </div>
+          {sessionStatus === "closed" && (
+            <button
+              onClick={handleDownloadSessionPdf}
+              disabled={pdfExporting}
+              title="Export session report as PDF"
+              className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm text-slate-400 hover:text-white hover:bg-white/5 transition disabled:opacity-50"
+            >
+              {pdfExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              <span className="hidden sm:inline">{locale === "fr" ? "Exporter PDF" : "Export PDF"}</span>
+            </button>
+          )}
           <button
             onClick={() => setShowReflection(true)}
             className="flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-3 py-2 text-sm font-semibold text-cyan-300 hover:bg-cyan-400/20"
