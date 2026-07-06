@@ -225,7 +225,10 @@ export default function OrgSettingsPage() {
                   <button
                     type="button"
                     disabled={logoUploading}
-                    onClick={() => logoInputRef.current?.click()}
+                    onClick={() => {
+                      if (!logoInputRef.current) { setError("Upload unavailable — please refresh the page."); return; }
+                      logoInputRef.current.click();
+                    }}
                     className="flex items-center gap-2 bg-[#0a0f1a] hover:bg-white/5 disabled:opacity-50 border border-[#1e293b] hover:border-slate-500 text-slate-300 text-sm font-medium px-4 py-2 rounded-xl transition-colors"
                   >
                     <Upload className="w-4 h-4" />
