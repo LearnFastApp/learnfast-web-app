@@ -311,13 +311,13 @@ export default function SessionsPage() {
   }
 
   async function deleteSession(session: OrgSession) {
-    if (!user || !confirm(`Delete "${session.title}"?`)) return;
+    if (!user || !confirm(`Delete "${session.title}"? This cannot be undone.`)) return;
     const token = await user.getIdToken();
-    await fetch(`/api/org/${orgId}/sessions/${session.id}`, {
+    const res = await fetch(`/api/org/${orgId}/sessions/${session.id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
-    setSessions((prev) => prev.filter((s) => s.id !== session.id));
+    if (res.ok) setSessions((prev) => prev.filter((s) => s.id !== session.id));
   }
 
   const isAdmin = myRole === "owner" || myRole === "admin";
@@ -691,11 +691,8 @@ function SessionCard({
   return (
     <div className="bg-[#0f172a] border border-[#1e293b] rounded-2xl overflow-hidden">
       {/* Summary row */}
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-white/[0.02] transition-colors"
-      >
-        <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-2 px-5 py-4 hover:bg-white/[0.02] transition-colors">
+        <button onClick={onToggle} className="flex-1 min-w-0 text-left">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-semibold text-white truncate">{session.title}</span>
             {session.status === "live" && (
@@ -724,9 +721,20 @@ function SessionCard({
               <LiveCounter consumerSessionId={session.linkedConsumerSessionId} />
             )}
           </div>
-        </div>
-        <ChevronDown className={`w-4 h-4 text-slate-500 flex-shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`} />
-      </button>
+        </button>
+        {isAdmin && (
+          <button
+            onClick={() => onDelete(session)}
+            title="Delete session"
+            className="flex-shrink-0 p-1.5 rounded-lg text-slate-600 hover:text-red-400 hover:bg-red-400/10 transition-all"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        )}
+        <button onClick={onToggle} className="flex-shrink-0 p-1">
+          <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${expanded ? "rotate-180" : ""}`} />
+        </button>
+      </div>
 
       {/* Expanded panel */}
       {expanded && (
@@ -891,7 +899,7 @@ function SessionCard({
                     Edit
                   </button>
                 )}
-                {isAdmin && session.status !== "cancelled" && session.status !== "completed" && (
+                {isAdmin && (
                   <button
                     onClick={() => onDelete(session)}
                     className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-white/5 hover:bg-red-500/10 text-red-400 transition-colors"
