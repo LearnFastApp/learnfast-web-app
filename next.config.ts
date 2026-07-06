@@ -1,13 +1,9 @@
 import type { NextConfig } from "next";
-import withPWAInit from "@ducanh2912/next-pwa";
 
-const withPWA = withPWAInit({
-  dest: "public",
-  disable: process.env.NODE_ENV === "development",
-  cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
-  reloadOnOnline: true,
-});
+// PWA disabled: aggressive Workbox precaching caused stale chunk URLs after
+// each deployment, breaking the /session/[code] feedback page with a hard
+// Safari "FetchEvent.respondWith no-response" error. A cleanup sw.js in
+// public/ clears existing caches in users' browsers.
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["firebase-admin", "firebase"],
@@ -16,4 +12,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withPWA(nextConfig);
+export default nextConfig;
