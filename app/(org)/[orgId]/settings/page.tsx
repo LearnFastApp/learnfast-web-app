@@ -231,7 +231,7 @@ export default function OrgSettingsPage() {
                         key={fileInputKey}
                         type="file"
                         accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                        onClick={() => console.log("DEBUG: file input clicked")}
+                        onClick={() => setError("DEBUG: click reached file input — file picker should be open")}
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) handleLogoUpload(file);
