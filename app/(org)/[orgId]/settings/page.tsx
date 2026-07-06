@@ -162,6 +162,9 @@ export default function OrgSettingsPage() {
           <Settings className="w-6 h-6 text-violet-400" />
           <h1 className="text-2xl font-bold">Organisation settings</h1>
         </div>
+        <div className="mb-4 text-xs text-slate-500 font-mono">
+          auth: {user ? user.email : "null"} · role: {myRole ?? "null"} · ref: {typeof window !== "undefined" ? (logoInputRef.current ? "ok" : "null") : "ssr"}
+        </div>
 
         {!isAdmin ? (
           <div className="bg-[#0f172a] border border-[#1e293b] rounded-2xl p-8 text-center">
