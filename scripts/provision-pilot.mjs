@@ -147,6 +147,20 @@ async function run() {
   batch.set(db.doc(`org_invite_tokens/${token}`), tokenData);
   await batch.commit();
 
+  // ── Smoke test: verify everything landed correctly ────────────────────────
+  const [orgCheck, tokenCheck] = await Promise.all([
+    db.doc(`organizations/${orgId}`).get(),
+    db.doc(`org_invite_tokens/${token}`).get(),
+  ]);
+  if (!orgCheck.exists || !tokenCheck.exists) {
+    console.error("\n❌  Smoke test failed: org or token doc missing after write.");
+    process.exit(1);
+  }
+  if (orgCheck.data().seats.purchased !== seats) {
+    console.error("\n❌  Smoke test failed: seat count mismatch.");
+    process.exit(1);
+  }
+
   // ── Summary ──────────────────────────────────────────────────────────────
 
   const trialEndDate = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000)
@@ -173,6 +187,14 @@ async function run() {
 
    (Dashboard: ${appUrl}/${orgId}/dashboard)
    (Billing:   ${appUrl}/${orgId}/billing)
+
+   ── Before sending the invite link, verify: ──────────────────────────────
+   □  Open the invite URL in an incognito window and complete sign-up
+   □  Confirm you land on the dashboard (not sessions)
+   □  Upload a test logo in Settings — if it fails, re-run the join flow
+   □  Check the trial banner shows the correct days remaining
+   □  Sign out and confirm the invite link is now expired / already used
+   ─────────────────────────────────────────────────────────────────────────
 `);
 }
 
