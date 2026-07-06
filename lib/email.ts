@@ -1205,6 +1205,32 @@ export interface CoachCancelEmailOptions {
   rosterUrl: string;
 }
 
+export async function sendEmailVerificationEmail(opts: {
+  to: string;
+  displayName: string;
+  verifyUrl: string;
+}): Promise<void> {
+  const { to, displayName, verifyUrl } = opts;
+  const from = `LearnFast <${process.env.GMAIL_USER}>`;
+  const html = `
+    <div style="background:#05070d;padding:40px 20px;font-family:system-ui,sans-serif;">
+      <div style="max-width:480px;margin:0 auto;background:#0f172a;border-radius:16px;padding:36px;border:1px solid #1e293b;">
+        <img src="https://learnfastapp.com/icon-mark.png" alt="LearnFast" width="52" height="38" style="display:block;border:0;margin-bottom:24px;" />
+        <h1 style="color:#f1f5f9;font-size:20px;font-weight:700;margin:0 0 8px;">Verify your email</h1>
+        <p style="color:#94a3b8;font-size:14px;line-height:1.6;margin:0 0 24px;">Hi ${displayName}, click the button below to verify your email and activate your LearnFast account.</p>
+        <a href="${verifyUrl}" style="display:inline-block;background:#8b5cf6;color:#fff;font-weight:600;font-size:14px;padding:12px 28px;border-radius:10px;text-decoration:none;margin-bottom:24px;">Verify my email</a>
+        <p style="color:#475569;font-size:12px;margin:0;">This link expires in 24 hours. If you didn't create a LearnFast account, you can ignore this email.</p>
+      </div>
+    </div>`;
+
+  await getTransporter().sendMail({
+    from,
+    to,
+    subject: "Verify your LearnFast account",
+    html,
+  });
+}
+
 export async function sendCoachCancelledEmail(opts: CoachCancelEmailOptions): Promise<void> {
   const { toEmail, toName, cancelledByName, coachName, userName, confirmedStart, recipientTimezone, icsContent, rosterUrl } = opts;
   const dateStr = slotLabel(confirmedStart, recipientTimezone);

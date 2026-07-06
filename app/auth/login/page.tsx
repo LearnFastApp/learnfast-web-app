@@ -6,7 +6,6 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
-  sendEmailVerification,
   updateProfile,
 } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
@@ -140,15 +139,17 @@ function LoginForm() {
         } catch {
           // non-fatal
         }
-        const claimToken = searchParams.get("claim");
-        const verifyRedirect = claimToken
-          ? `${window.location.origin}/auth/login?claim=${claimToken}`
-          : `${window.location.origin}/auth/login`;
-        await sendEmailVerification(result.user, {
-          url: verifyRedirect,
-        });
-        // Sign out immediately — user must verify email before accessing the app.
-        // This clears the auth cookie so unverified users can't reach the dashboard.
+        // Send our own verification email (immune to Apple Mail link pre-fetching)
+        // then sign out — user must verify before accessing the app.
+        try {
+          const idToken = await result.user.getIdToken();
+          await fetch("/api/auth/send-verification", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${idToken}` },
+          });
+        } catch {
+          // Non-fatal — user can request a resend from the sign-in screen
+        }
         await auth.signOut();
         setVerificationSent(true);
         return;
@@ -234,11 +235,11 @@ function LoginForm() {
                 onClick={async () => {
                   try {
                     const result = await signInWithEmailAndPassword(auth, email, password);
-                    const claimToken = searchParams.get("claim");
-                    const continueUrl = claimToken
-                      ? `${window.location.origin}/auth/login?claim=${claimToken}`
-                      : `${window.location.origin}/auth/login`;
-                    await sendEmailVerification(result.user, { url: continueUrl });
+                    const idToken = await result.user.getIdToken();
+                    await fetch("/api/auth/send-verification", {
+                      method: "POST",
+                      headers: { Authorization: `Bearer ${idToken}` },
+                    });
                     await auth.signOut();
                     setVerifyNeeded(false);
                     setVerificationSent(true);
