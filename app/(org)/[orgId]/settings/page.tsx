@@ -71,7 +71,7 @@ export default function OrgSettingsPage() {
   const isAdmin = myRole === "owner" || myRole === "admin";
 
   async function handleLogoUpload(file: File) {
-    if (!user) return;
+    if (!user) { setError("Not authenticated — please refresh the page and try again."); return; }
     setLogoUploading(true);
     setLogoUploadProgress(0);
     setError("");
