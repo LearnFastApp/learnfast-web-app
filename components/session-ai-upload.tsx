@@ -4,7 +4,12 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
-import { Brain, UploadCloud, Loader2, AlertCircle, FileVideo, ChevronRight, CheckCircle } from "lucide-react";
+import { Brain, UploadCloud, Loader2, AlertCircle, FileVideo, ChevronRight, CheckCircle, Mic } from "lucide-react";
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 const ACCEPTED_TYPES = [
   "video/mp4", "video/quicktime", "video/webm", "video/x-matroska",
@@ -13,11 +18,12 @@ const ACCEPTED_TYPES = [
 const ACCEPTED_EXT = ".mp4,.mov,.webm,.mkv,.mp3,.wav,.m4a";
 const MAX_SIZE_BYTES = 500 * 1024 * 1024;
 
-type Stage = "idle" | "uploading" | "processing" | "complete" | "failed";
+type Stage = "idle" | "ready" | "uploading" | "processing" | "complete" | "failed";
 
 interface Props {
   sessionId: string;
   existingAssessmentId?: string | null;
+  initialFile?: File;
   locale?: "en" | "fr";
   onComplete: (scores: Record<string, number>, assessmentId: string) => void;
 }
@@ -41,6 +47,10 @@ const STRINGS = {
     errTooLarge: "File too large — maximum 500 MB.",
     errUpgrade: "AI Analysis is available on Lite and Pro plans.",
     errMonthlyLimit: "You've used your 3 AI assessments this month. Upgrade to Pro for unlimited.",
+    recordingReady: "Session recording ready",
+    recordingReadyDesc: (size: string) => `${size} · Recorded during your session`,
+    uploadRecording: "Upload for AI assessment",
+    useDifferentFile: "or upload a different file instead",
   },
   fr: {
     bannerTitle: "Ajouter l'analyse IA",
@@ -60,14 +70,19 @@ const STRINGS = {
     errTooLarge: "Fichier trop volumineux — maximum 500 Mo.",
     errUpgrade: "L'analyse IA est disponible sur les abonnements Lite et Pro.",
     errMonthlyLimit: "Vous avez utilisé vos 3 analyses IA ce mois-ci. Passez à Pro pour un accès illimité.",
+    recordingReady: "Enregistrement de session prêt",
+    recordingReadyDesc: (size: string) => `${size} · Enregistré pendant votre session`,
+    uploadRecording: "Envoyer pour analyse IA",
+    useDifferentFile: "ou envoyer un autre fichier à la place",
   },
 };
 
-export default function SessionAiUpload({ sessionId, existingAssessmentId, locale = "en", onComplete }: Props) {
+export default function SessionAiUpload({ sessionId, existingAssessmentId, initialFile, locale = "en", onComplete }: Props) {
   const s = STRINGS[locale];
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const movedToReadyRef = useRef(false);
 
   const [stage, setStage] = useState<Stage>(existingAssessmentId ? "processing" : "idle");
   const [showZone, setShowZone] = useState(false);
@@ -101,6 +116,15 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, local
     poll();
     return () => { if (pollRef.current) clearTimeout(pollRef.current); };
   }, [assessmentId, user, stage, onComplete]);
+
+  // Transition to "ready" when a live recording arrives (may come after initial render)
+  useEffect(() => {
+    if (initialFile && !movedToReadyRef.current && !existingAssessmentId) {
+      movedToReadyRef.current = true;
+      setStage("ready");
+      setShowZone(false);
+    }
+  }, [initialFile, existingAssessmentId]);
 
   const handleFile = useCallback(async (file: File) => {
     if (!user) return;
@@ -159,6 +183,40 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, local
       }
     );
   }, [user, sessionId]);
+
+  // Recording ready — presenter can confirm upload or switch to file picker
+  if (stage === "ready" && initialFile) {
+    return (
+      <div className="mx-6 mt-4 rounded-2xl border border-amber-500/30 bg-[#111827] p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Brain className="h-4 w-4 text-amber-400" />
+          <p className="text-sm font-semibold text-white">{s.heading}</p>
+        </div>
+
+        <div className="flex items-center gap-3 rounded-xl bg-[#1a2135] px-4 py-3 mb-4">
+          <Mic className="h-5 w-5 text-amber-400 shrink-0" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-white">{s.recordingReady}</p>
+            <p className="text-xs text-slate-400">{s.recordingReadyDesc(formatBytes(initialFile.size))}</p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => handleFile(initialFile)}
+          className="w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-400 transition mb-3"
+        >
+          {s.uploadRecording}
+        </button>
+
+        <button
+          onClick={() => { setStage("idle"); setShowZone(true); setErrorMsg(""); }}
+          className="w-full text-center text-xs text-slate-500 hover:text-slate-300 transition py-1"
+        >
+          {s.useDifferentFile}
+        </button>
+      </div>
+    );
+  }
 
   // CTA banner — collapsed
   if ((stage === "idle" || stage === "failed") && !showZone) {

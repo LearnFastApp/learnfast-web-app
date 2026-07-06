@@ -11,7 +11,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { QRCodeCanvas } from "qrcode.react";
-import { ArrowLeft, Copy, Check, Users, PenLine, PlayCircle, TrendingUp, Lock, StopCircle, CalendarDays } from "lucide-react";
+import { ArrowLeft, Copy, Check, Users, PenLine, PlayCircle, TrendingUp, Lock, StopCircle, CalendarDays, Mic, Loader2 } from "lucide-react";
+import { useLiveRecorder } from "@/hooks/use-live-recorder";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import PresenterReflectionModal from "@/components/presenter-reflection-modal";
@@ -120,6 +121,12 @@ function average(values: number[]): number {
   return Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10;
 }
 
+function formatRecordingTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
 export default function LiveSessionPage() {
   const { id } = useParams<{ id: string }>();
   const { user, loading: authLoading } = useAuth();
@@ -161,6 +168,8 @@ export default function LiveSessionPage() {
   const [aiScores, setAiScores] = useState<Record<Dimension, number> | null>(null);
   const [aiAssessmentId, setAiAssessmentId] = useState<string | null>(null);
   const [aiAssessmentComplete, setAiAssessmentComplete] = useState(false);
+
+  const recorder = useLiveRecorder();
 
   const DIMENSION_LABELS = locale === "fr" ? DIMENSION_LABELS_FR : DIMENSION_LABELS_EN;
   const RECOMMENDATIONS = locale === "fr" ? RECOMMENDATIONS_FR : RECOMMENDATIONS_EN;
@@ -226,6 +235,8 @@ export default function LiveSessionPage() {
     unlockLearningDesc: "Vidéos, TED talks, podcasts & articles adaptés à vos résultats",
     upgradeBtn: "Passer à Lite →",
     alsoWorthWorking: (dim: string, score: number) => `À améliorer aussi · ${dim} : ${score}/100`,
+    record: "Enregistrer",
+    recordingSaved: "Enregistrement sauvegardé",
   } : {
     endSessionTitle: "End this session?",
     endSessionBody: "Audience members will no longer be able to submit feedback. Your results are saved and you can still view them any time.",
@@ -287,6 +298,8 @@ export default function LiveSessionPage() {
     unlockLearningDesc: "Videos, TED talks, podcasts & articles matched to your session results",
     upgradeBtn: "Upgrade to Lite →",
     alsoWorthWorking: (dim: string, score: number) => `Also worth working on · ${dim}: ${score}/100`,
+    record: "Record",
+    recordingSaved: "Recording saved",
   };
 
   useEffect(() => {
@@ -368,6 +381,16 @@ export default function LiveSessionPage() {
     });
   }, [user, id]);
 
+  useEffect(() => {
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (recorder.status === "recording") {
+        e.preventDefault();
+      }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [recorder.status]);
+
   const audienceAverages = DIMENSIONS.reduce(
     (acc, dim) => ({ ...acc, [dim]: average(responses.map((r) => r[dim])) }),
     {} as Record<Dimension, number>
@@ -445,6 +468,7 @@ export default function LiveSessionPage() {
 
   async function endSession() {
     setEnding(true);
+    if (recorder.status === "recording") recorder.stop();
     await updateDoc(doc(db, "sessions", id), { status: "closed", endedAt: serverTimestamp() });
     setSessionStatus("closed");
     setShowEndConfirm(false);
@@ -564,6 +588,44 @@ export default function LiveSessionPage() {
             <PenLine className="h-4 w-4" />
             <span className="hidden sm:inline">{reflection ? t.editReflection : t.rateSelf}</span>
           </button>
+
+          {/* Recording control */}
+          {sessionStatus === "active" && recorder.status === "recording" && (
+            <button
+              onClick={recorder.stop}
+              title="Stop recording"
+              className="flex items-center gap-2 rounded-xl border border-red-500/50 bg-red-500/15 px-3 py-2 text-sm font-semibold text-red-400 hover:bg-red-500/25 transition"
+            >
+              <span className="h-2 w-2 rounded-full bg-red-400 animate-pulse shrink-0" />
+              <span className="tabular-nums font-mono text-xs">{formatRecordingTime(recorder.elapsedSeconds)}</span>
+            </button>
+          )}
+          {sessionStatus === "active" && recorder.status === "requesting" && (
+            <button disabled className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm text-slate-500 opacity-60">
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </button>
+          )}
+          {sessionStatus === "active" && (recorder.status === "idle" || recorder.status === "error") && (
+            <button
+              onClick={recorder.start}
+              title={recorder.status === "error" ? recorder.errorMsg : "Record this session for AI assessment"}
+              className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm transition ${
+                recorder.status === "error"
+                  ? "border-red-500/30 text-red-400 hover:bg-red-500/10"
+                  : "border-white/10 text-slate-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Mic className="h-4 w-4" />
+              <span className="hidden sm:inline">{t.record}</span>
+            </button>
+          )}
+          {sessionStatus === "active" && recorder.status === "stopped" && recorder.recordedFile && (
+            <div className="flex items-center gap-1.5 text-xs text-green-400">
+              <span className="h-2 w-2 rounded-full bg-green-400 shrink-0" />
+              <span className="hidden sm:inline">{t.recordingSaved}</span>
+            </div>
+          )}
+
           {sessionStatus === "active" && (
             <button
               onClick={() => setShowEndConfirm(true)}
@@ -615,6 +677,7 @@ export default function LiveSessionPage() {
           <SessionAiUpload
             sessionId={id}
             existingAssessmentId={aiAssessmentId}
+            initialFile={recorder.recordedFile ?? undefined}
             locale={locale}
             onComplete={(scores, newAssessmentId) => {
               setAiScores(scores as Record<Dimension, number>);
