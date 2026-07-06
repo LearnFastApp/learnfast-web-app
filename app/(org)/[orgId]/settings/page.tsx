@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Settings, Loader2, CheckCircle, AlertCircle, ImageIcon, Upload, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
@@ -30,7 +30,7 @@ export default function OrgSettingsPage() {
   const [brandColor, setBrandColor] = useState("#8b5cf6");
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoUploadProgress, setLogoUploadProgress] = useState(0);
-  const logoInputRef = useRef<HTMLInputElement>(null);
+  const [fileInputKey, setFileInputKey] = useState(0);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -162,10 +162,6 @@ export default function OrgSettingsPage() {
           <Settings className="w-6 h-6 text-violet-400" />
           <h1 className="text-2xl font-bold">Organisation settings</h1>
         </div>
-        <div className="mb-4 text-xs text-slate-500 font-mono">
-          auth: {user ? user.email : "null"} · role: {myRole ?? "null"} · ref: {typeof window !== "undefined" ? (logoInputRef.current ? "ok" : "null") : "ssr"}
-        </div>
-
         {!isAdmin ? (
           <div className="bg-[#0f172a] border border-[#1e293b] rounded-2xl p-8 text-center">
             <AlertCircle className="w-8 h-8 text-slate-500 mx-auto mb-3" />
@@ -216,7 +212,8 @@ export default function OrgSettingsPage() {
 
                 <div className="flex-1 min-w-0">
                   <input
-                    ref={logoInputRef}
+                    key={fileInputKey}
+                    id={`logo-upload-${orgId}`}
                     type="file"
                     accept="image/png,image/jpeg,image/svg+xml,image/webp"
                     className="hidden"
@@ -225,23 +222,18 @@ export default function OrgSettingsPage() {
                       if (file) handleLogoUpload(file);
                     }}
                   />
-                  <button
-                    type="button"
-                    disabled={logoUploading}
-                    onClick={() => {
-                      if (!logoInputRef.current) { setError("Upload unavailable — please refresh the page."); return; }
-                      logoInputRef.current.click();
-                    }}
-                    className="flex items-center gap-2 bg-[#0a0f1a] hover:bg-white/5 disabled:opacity-50 border border-[#1e293b] hover:border-slate-500 text-slate-300 text-sm font-medium px-4 py-2 rounded-xl transition-colors"
+                  <label
+                    htmlFor={logoUploading ? undefined : `logo-upload-${orgId}`}
+                    className={`inline-flex items-center gap-2 bg-[#0a0f1a] hover:bg-white/5 border border-[#1e293b] hover:border-slate-500 text-slate-300 text-sm font-medium px-4 py-2 rounded-xl transition-colors ${logoUploading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                   >
                     <Upload className="w-4 h-4" />
                     {logoUploading ? `Uploading ${logoUploadProgress}%…` : logoUrl ? "Change logo" : "Upload logo"}
-                  </button>
+                  </label>
                   {logoUrl && !logoUploading && (
                     <div className="flex items-center gap-3 mt-2">
                       <button
                         type="button"
-                        onClick={() => { setLogoUrl(""); if (logoInputRef.current) logoInputRef.current.value = ""; }}
+                        onClick={() => { setLogoUrl(""); setFileInputKey((k) => k + 1); }}
                         className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-400 transition-colors"
                       >
                         <X className="w-3 h-3" />
