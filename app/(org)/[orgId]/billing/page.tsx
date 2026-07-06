@@ -71,6 +71,7 @@ export default function BillingPage() {
 
   // Checkout state
   const [checkoutInterval, setCheckoutInterval] = useState<"monthly" | "annual">("monthly");
+  const [checkoutSeats, setCheckoutSeats] = useState<number>(0);
   const [checkingOut, setCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
   const [portalLoading, setPortalLoading] = useState(false);
@@ -104,6 +105,7 @@ export default function BillingPage() {
       const infoData = await infoRes.json();
       setOrgInfo(infoData);
       setNewSeats(infoData.seats.purchased);
+      setCheckoutSeats(infoData.seats.purchased);
       // info route now returns myRole — use as fallback if members-list is restricted
       if (membersRes.ok) {
         const d = await membersRes.json();
@@ -181,7 +183,7 @@ export default function BillingPage() {
       const res = await fetch("/api/stripe/enterprise-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
-        body: JSON.stringify({ orgId, interval: checkoutInterval }),
+        body: JSON.stringify({ orgId, interval: checkoutInterval, seats: checkoutSeats }),
       });
       const data = await res.json().catch(() => ({ error: `server_error_${res.status}` }));
       if (res.ok && data.url) {
@@ -319,13 +321,49 @@ export default function BillingPage() {
           {(orgInfo.subscriptionStatus === "trialing" || orgInfo.subscriptionStatus === "expired") && isOwner && (
             <div className="border-t border-[#1e293b] pt-4 mt-4">
               {orgInfo.subscriptionStatus === "expired" ? (
-                <div className="flex items-start gap-2 mb-3 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                <div className="flex items-start gap-2 mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
                   <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
                   <p className="text-sm text-red-300">Your trial has ended. Subscribe to restore full access — creating sessions and inviting members is paused until then.</p>
                 </div>
               ) : (
-                <p className="text-sm text-slate-400 mb-3">Subscribe now to avoid interruption when your trial ends.</p>
+                <p className="text-sm text-slate-400 mb-4">Subscribe now to lock in your seat count and avoid interruption when your trial ends.</p>
               )}
+
+              {/* Seat selector */}
+              <div className="mb-4">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Seats</p>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setCheckoutSeats((s) => Math.max(orgInfo.seats.used || 1, s - 1))}
+                    disabled={checkoutSeats <= (orgInfo.seats.used || 1)}
+                    className="w-9 h-9 rounded-lg border border-[#1e293b] flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-400 disabled:opacity-30 transition-colors"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                  <span className="text-2xl font-bold text-white w-8 text-center">{checkoutSeats}</span>
+                  <button
+                    onClick={() => setCheckoutSeats((s) => Math.min(200, s + 1))}
+                    disabled={checkoutSeats >= 200}
+                    className="w-9 h-9 rounded-lg border border-[#1e293b] flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-400 disabled:opacity-30 transition-colors"
+                  >
+                    <ChevronUp className="w-4 h-4" />
+                  </button>
+                  <span className="text-sm text-slate-500">
+                    £{checkoutInterval === "monthly"
+                      ? (checkoutSeats * MONTHLY_PRICE_PER_SEAT).toLocaleString()
+                      : (checkoutSeats * ANNUAL_PRICE_PER_SEAT * 12).toLocaleString()}/
+                    {checkoutInterval === "monthly" ? "mo" : "yr"}
+                  </span>
+                </div>
+                {checkoutSeats > 200 && (
+                  <p className="text-xs text-slate-400 mt-2">
+                    Need more than 200 seats?{" "}
+                    <a href="mailto:hello@learnfastapp.com" className="text-violet-400 underline">Contact us</a>
+                  </p>
+                )}
+              </div>
+
+              {/* Billing interval */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <button
                   onClick={() => setCheckoutInterval("monthly")}
@@ -348,12 +386,19 @@ export default function BillingPage() {
                   Annual · £{ANNUAL_PRICE_PER_SEAT}/seat <span className="text-green-400">Save 20%</span>
                 </button>
               </div>
+
               <button
                 onClick={startCheckout}
                 disabled={checkingOut}
                 className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors"
               >
-                {checkingOut ? "Redirecting to checkout…" : `Subscribe — £${checkoutInterval === "monthly" ? orgInfo.seats.purchased * MONTHLY_PRICE_PER_SEAT : orgInfo.seats.purchased * ANNUAL_PRICE_PER_SEAT * 12}/` + (checkoutInterval === "monthly" ? "mo" : "yr")}
+                {checkingOut
+                  ? "Redirecting to checkout…"
+                  : `Subscribe — ${checkoutSeats} seat${checkoutSeats !== 1 ? "s" : ""} · £${
+                      checkoutInterval === "monthly"
+                        ? (checkoutSeats * MONTHLY_PRICE_PER_SEAT).toLocaleString()
+                        : (checkoutSeats * ANNUAL_PRICE_PER_SEAT * 12).toLocaleString()
+                    }/${checkoutInterval === "monthly" ? "mo" : "yr"}`}
               </button>
               {checkoutError && (
                 <p className="mt-2 text-sm text-red-400 flex items-center gap-1.5">

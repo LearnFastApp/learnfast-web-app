@@ -12,11 +12,18 @@ export async function POST(req: NextRequest) {
   if (!uid) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));
-  const { orgId, interval } = body as { orgId?: string; interval?: "monthly" | "annual" };
+  const { orgId, interval, seats: requestedSeats } = body as {
+    orgId?: string;
+    interval?: "monthly" | "annual";
+    seats?: number;
+  };
 
   if (!orgId) return NextResponse.json({ error: "missing_orgId" }, { status: 400 });
   if (interval !== "monthly" && interval !== "annual") {
     return NextResponse.json({ error: "invalid_interval" }, { status: 400 });
+  }
+  if (requestedSeats !== undefined && (typeof requestedSeats !== "number" || requestedSeats < 1 || requestedSeats > 200)) {
+    return NextResponse.json({ error: "invalid_seats" }, { status: 400 });
   }
 
   const ctx = await getOrgContext(uid);
@@ -38,6 +45,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "price_not_configured" }, { status: 503 });
   }
 
+  // Use caller-requested seats if provided; otherwise keep current purchased count.
+  // The webhook updates org.seats.purchased when checkout.session.completed fires.
+  const seatCount = requestedSeats ?? org.seats.purchased;
+
   const db = getAdminDb();
   const presenterSnap = await db.doc(`presenters/${uid}`).get();
   const email = presenterSnap.data()?.email as string | undefined;
@@ -46,14 +57,14 @@ export async function POST(req: NextRequest) {
   try {
     session = await getStripe().checkout.sessions.create({
       mode: "subscription",
-      line_items: [{ price: priceId, quantity: org.seats.purchased }],
+      line_items: [{ price: priceId, quantity: seatCount }],
       success_url: `${APP_URL}/${orgId}/billing?success=true`,
       cancel_url: `${APP_URL}/${orgId}/billing?cancelled=true`,
       customer: org.stripeCustomerId ?? undefined,
       customer_email: !org.stripeCustomerId ? email : undefined,
-      metadata: { orgId, seats: String(org.seats.purchased), interval },
+      metadata: { orgId, seats: String(seatCount), interval },
       subscription_data: {
-        metadata: { orgId, seats: String(org.seats.purchased) },
+        metadata: { orgId, seats: String(seatCount) },
         // Honour the remaining trial period if it hasn't expired yet
         ...(() => {
           const trialEndsAt = (org.trialEndsAt as { toDate?: () => Date } | null)?.toDate?.();
