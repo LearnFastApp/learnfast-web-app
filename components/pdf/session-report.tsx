@@ -12,7 +12,7 @@ const DIM_COLORS: Record<Dimension, string> = {
 };
 
 const s = StyleSheet.create({
-  page: { fontFamily: "Helvetica", backgroundColor: "#ffffff", padding: 44, fontSize: 9, color: "#1e293b", lineHeight: 1.4 },
+  page: { fontFamily: "Helvetica", backgroundColor: "#ffffff", paddingTop: 44, paddingLeft: 44, paddingRight: 44, paddingBottom: 80, fontSize: 9, color: "#1e293b", lineHeight: 1.4 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 24, paddingBottom: 16, borderBottomWidth: 2, borderBottomColor: "#7c3aed" },
   brand: { fontSize: 14, fontFamily: "Helvetica-Bold", letterSpacing: 2, color: "#7c3aed" },
   brandSub: { fontSize: 7, color: "#64748b", marginTop: 2, letterSpacing: 1 },
@@ -193,7 +193,7 @@ export function SessionReportDocument({
 
         {/* Gap analysis */}
         {hasReflection && reflectionScores && (
-          <View style={s.section}>
+          <View style={s.section} wrap={false}>
             <Text style={s.sectionTitle}>{t.gapTitle}</Text>
             <View style={s.gapTable}>
               <View style={s.gapHeader}>
@@ -255,7 +255,7 @@ export function SessionReportDocument({
 
         {/* Commitment */}
         {commitment?.text && (
-          <View style={s.section}>
+          <View style={s.section} wrap={false}>
             <Text style={s.sectionTitle}>{t.commitTitle}</Text>
             <View style={s.commitmentBox}>
               <Text style={s.commitmentDim}>{LABELS[commitment.dimension as Dimension] ?? commitment.dimension}</Text>

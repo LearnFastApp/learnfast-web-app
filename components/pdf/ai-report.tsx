@@ -12,7 +12,7 @@ const DIM_COLORS: Record<Dimension, string> = {
 };
 
 const s = StyleSheet.create({
-  page: { fontFamily: "Helvetica", backgroundColor: "#ffffff", padding: 44, fontSize: 9, color: "#1e293b", lineHeight: 1.4 },
+  page: { fontFamily: "Helvetica", backgroundColor: "#ffffff", paddingTop: 44, paddingLeft: 44, paddingRight: 44, paddingBottom: 80, fontSize: 9, color: "#1e293b", lineHeight: 1.4 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 24, paddingBottom: 16, borderBottomWidth: 2, borderBottomColor: "#d97706" },
   brand: { fontSize: 14, fontFamily: "Helvetica-Bold", letterSpacing: 2, color: "#7c3aed" },
   brandSub: { fontSize: 7, color: "#64748b", marginTop: 2, letterSpacing: 1 },
@@ -192,7 +192,7 @@ export function AiReportDocument({
 
         {/* Archetype */}
         {archetypeName && (
-          <View style={s.archBox}>
+          <View style={s.archBox} wrap={false}>
             <Text style={s.archLabel}>{t.archetypeLabel}</Text>
             <Text style={s.archName}>{archetypeName}</Text>
             {archetypeStrength && <Text style={s.archDesc}>{t.archetypeStrengthLabel}: {archetypeStrength}</Text>}
@@ -202,7 +202,7 @@ export function AiReportDocument({
 
         {/* AI Summary */}
         {summary && (
-          <View style={s.summaryBox}>
+          <View style={s.summaryBox} wrap={false}>
             <Text style={s.summaryLabel}>{t.summaryLabel}</Text>
             <Text style={s.summaryText}>{summary}</Text>
           </View>
@@ -271,7 +271,7 @@ export function AiReportDocument({
 
         {/* Vocal stats */}
         {(audioDurationMins || wordCount || wordsPerMinute || fillerWordCount !== undefined) && (
-          <View style={s.section}>
+          <View style={s.section} wrap={false}>
             <Text style={s.sectionTitle}>{t.vocalTitle}</Text>
             <View style={s.statGrid}>
               {audioDurationMins && (
