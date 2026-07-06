@@ -1,10 +1,14 @@
 /**
- * Provisions a no-charge enterprise pilot for an existing LearnFast user.
+ * Provisions a no-charge enterprise pilot for a future LearnFast customer.
  *
- * The target user must already have signed up at learnfastapp.com.
- * No Stripe subscription is created — the pilot is entirely free until
- * the trial expires. At expiry the owner lands on /[orgId]/billing and
- * can subscribe with whatever seat count they actually need.
+ * The customer does NOT need an account before you run this — just their email.
+ * The script creates the org and generates a one-click invite link. Share the
+ * invite URL and the customer will create their account (or sign in) and join
+ * as Owner in one step.
+ *
+ * No Stripe subscription is created — the pilot is entirely free until the
+ * trial expires. At expiry the Owner lands on /[orgId]/billing and can subscribe
+ * with whatever seat count they actually need.
  *
  * Usage:
  *   node scripts/provision-pilot.mjs \
@@ -17,8 +21,7 @@
  */
 
 import { initializeApp } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
-import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
 
 // ── Args ─────────────────────────────────────────────────────────────────────
 
@@ -54,6 +57,12 @@ async function uniqueSlug(db, base) {
   return `${base}-${Date.now()}`;
 }
 
+function generateToken() {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 async function run() {
@@ -61,9 +70,9 @@ async function run() {
 
   // Validate args
   const errors = [];
-  if (!email || !email.includes("@"))     errors.push("--email is required (e.g. pilot@company.com)");
-  if (!orgName || orgName.trim().length < 2) errors.push("--org is required (e.g. \"Acme Corp\")");
-  if (!seats || isNaN(seats) || seats < 1 || seats > 200) errors.push("--seats must be a number between 1 and 200");
+  if (!email || !email.includes("@"))                              errors.push("--email is required (e.g. pilot@company.com)");
+  if (!orgName || orgName.trim().length < 2)                      errors.push("--org is required (e.g. \"Acme Corp\")");
+  if (!seats || isNaN(seats) || seats < 1 || seats > 200)         errors.push("--seats must be a number between 1 and 200");
   if (!trialDays || isNaN(trialDays) || trialDays < 1 || trialDays > 365) errors.push("--trial-days must be a number between 1 and 365");
   if (errors.length) {
     console.error("\n❌  Invalid arguments:\n");
@@ -73,46 +82,12 @@ async function run() {
     process.exit(1);
   }
 
-  initializeApp({ projectId: "learnfast-web-app" });
-  const auth = getAuth();
+  initializeApp({ projectId: "learnfast-app-cc98c" });
   const db = getFirestore();
 
-  // 1. Look up the user in Firebase Auth
-  let authUser;
-  try {
-    authUser = await auth.getUserByEmail(email);
-  } catch {
-    console.error(`\n❌  No Firebase Auth user found for ${email}`);
-    console.error("    The pilot customer must sign up at learnfastapp.com first.\n");
-    process.exit(1);
-  }
-
-  const uid = authUser.uid;
-  console.log(`\n✓  Firebase Auth user found: ${uid}`);
-
-  // 2. Check presenter doc exists
-  const presenterSnap = await db.doc(`presenters/${uid}`).get();
-  if (!presenterSnap.exists) {
-    console.error(`\n❌  No presenter doc found for ${email} (uid: ${uid})`);
-    console.error("    The user must have completed sign-up at learnfastapp.com.\n");
-    process.exit(1);
-  }
-
-  const presenterData = presenterSnap.data();
-
-  // 3. Guard: already in an org
-  if (presenterData.orgId) {
-    console.error(`\n❌  ${email} is already a member of org: ${presenterData.orgId}`);
-    console.error("    Remove them from that org first, or use a different account.\n");
-    process.exit(1);
-  }
-
-  const presenterEmail   = presenterData.email   ?? email;
-  const presenterName    = presenterData.displayName ?? email.split("@")[0];
-
-  // 4. Create the org
-  const slug       = await uniqueSlug(db, slugify(orgName.trim()));
-  const now        = Timestamp.now();
+  // Create org
+  const slug        = await uniqueSlug(db, slugify(orgName.trim()));
+  const now         = Timestamp.now();
   const trialEndsAt = Timestamp.fromDate(new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000));
 
   const orgRef = db.collection("organizations").doc();
@@ -123,13 +98,13 @@ async function run() {
     slug,
     logoUrl:            null,
     createdAt:          now,
-    createdBy:          uid,
+    createdBy:          null,   // no uid yet — customer hasn't signed up
     plan:               "enterprise",
     subscriptionStatus: "trialing",
     trialEndsAt,
-    isPilot:            true,          // marks this as a provisioned pilot (not self-serve)
-    seats: { purchased: seats, used: 1 },
-    stripeCustomerId:      null,        // deliberately absent — no charge possible
+    isPilot:            true,   // marks this as a provisioned pilot (not self-serve)
+    seats: { purchased: seats, used: 0 }, // 0 until owner accepts invite
+    stripeCustomerId:      null,           // deliberately absent — no charge possible
     stripeSubscriptionId:  null,
     settings: {
       managerCanViewIndividualSessions: false,
@@ -141,48 +116,63 @@ async function run() {
     },
   };
 
-  const memberData = {
-    role:        "owner",
-    email:       presenterEmail,
-    displayName: presenterName,
-    joinedAt:    now,
-    invitedBy:   null,
-    status:      "active",
+  // Create invite token (same shape as /api/org/[orgId]/invite so the
+  // existing /org/join/[token] page and /api/org/[orgId]/join route work as-is)
+  const token     = generateToken();
+  const inviteRef = db.collection(`organizations/${orgId}/invites`).doc();
+
+  const inviteData = {
+    email:     email.trim().toLowerCase(),
+    role:      "owner",
+    token,
+    createdAt: now,
+    expiresAt: trialEndsAt, // invite stays valid for the full trial period
+    status:    "pending",
+    createdBy: null,
   };
 
-  // 5. Atomic write: org + member + presenter update
+  const tokenData = {
+    orgId,
+    inviteId:  inviteRef.id,
+    email:     email.trim().toLowerCase(),
+    role:      "owner",
+    expiresAt: trialEndsAt,
+    status:    "pending",
+  };
+
+  // Atomic write: org + invite sub-doc + top-level token lookup doc
   const batch = db.batch();
   batch.set(orgRef, orgData);
-  batch.set(db.doc(`organizations/${orgId}/members/${uid}`), memberData);
-  batch.update(db.doc(`presenters/${uid}`), {
-    orgId,
-    orgRole:   "owner",
-    updatedAt: FieldValue.serverTimestamp(),
-  });
+  batch.set(inviteRef, inviteData);
+  batch.set(db.doc(`org_invite_tokens/${token}`), tokenData);
   await batch.commit();
 
   // ── Summary ──────────────────────────────────────────────────────────────
 
   const trialEndDate = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000)
     .toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  const appUrl = "https://learnfastapp.com";
 
   console.log(`
 ✅  Pilot org created!
 
-   Org ID      : ${orgId}
-   Org name    : ${orgName.trim()}
-   Slug        : ${slug}
-   Owner       : ${presenterEmail} (${uid})
-   Seats       : ${seats}
-   Trial ends  : ${trialEndDate} (${trialDays} days)
-   Stripe      : none — client will not be charged during trial
+   Org ID       : ${orgId}
+   Org name     : ${orgName.trim()}
+   Slug         : ${slug}
+   Invited      : ${email.trim().toLowerCase()} (as Owner)
+   Seats        : ${seats}
+   Trial ends   : ${trialEndDate} (${trialDays} days)
+   Stripe       : none — client will not be charged during trial
 
-   Dashboard   : https://learnfastapp.com/${orgId}/dashboard
-   Billing     : https://learnfastapp.com/${orgId}/billing
+   ✉️  Send this link to your pilot customer:
+   Invite URL   : ${appUrl}/org/join/${token}
 
-   Share the dashboard link with your pilot customer.
-   When the trial expires they will be prompted to subscribe
-   and can choose their own seat count at that point.
+   The invite is valid until ${trialEndDate}.
+   The customer does NOT need an account before clicking it —
+   they can sign up and join in one step.
+
+   (Dashboard: ${appUrl}/${orgId}/dashboard)
+   (Billing:   ${appUrl}/${orgId}/billing)
 `);
 }
 

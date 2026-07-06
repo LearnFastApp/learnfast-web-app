@@ -1,4 +1,5 @@
 import { getAdminDb } from "@/lib/firebase-admin";
+import { TrialBanner } from "@/components/trial-banner";
 
 export default async function OrgLayout({
   children,
@@ -35,6 +36,7 @@ export default async function OrgLayout({
           --org-accent-tint: ${tint};
         }
       `}</style>
+      <TrialBanner orgId={orgId} />
       {children}
     </>
   );

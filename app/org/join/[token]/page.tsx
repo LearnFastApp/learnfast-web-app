@@ -111,7 +111,8 @@ export default function JoinPage() {
         return;
       }
       setStage("success");
-      setTimeout(() => { window.location.href = `/${p.orgId}/sessions`; }, 1500);
+      const redirect = p.role === "owner" ? `/${p.orgId}/dashboard` : `/${p.orgId}/sessions`;
+      setTimeout(() => { window.location.href = redirect; }, 1500);
     } catch {
       setErrorKind("unknown");
       setStage("error");

@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["https://learnfastapp.com", "http://localhost:3000"],
+    "method": ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"],
+    "responseHeader": ["Content-Type", "Authorization", "X-Goog-Upload-Command", "X-Goog-Upload-Content-Type", "X-Goog-Upload-Content-Length", "X-Goog-Upload-File-Name", "X-Goog-Upload-Offset", "X-Goog-Upload-Protocol", "X-Goog-Upload-Status", "X-Goog-Upload-URL", "X-Goog-Upload-Chunk-Granularity", "Content-Range", "Range"],
+    "maxAgeSeconds": 3600
+  }
+]
