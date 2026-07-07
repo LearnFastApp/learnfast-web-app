@@ -343,6 +343,42 @@ export default function EnterprisePage() {
         </div>
       </section>
 
+      {/* Testimonials */}
+      <section className="border-t border-[#1e293b] bg-[#0f172a]/40">
+        <div className="mx-auto max-w-6xl px-6 py-16">
+          <h2 className="mb-4 text-center text-2xl font-bold sm:text-3xl">Trusted by teams we coach</h2>
+          <p className="mx-auto mb-8 max-w-2xl text-center text-slate-400">Real teams, real results — feedback that scales with your organisation.</p>
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="flex gap-4 rounded-2xl border border-[#1e293b] bg-[#0f172a] p-6">
+              <div className="flex-shrink-0">
+                <Image src="/testimonials/sydney-swans.png" alt="Sydney Swans" width={84} height={84} className="rounded-md object-contain" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-300 italic leading-relaxed mb-3">
+                  “LearnFast let our coaches see what actually moves the needle — not opinions, but consistent, dimensioned feedback that helps people get better, faster.”
+                </p>
+                <p className="text-sm font-semibold text-white">Jamie Roberts</p>
+                <p className="text-xs text-slate-400">Head of Performance, Sydney Swans</p>
+              </div>
+            </div>
+
+            <div className="flex gap-4 rounded-2xl border border-[#1e293b] bg-[#0f172a] p-6">
+              <div className="flex-shrink-0">
+                <Image src="/testimonials/ufc-pi.png" alt="UFC Performance Institute" width={84} height={84} className="rounded-md object-contain" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-300 italic leading-relaxed mb-3">
+                  “As a coach, how you deliver a message is half the job. LearnFast has been invaluable for rehearsing presentations before the real thing — you present, the audience scores what they actually experienced, and you get honest, live feedback instead of a polite nod. It's changed how I prepare, and my delivery has improved because of it.”
+                </p>
+                <p className="text-sm font-semibold text-white">Dean Amasinger</p>
+                <p className="text-xs text-slate-400">Director of MMA / Head Coach, UFC Performance Institute</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features grid */}
       <section className="mx-auto max-w-6xl px-6 py-20">
         <h2 className="mb-3 text-center text-2xl font-bold sm:text-3xl">Everything in the platform</h2>
