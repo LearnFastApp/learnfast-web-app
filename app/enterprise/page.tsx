@@ -239,8 +239,8 @@ export default function EnterprisePage() {
       {/* Problem band */}
       <section className="border-t border-[#1e293b]">
         <div className="mx-auto max-w-6xl px-6 py-16">
-          <h2 className="mb-4 text-center text-2xl font-bold sm:text-3xl">Trusted by teams we coach</h2>
-          <p className="mx-auto mb-8 max-w-2xl text-center text-slate-400">Real teams, real results — feedback that scales with your organisation.</p>
+          <h2 className="mb-4 text-center text-2xl font-bold sm:text-3xl">Trusted by coaches we coach</h2>
+          <p className="mx-auto mb-8 max-w-2xl text-center text-slate-400">Real coaches, real results — feedback that improves your delivery.</p>
 
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="flex gap-4 rounded-2xl border border-[#1e293b] bg-[#0f172a] p-6">
@@ -335,8 +335,8 @@ export default function EnterprisePage() {
       {/* Testimonials */}
       <section className="border-t border-[#1e293b] bg-[#0f172a]/40">
         <div className="mx-auto max-w-6xl px-6 py-16">
-          <h2 className="mb-4 text-center text-2xl font-bold sm:text-3xl">Trusted by teams we coach</h2>
-          <p className="mx-auto mb-8 max-w-2xl text-center text-slate-400">Real teams, real results — feedback that scales with your organisation.</p>
+          <h2 className="mb-4 text-center text-2xl font-bold sm:text-3xl">Trusted by coaches we coach</h2>
+          <p className="mx-auto mb-8 max-w-2xl text-center text-slate-400">Real coaches, real results — feedback that improves your delivery.</p>
 
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="flex gap-4 rounded-2xl border border-[#1e293b] bg-[#0f172a] p-6">
