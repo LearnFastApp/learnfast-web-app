@@ -355,7 +355,7 @@ export default function EnterprisePage() {
                   “As a coach, how you deliver a message is half the job. LearnFast has been invaluable for rehearsing presentations before the real thing — you present, the audience scores what they actually experienced, and you get honest, live feedback instead of a polite nod. It's changed how I prepare, and my delivery has improved because of it.”
                 </p>
                 <p className="text-sm font-semibold text-white">Dean Amasinger</p>
-                <p className="text-xs text-slate-400">Director of MMA / Head Coach, UFC Performance Institute</p>
+                <p className="text-xs text-slate-400">Technical Director, UFC Performance Institute</p>
               </div>
             </div>
           </div>
