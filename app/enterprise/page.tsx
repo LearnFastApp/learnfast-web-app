@@ -356,10 +356,10 @@ export default function EnterprisePage() {
               </div>
               <div>
                 <p className="text-sm text-slate-300 italic leading-relaxed mb-3">
-                  “LearnFast let our coaches see what actually moves the needle — not opinions, but consistent, dimensioned feedback that helps people get better, faster.”
+                  “Conference presenting is a strange skill — high stakes, infrequent reps, and almost no honest feedback. LearnFast fills that gap. I rehearse the talk, get scored on how it actually comes across, and refine the delivery before I'm in front of a room full of peers. By the time I step on stage, the rough edges have already been found and fixed. Invaluable preparation tool.”
                 </p>
-                <p className="text-sm font-semibold text-white">Jamie Roberts</p>
-                <p className="text-xs text-slate-400">Head of Performance, Sydney Swans</p>
+                <p className="text-sm font-semibold text-white">Shane Lehane</p>
+                <p className="text-xs text-slate-400">Head of Athletic Performance, Sydney Swans</p>
               </div>
             </div>
 
