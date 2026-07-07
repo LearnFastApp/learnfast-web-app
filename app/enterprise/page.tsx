@@ -234,7 +234,7 @@ export default function EnterprisePage() {
             </span>
           ))}
         </div>
-      </section>
+      
 
       {/* Problem band */}
       <section className="border-t border-[#1e293b]">
