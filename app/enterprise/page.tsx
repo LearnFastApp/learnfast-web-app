@@ -200,25 +200,6 @@ export default function EnterprisePage() {
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="mx-auto max-w-6xl px-6 pb-20 pt-24 text-center">
-        <p className="mb-6 text-sm font-semibold uppercase tracking-widest text-violet-400">
-          Presentation &amp; Communication Skills — For Your Whole Team
-        </p>
-
-        {/* Personal / Business toggle */}
-        <div className="inline-flex items-center gap-1 bg-white/[0.05] border border-white/10 rounded-full p-1 mb-8">
-          <Link
-            href="/"
-            className="px-5 py-2 rounded-full text-sm font-semibold text-slate-400 hover:text-white transition-colors"
-          >
-            Personal
-          </Link>
-          <span className="px-5 py-2 rounded-full text-sm font-semibold text-white bg-violet-600">
-            Business
-          </span>
-        </div>
-
         <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
           YOUR WHOLE TEAM.{" "}
           <span className="text-violet-400">ONE FEEDBACK PLATFORM.</span>
@@ -258,27 +239,35 @@ export default function EnterprisePage() {
       {/* Problem band */}
       <section className="border-t border-[#1e293b]">
         <div className="mx-auto max-w-6xl px-6 py-16">
-          <p className="text-center text-xs font-semibold uppercase tracking-widest text-slate-500 mb-10">Sound familiar?</p>
-          <div className="grid gap-6 sm:grid-cols-3">
-            {[
-              {
-                quote: "Our presenters get feedback after every session — it's just 'great job' and nothing measurable.",
-                fix: "LearnFast replaces vague praise with real-time scores across five structured dimensions.",
-              },
-              {
-                quote: "We invest in coaching, but we have no way to tell if it's actually working.",
-                fix: "Performance over time — line charts and trend data for every member, every session.",
-              },
-              {
-                quote: "I can't see how my team communicates without sitting in every meeting.",
-                fix: "A manager dashboard that shows individual and team-wide patterns — without you being in the room.",
-              },
-            ].map(({ quote, fix }) => (
-              <div key={fix} className="rounded-2xl border border-[#1e293b] bg-[#0f172a] p-6">
-                <p className="text-sm text-slate-400 italic leading-relaxed mb-4">&ldquo;{quote}&rdquo;</p>
-                <p className="text-xs font-semibold text-violet-400 leading-relaxed">{fix}</p>
+          <h2 className="mb-4 text-center text-2xl font-bold sm:text-3xl">Trusted by teams we coach</h2>
+          <p className="mx-auto mb-8 max-w-2xl text-center text-slate-400">Real teams, real results — feedback that scales with your organisation.</p>
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="flex gap-4 rounded-2xl border border-[#1e293b] bg-[#0f172a] p-6">
+              <div className="flex-shrink-0">
+                <Image src="/testimonials/sydney-swans.png" alt="Sydney Swans" width={84} height={84} className="rounded-md object-contain" />
               </div>
-            ))}
+              <div>
+                <p className="text-sm text-slate-300 italic leading-relaxed mb-3">
+                  “Conference presenting is a strange skill — high stakes, infrequent reps, and almost no honest feedback. LearnFast fills that gap. I rehearse the talk, get scored on how it actually comes across, and refine the delivery before I'm in front of a room full of peers. By the time I step on stage, the rough edges have already been found and fixed. Invaluable preparation tool.”
+                </p>
+                <p className="text-sm font-semibold text-white">Shane Lehane</p>
+                <p className="text-xs text-slate-400">Head of Athletic Performance, Sydney Swans</p>
+              </div>
+            </div>
+
+            <div className="flex gap-4 rounded-2xl border border-[#1e293b] bg-[#0f172a] p-6">
+              <div className="flex-shrink-0">
+                <Image src="/testimonials/ufc-pi.png" alt="UFC Performance Institute" width={84} height={84} className="rounded-md object-contain" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-300 italic leading-relaxed mb-3">
+                  “As a coach, how you deliver a message is half the job. LearnFast has been invaluable for rehearsing presentations before the real thing — you present, the audience scores what they actually experienced, and you get honest, live feedback instead of a polite nod. It's changed how I prepare, and my delivery has improved because of it.”
+                </p>
+                <p className="text-sm font-semibold text-white">Dean Amasinger</p>
+                <p className="text-xs text-slate-400">Director of MMA / Head Coach, UFC Performance Institute</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
