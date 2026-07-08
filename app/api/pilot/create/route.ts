@@ -17,10 +17,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { orgName, code, maxUses } = (await req.json()) as {
+  const { orgName, code, maxUses, durationDays } = (await req.json()) as {
     orgName?: string;
     code?: string;
     maxUses?: number;
+    durationDays?: number;
   };
 
   if (!orgName?.trim()) {
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest) {
     orgName: orgName.trim(),
     code: finalCode,
     maxUses: maxUses ?? 100,
+    durationDays: typeof durationDays === "number" && durationDays > 0 ? durationDays : 30,
     usedBy: [],
     active: true,
     createdAt: FieldValue.serverTimestamp(),
@@ -71,6 +73,7 @@ export async function GET(req: NextRequest) {
       code: d.id,
       orgName: data.orgName,
       maxUses: data.maxUses,
+      durationDays: data.durationDays ?? 30,
       usedCount: (data.usedBy ?? []).length,
       active: data.active,
       createdAt: data.createdAt?.toDate().toISOString() ?? null,

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
+import { getOrCreateUserKey } from "@/lib/user-key";
+import { logEvent } from "@/lib/telemetry";
 
 export const dynamic = "force-dynamic";
 
@@ -42,8 +44,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "You already have an active subscription" }, { status: 409 });
   }
 
+  const durationDays =
+    typeof codeData.durationDays === "number" && codeData.durationDays > 0
+      ? codeData.durationDays
+      : 30;
   const pilotExpiresAt = new Date();
-  pilotExpiresAt.setDate(pilotExpiresAt.getDate() + 30);
+  pilotExpiresAt.setDate(pilotExpiresAt.getDate() + durationDays);
 
   // Apply pilot to presenter
   await db.collection("presenters").doc(uid).update({
@@ -56,6 +62,16 @@ export async function POST(req: NextRequest) {
   // Record usage on the code
   await codeRef.update({
     usedBy: FieldValue.arrayUnion(uid),
+  });
+
+  const user_key = await getOrCreateUserKey(uid);
+  logEvent("funnel.pilot_code_redeemed", {
+    user_key,
+    payload: {
+      duration_days: durationDays,
+      max_uses: codeData.maxUses ?? 100,
+      used_count: usedBy.length + 1,
+    },
   });
 
   return NextResponse.json({

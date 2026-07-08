@@ -9,6 +9,7 @@ interface PilotCode {
   code: string;
   orgName: string;
   maxUses: number;
+  durationDays: number;
   usedCount: number;
   active: boolean;
   createdAt: string | null;
@@ -22,6 +23,7 @@ export default function AdminPilotPage() {
   const [orgName, setOrgName] = useState("");
   const [customCode, setCustomCode] = useState("");
   const [maxUses, setMaxUses] = useState("100");
+  const [durationDays, setDurationDays] = useState("90");
   const [creating, setCreating] = useState(false);
   const [newCode, setNewCode] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -67,6 +69,7 @@ export default function AdminPilotPage() {
         orgName: orgName.trim(),
         code: customCode.trim() || undefined,
         maxUses: parseInt(maxUses, 10) || 100,
+        durationDays: parseInt(durationDays, 10) || 90,
       }),
     });
     const data = await res.json();
@@ -75,6 +78,7 @@ export default function AdminPilotPage() {
     setOrgName("");
     setCustomCode("");
     setMaxUses("100");
+    setDurationDays("90");
     setCreating(false);
     fetchCodes();
   }
@@ -131,7 +135,7 @@ export default function AdminPilotPage() {
         <div className="mb-8">
           <a href="/dashboard" className="text-sm text-slate-400 hover:text-white transition-colors mb-3 inline-block">← Dashboard</a>
           <h1 className="text-2xl font-bold mb-1">Pilot Code Manager</h1>
-          <p className="text-slate-400 text-sm">Generate and manage 1-month free pilot access for organisations.</p>
+          <p className="text-slate-400 text-sm">Generate and manage free trial access codes for organisations and events.</p>
         </div>
 
         {/* Create form */}
@@ -148,7 +152,7 @@ export default function AdminPilotPage() {
                 className="w-full rounded-xl border border-white/10 bg-[#0a0d1a] px-4 py-3 text-sm text-white placeholder-slate-600 focus:border-violet-500/50 focus:outline-none"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs text-slate-400 mb-1.5">Custom code <span className="text-slate-600">(optional)</span></label>
                 <input
@@ -165,6 +169,17 @@ export default function AdminPilotPage() {
                   value={maxUses}
                   onChange={(e) => setMaxUses(e.target.value)}
                   min="1"
+                  className="w-full rounded-xl border border-white/10 bg-[#0a0d1a] px-4 py-3 text-sm text-white focus:border-violet-500/50 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-slate-400 mb-1.5">Duration (days)</label>
+                <input
+                  type="number"
+                  value={durationDays}
+                  onChange={(e) => setDurationDays(e.target.value)}
+                  min="1"
+                  placeholder="e.g. 90"
                   className="w-full rounded-xl border border-white/10 bg-[#0a0d1a] px-4 py-3 text-sm text-white focus:border-violet-500/50 focus:outline-none"
                 />
               </div>
@@ -301,6 +316,10 @@ export default function AdminPilotPage() {
                   <div className="text-right shrink-0">
                     <p className="text-xs text-slate-300 font-semibold">{c.usedCount}/{c.maxUses}</p>
                     <p className="text-[10px] text-slate-600">used</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-xs text-slate-300 font-semibold">{c.durationDays}d</p>
+                    <p className="text-[10px] text-slate-600">trial</p>
                   </div>
                   <button
                     onClick={() => toggleActive(c.code, c.active)}

@@ -27,6 +27,9 @@ function LoginForm() {
   const [confirm, setConfirm] = useState("");
   const [industry, setIndustry] = useState("");
   const [nickname, setNickname] = useState("");
+  const [showTrialCode, setShowTrialCode] = useState(false);
+  const [trialCode, setTrialCode] = useState("");
+  const [trialCodeWarning, setTrialCodeWarning] = useState("");
   const [error, setError] = useState("");
   const [resetSent, setResetSent] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
@@ -128,6 +131,31 @@ function LoginForm() {
           },
           { merge: true }
         );
+        // Redeem a trial code if one was entered — must be awaited (not fire-and-forget):
+        // it needs to run strictly after the free-status write above and strictly
+        // before auth.signOut() below, while the fresh ID token is still valid.
+        if (trialCode.trim()) {
+          try {
+            const idToken = await result.user.getIdToken();
+            const redeemRes = await fetch("/api/pilot/redeem", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+              body: JSON.stringify({ code: trialCode.trim() }),
+            });
+            if (!redeemRes.ok) {
+              const data = await redeemRes.json().catch(() => ({}));
+              setTrialCodeWarning(
+                data.error === "Invalid pilot code"
+                  ? (isFr ? "Ce code d'essai n'a pas été reconnu — votre compte a tout de même été créé." : "That trial code wasn't recognised — your account was still created.")
+                  : data.error === "This pilot code has reached its maximum uses"
+                  ? (isFr ? "Ce code d'essai a déjà été entièrement utilisé — votre compte a tout de même été créé." : "That trial code has already been fully redeemed — your account was still created.")
+                  : (isFr ? "Ce code d'essai n'a pas pu être appliqué — votre compte a tout de même été créé." : "That trial code couldn't be applied — your account was still created.")
+              );
+            }
+          } catch {
+            setTrialCodeWarning(isFr ? "Ce code d'essai n'a pas pu être appliqué — votre compte a tout de même été créé." : "That trial code couldn't be applied — your account was still created.");
+          }
+        }
         // Generate user_key and fire funnel.signup event (fire-and-forget)
         try {
           const idToken = await result.user.getIdToken();
@@ -211,6 +239,9 @@ function LoginForm() {
                   ? "Cliquez sur le lien pour vérifier votre compte, puis connectez-vous ci-dessous."
                   : "Click the link to verify your account, then sign in below."}
               </p>
+              {trialCodeWarning && (
+                <p className="text-xs text-amber-400 mb-6">{trialCodeWarning}</p>
+              )}
               <button
                 onClick={() => { setVerificationSent(false); setMode("signin"); }}
                 className="w-full rounded-xl bg-violet-500 px-4 py-3 font-semibold text-white hover:bg-violet-400 transition"
@@ -376,6 +407,25 @@ function LoginForm() {
                         ? "⚠ Votre pseudo sera visible par les autres utilisateurs sur le classement sectoriel."
                         : "⚠ Your nickname will be visible to other users on the industry leaderboard."}
                     </p>
+                  </div>
+                  <div>
+                    {!showTrialCode ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowTrialCode(true)}
+                        className="text-sm text-slate-500 hover:text-slate-300 transition"
+                      >
+                        {isFr ? "Vous avez un code d'essai ?" : "Have a trial code?"}
+                      </button>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder={isFr ? "ex. CONFERENCE2026" : "e.g. CONFERENCE2026"}
+                        value={trialCode}
+                        onChange={(e) => setTrialCode(e.target.value.toUpperCase())}
+                        className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-violet-500 font-mono"
+                      />
+                    )}
                   </div>
                 </>
               )}
