@@ -202,6 +202,23 @@ export default function EnterprisePage() {
 
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-6 pb-20 pt-24 text-center">
+        <p className="mb-6 text-sm font-semibold uppercase tracking-widest text-violet-400">
+          Presentation &amp; Communication Skills — For Your Whole Team
+        </p>
+
+        {/* Personal / Business toggle */}
+        <div className="inline-flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1 mb-8">
+          <Link
+            href="/"
+            className="px-5 py-2 rounded-full text-sm font-semibold text-slate-400 hover:text-white transition-colors"
+          >
+            Personal
+          </Link>
+          <span className="px-5 py-2 rounded-full text-sm font-semibold text-white bg-violet-600">
+            Business
+          </span>
+        </div>
+
         <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
           YOUR WHOLE TEAM.{" "}
           <span className="text-violet-400">ONE FEEDBACK PLATFORM.</span>
