@@ -18,9 +18,17 @@ import {
   Menu,
   X,
   LogOut,
+  ShieldCheck,
 } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { useAuth } from "@/lib/auth-context";
+
+const SYSTEM_ADMIN_EMAIL = "physicalperformance@icloud.com";
+const SYSTEM_ADMIN_NAV = [
+  { href: "/admin/pilot", label: "Pilot Admin", icon: ShieldCheck },
+  { href: "/admin/content", label: "Premium Content", icon: BookOpen },
+];
 
 interface OrgSidebarProps {
   orgName?: string;
@@ -95,8 +103,10 @@ function SidebarContent({
   onNavClick?: () => void;
 }) {
   const pathname = usePathname();
+  const { user } = useAuth();
   const isCoachOrAbove = myRole === "owner" || myRole === "admin" || myRole === "coach";
   const isAdminOrAbove = myRole === "owner" || myRole === "admin";
+  const isSystemAdmin = user?.email === SYSTEM_ADMIN_EMAIL;
 
   function isActive(segment: string) {
     return pathname === `/${orgId}/${segment}`;
@@ -169,6 +179,26 @@ function SidebarContent({
                 label={label}
                 icon={icon}
                 active={isActive(segment)}
+                onClick={onNavClick}
+              />
+            ))}
+          </>
+        )}
+
+        {isSystemAdmin && (
+          <>
+            <div className="pt-5 pb-2 px-3">
+              <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">
+                System Admin
+              </p>
+            </div>
+            {SYSTEM_ADMIN_NAV.map(({ href, label, icon }) => (
+              <NavItem
+                key={href}
+                href={href}
+                label={label}
+                icon={icon}
+                active={pathname === href}
                 onClick={onNavClick}
               />
             ))}
