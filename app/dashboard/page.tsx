@@ -580,8 +580,8 @@ export default function Dashboard() {
           </div>
         </aside>
 
-        <section className="flex-1">
-          <header className="flex items-center justify-between border-b border-white/10 bg-[#101523] px-6 py-6 lg:px-8">
+        <section className="min-w-0 flex-1">
+          <header className="flex flex-col gap-4 border-b border-white/10 bg-[#101523] px-6 py-6 sm:flex-row sm:items-center sm:justify-between lg:px-8">
             <div>
               <h1 className="text-2xl font-bold">{t.pageTitle}</h1>
               <p className="text-sm text-slate-400">
@@ -650,7 +650,7 @@ export default function Dashboard() {
           )}
 
           {/* Tabs */}
-          <div className="flex gap-1 border-b border-white/10 px-6 lg:px-8 pt-6">
+          <div className="flex gap-1 overflow-x-auto border-b border-white/10 px-6 pt-6 lg:px-8">
             <button
               onClick={() => setActiveTab("sessions")}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-lg transition border-b-2 -mb-px ${activeTab === "sessions" ? "border-violet-500 text-white" : "border-transparent text-slate-400 hover:text-white"}`}
