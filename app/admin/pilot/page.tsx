@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Check, Copy, Mail, Plus, ToggleLeft, ToggleRight } from "lucide-react";
 
+const PLATFORM_ADMIN = "physicalperformance@icloud.com";
+
 interface PilotCode {
   code: string;
   orgName: string;
@@ -36,7 +38,9 @@ export default function AdminPilotPage() {
   const [broadcastResult, setBroadcastResult] = useState<{ sent: number; failed: number; skipped: number } | null>(null);
 
   useEffect(() => {
-    if (!loading && !user) router.replace("/");
+    if (loading) return;
+    if (!user) { router.replace("/"); return; }
+    if (user.email !== PLATFORM_ADMIN) { router.replace("/dashboard"); return; }
   }, [user, loading, router]);
 
   async function fetchCodes() {

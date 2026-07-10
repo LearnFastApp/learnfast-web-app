@@ -21,6 +21,7 @@
  */
 
 import { readFileSync } from "fs";
+import { createHash } from "crypto";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
@@ -113,8 +114,11 @@ try {
 // ── Step 5: Log erasure event (user_key only — PII-free tombstone) ───────────
 if (user_key) {
   const { logEvent } = await import("../lib/telemetry.js");
+  // A genuine one-way hash, not a raw uid substring — the erased uid must not be
+  // recoverable or fragment-matchable from this tombstone event.
+  const uid_hash = createHash("sha256").update(uid).digest("hex").slice(0, 16);
   logEvent("system.identity_erased", {
-    payload: { uid_hash: uid.slice(0, 8) + "…", erased_at: new Date().toISOString() },
+    payload: { uid_hash, erased_at: new Date().toISOString() },
   });
   // Give the fire-and-forget write a moment to flush
   await new Promise((r) => setTimeout(r, 2000));
