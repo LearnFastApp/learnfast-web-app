@@ -55,7 +55,7 @@ async function fetchFromPodcastIndex(dimension: string): Promise<PodcastResult[]
     .update(apiKey + apiSecret + timestamp)
     .digest("hex");
 
-  const url = `https://api.podcastindex.org/api/1.0/search/byterm?q=${encodeURIComponent(QUERIES[dimension])}&max=8&clean`;
+  const url = `https://api.podcastindex.org/api/1.0/search/byterm?q=${encodeURIComponent(QUERIES[dimension])}&max=10&clean`;
 
   const res = await fetch(url, {
     headers: {
@@ -70,7 +70,7 @@ async function fetchFromPodcastIndex(dimension: string): Promise<PodcastResult[]
 
   const json = await res.json();
   return (json.feeds ?? [])
-    .slice(0, 8)
+    .slice(0, 10)
     .map((feed: {
       title: string;
       author: string;
@@ -93,7 +93,7 @@ async function fetchFromPodcastIndex(dimension: string): Promise<PodcastResult[]
 
 async function fetchFromItunes(dimension: string): Promise<PodcastResult[]> {
   const query = QUERIES[dimension];
-  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=podcast&entity=podcast&limit=10&country=US`;
+  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=podcast&entity=podcast&limit=12&country=US`;
 
   try {
     const res = await fetch(url, { headers: { "User-Agent": "LearnFastApp/1.0" } });
@@ -101,7 +101,7 @@ async function fetchFromItunes(dimension: string): Promise<PodcastResult[]> {
     const json = await res.json() as {
       results?: { collectionName: string; artistName: string; artworkUrl100: string; trackViewUrl: string }[];
     };
-    return (json.results ?? []).slice(0, 8).map((item) => ({
+    return (json.results ?? []).slice(0, 10).map((item) => ({
       title: item.collectionName,
       author: item.artistName || "Unknown host",
       description: "",
@@ -139,15 +139,15 @@ export async function GET(req: NextRequest) {
   }
 
   if (!uid || pool.length === 0) {
-    return NextResponse.json({ podcasts: pool.slice(0, 4) });
+    return NextResponse.json({ podcasts: pool.slice(0, 5) });
   }
 
   // Filter seen podcasts for this user
   const seen = await getSeenResources(uid, dimension);
   const { items: podcasts, didReset } = filterUnseen(pool, (p) => p.link, seen.podcasts);
 
-  // Show up to 4
-  const toServe = podcasts.slice(0, 4);
+  // Show up to 5
+  const toServe = podcasts.slice(0, 5);
 
   recordSeenResources(
     uid,

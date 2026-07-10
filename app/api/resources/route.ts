@@ -170,8 +170,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "YouTube API not configured" }, { status: 500 });
     }
     const [videoRes, tedRes] = await Promise.all([
-      fetch(buildYouTubeUrl(videoQueries[dimension], 6, apiKey, locale)),
-      fetch(buildYouTubeUrl(tedQueries[dimension], 6, apiKey, locale)),
+      fetch(buildYouTubeUrl(videoQueries[dimension], 8, apiKey, locale)),
+      fetch(buildYouTubeUrl(tedQueries[dimension], 8, apiKey, locale)),
     ]);
     if (!videoRes.ok || !tedRes.ok) {
       return NextResponse.json({ error: "YouTube API error" }, { status: 502 });

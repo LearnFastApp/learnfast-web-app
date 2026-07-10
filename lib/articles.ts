@@ -24,6 +24,10 @@ export const ARTICLES: ArticleEntry[] = [
   { dimension: "clarity", title: "Verbal Communication Skills: What They Are and How to Improve", url: "https://www.coursera.org/articles/verbal-communication", source: "Coursera" },
   { dimension: "clarity", title: "Presentation Skills: Your Guide to Communicating Ideas Clearly", url: "https://www.coursera.org/articles/presentation-skills", source: "Coursera" },
   { dimension: "clarity", title: "Circle of Competence: Why Knowing What You Don't Know Matters", url: "https://fs.blog/circle-of-competence/", source: "Farnam Street" },
+  { dimension: "clarity", title: "4 Proven Rules To Simplify Complex Ideas", url: "https://www.forbes.com/sites/carminegallo/2023/10/06/4-proven-rules-to-simplify-complex-ideas/", source: "Forbes" },
+  { dimension: "clarity", title: "How To Write Talking Points: Steps and Tips", url: "https://www.indeed.com/career-advice/career-development/how-to-write-talking-points", source: "Indeed" },
+  { dimension: "clarity", title: "14 Proven Ways to Improve Your Communication Skills", url: "https://www.entrepreneur.com/growing-a-business/14-proven-ways-to-improve-your-communication-skills/300466", source: "Entrepreneur" },
+  { dimension: "clarity", title: "How to Structure a Presentation", url: "https://www.mindtools.com/a522rg7/how-to-structure-a-presentation/", source: "MindTools" },
 
   // ── Engagement ───────────────────────────────────────────────────────────
   { dimension: "engagement", title: "Active Listening: The Art of Empathetic Conversation", url: "https://positivepsychology.com/active-listening/", source: "Positive Psychology" },
@@ -43,6 +47,10 @@ export const ARTICLES: ArticleEntry[] = [
   { dimension: "engagement", title: "Interactive Presentations: Techniques to Engage Your Audience", url: "https://visme.co/blog/interactive-presentation/", source: "Visme" },
   { dimension: "engagement", title: "Motivational Interviewing: Listening With Empathy", url: "https://positivepsychology.com/motivational-interviewing/", source: "Positive Psychology" },
   { dimension: "engagement", title: "The Power of Questions: Engaging Your Audience", url: "https://www.entrepreneur.com/leadership/the-power-of-questions-how-asking-the-right-ones-can/243855", source: "Entrepreneur" },
+  { dimension: "engagement", title: "Business Storytelling", url: "https://www.mindtools.com/a69x1bw/business-storytelling/", source: "MindTools" },
+  { dimension: "engagement", title: "Storytelling with Data: How to Communicate with Data", url: "https://www.coursera.org/articles/storytelling-with-data", source: "Coursera" },
+  { dimension: "engagement", title: "26 Ways To Start a Speech and Capture People's Attention", url: "https://www.indeed.com/career-advice/career-development/how-to-start-a-speech", source: "Indeed" },
+  { dimension: "engagement", title: "11 Audience Engagement Strategies for All Presentations", url: "https://www.duarte.com/blog/audience-engagement-strategies-presentations/", source: "Duarte" },
 
   // ── Energy ───────────────────────────────────────────────────────────────
   { dimension: "energy", title: "Vocal Power: How to Command a Room With Your Voice", url: "https://www.entrepreneur.com/leadership/vocal-power-how-to-command-a-room-with-your-voice/299987", source: "Entrepreneur" },
@@ -62,6 +70,10 @@ export const ARTICLES: ArticleEntry[] = [
   { dimension: "energy", title: "Confidence at Work: Projecting Presence and Authority", url: "https://www.indeed.com/career-advice/career-development/confidence-at-work", source: "Indeed" },
   { dimension: "energy", title: "Positive Psychology in the Workplace: Creating a Thriving Environment", url: "https://positivepsychology.com/positive-psychology-workplace/", source: "Positive Psychology" },
   { dimension: "energy", title: "How to Build Resilience and Confidence as a Speaker", url: "https://positivepsychology.com/resilience-in-the-workplace/", source: "Positive Psychology" },
+  { dimension: "energy", title: "5 Ways to Project Confidence in Front of an Audience", url: "https://hbr.org/2018/05/5-ways-to-project-confidence-in-front-of-an-audience", source: "Harvard Business Review" },
+  { dimension: "energy", title: "6 Ways to Look More Confident During a Presentation", url: "https://hbr.org/2017/04/6-ways-to-look-more-confident-during-a-presentation", source: "Harvard Business Review" },
+  { dimension: "energy", title: "Glossophobia: Tips To Overcome a Fear of Speaking Publicly", url: "https://www.indeed.com/career-advice/career-development/fear-of-speaking-publicly", source: "Indeed" },
+  { dimension: "energy", title: "Managing Presentation Nerves: How to Calm Your Stage Fright", url: "https://www.mindtools.com/aadvtou/managing-presentation-nerves", source: "MindTools" },
 
   // ── Understanding ────────────────────────────────────────────────────────
   { dimension: "understanding", title: "The Feynman Technique: Make Complex Ideas Stick", url: "https://fs.blog/feynman-technique/", source: "Farnam Street" },
@@ -81,6 +93,10 @@ export const ARTICLES: ArticleEntry[] = [
   { dimension: "understanding", title: "Questioning Skills: How to Ask Better Questions", url: "https://www.skillsyouneed.com/ips/questioning.html", source: "Skills You Need" },
   { dimension: "understanding", title: "Interpersonal Skills: How to Connect With Anyone", url: "https://www.coursera.org/articles/interpersonal-skills", source: "Coursera" },
   { dimension: "understanding", title: "Mindfulness at Work: How to Be More Present and Effective", url: "https://positivepsychology.com/mindfulness-at-work/", source: "Positive Psychology" },
+  { dimension: "understanding", title: "Does Your Office Have a Jargon Problem?", url: "https://hbr.org/2021/03/do-you-have-a-jargon-problem", source: "Harvard Business Review" },
+  { dimension: "understanding", title: "What Is Analytical Thinking and How Can You Improve It?", url: "https://www.coursera.org/articles/analytical-thinking", source: "Coursera" },
+  { dimension: "understanding", title: "Critical Thinking Skills", url: "https://www.skillsyouneed.com/learn/critical-thinking.html", source: "Skills You Need" },
+  { dimension: "understanding", title: "How to Use Occam's Razor Without Getting Cut", url: "https://fs.blog/occams-razor/", source: "Farnam Street" },
 
   // ── Connection ───────────────────────────────────────────────────────────
   { dimension: "connection", title: "Social Intelligence: Navigating Social Situations Effectively", url: "https://positivepsychology.com/social-intelligence/", source: "Positive Psychology" },
@@ -100,6 +116,10 @@ export const ARTICLES: ArticleEntry[] = [
   { dimension: "connection", title: "Empathy: Definition, Types, and How to Practise It", url: "https://www.skillsyouneed.com/ips/empathy.html", source: "Skills You Need" },
   { dimension: "connection", title: "Assertive Communication: Connecting Whilst Standing Your Ground", url: "https://positivepsychology.com/assertive-communication/", source: "Positive Psychology" },
   { dimension: "connection", title: "Active Listening Skills: The Art of Truly Hearing Others", url: "https://www.skillsyouneed.com/ips/active-listening.html", source: "Skills You Need" },
+  { dimension: "connection", title: "Begin with Trust", url: "https://hbr.org/2020/05/begin-with-trust", source: "Harvard Business Review" },
+  { dimension: "connection", title: "Your 2026 Guide to Charismatic Leadership", url: "https://www.coursera.org/enterprise/articles/charismatic-leadership", source: "Coursera" },
+  { dimension: "connection", title: "Learning to Instill Trust in the People You Work With", url: "https://www.skillsyouneed.com/rhubarb/instill-trust-people.html", source: "SkillsYouNeed" },
+  { dimension: "connection", title: "Why Emotional Intelligence Is the Key to High-Impact Leadership", url: "https://www.entrepreneur.com/leadership/why-emotional-intelligence-is-the-key-to-high-impact/484438", source: "Entrepreneur" },
 ];
 
 export function articlesByDimension(dimension: string, locale = "en") {
@@ -139,6 +159,8 @@ export const ARTICLES_FR: ArticleEntry[] = [
   { dimension: "clarity", title: "Stratégies de communication : mieux vous connecter à votre auditoire", url: "https://www.coursera.org/articles/strategies-in-communication", source: "Coursera" },
   { dimension: "clarity", title: "Qu'est-ce qu'une communication efficace ?", url: "https://www.coursera.org/articles/communication-effectiveness", source: "Coursera" },
   { dimension: "clarity", title: "Comment réussir une présentation à coup sûr", url: "https://hbr.org/2013/06/how-to-give-a-killer-presentation", source: "Harvard Business Review" },
+  { dimension: "clarity", title: "Chris Anderson : le secret d'une grande conférence TED", url: "https://www.ted.com/talks/chris_anderson_ted_s_secret_to_great_public_speaking?language=fr", source: "TED" },
+  { dimension: "clarity", title: "Présentations orales : les 10 meilleurs secrets pour réussir", url: "https://www.welcometothejungle.com/fr/articles/10-conseils-pour-reussir-ses-presentations-orales-consultant", source: "Welcome to the Jungle" },
 
   // ── Engagement ───────────────────────────────────────────────────────────
   { dimension: "engagement", title: "Julian Treasure : parler pour que les autres veuillent écouter", url: "https://www.ted.com/talks/julian_treasure_how_to_speak_so_that_people_want_to_listen?language=fr", source: "TED" },
@@ -151,6 +173,8 @@ export const ARTICLES_FR: ArticleEntry[] = [
   { dimension: "engagement", title: "Compétences interpersonnelles : guide pratique", url: "https://www.coursera.org/articles/interpersonal-skills", source: "Coursera" },
   { dimension: "engagement", title: "Techniques d'écoute active pour vraiment entendre votre public", url: "https://positivepsychology.com/active-listening-techniques/", source: "Positive Psychology" },
   { dimension: "engagement", title: "L'écoute empathique : comment améliorer vos compétences", url: "https://positivepsychology.com/empathic-listening/", source: "Positive Psychology" },
+  { dimension: "engagement", title: "Joe Sabia : la technologie du conte", url: "https://www.ted.com/talks/joe_sabia_the_technology_of_storytelling?language=fr", source: "TED" },
+  { dimension: "engagement", title: "Didier Chambaretaud : panser le storytelling", url: "https://www.ted.com/talks/didier_chambaretaud_panser_le_storytelling?language=fr", source: "TED" },
 
   // ── Énergie ──────────────────────────────────────────────────────────────
   { dimension: "energy", title: "Kelly McGonigal : comment faire du stress votre allié", url: "https://www.ted.com/talks/kelly_mcgonigal_how_to_make_stress_your_friend?language=fr", source: "TED" },
@@ -163,6 +187,8 @@ export const ARTICLES_FR: ArticleEntry[] = [
   { dimension: "energy", title: "La présence exécutive : ce que c'est et comment la développer", url: "https://www.indeed.com/career-advice/career-development/executive-presence", source: "Indeed" },
   { dimension: "energy", title: "La pratique délibérée : comment progresser vraiment", url: "https://fs.blog/deliberate-practice-guide/", source: "Farnam Street" },
   { dimension: "energy", title: "Prise de parole efficace : faire passer votre message", url: "https://www.skillsyouneed.com/ips/effective-speaking.html", source: "Skills You Need" },
+  { dimension: "energy", title: "Sophie Bonduelle : être à l'écoute de soi, avoir confiance", url: "https://www.ted.com/talks/sophie_bonduelle_etre_a_l_ecoute_de_soi_avoir_confiance", source: "TED" },
+  { dimension: "energy", title: "Lynne Franklin : lire les pensées via le langage corporel", url: "https://www.ted.com/talks/lynne_franklin_reading_minds_through_body_language_jan_19_2017?language=fr", source: "TED" },
 
   // ── Compréhension ────────────────────────────────────────────────────────
   { dimension: "understanding", title: "Hans Rosling : transformer des données en récits compréhensibles", url: "https://www.ted.com/talks/hans_rosling_the_best_stats_you_ve_ever_seen?language=fr", source: "TED" },
@@ -175,6 +201,8 @@ export const ARTICLES_FR: ArticleEntry[] = [
   { dimension: "understanding", title: "Les premiers principes : les fondations de la vraie connaissance", url: "https://fs.blog/first-principles/", source: "Farnam Street" },
   { dimension: "understanding", title: "La malédiction de la connaissance : pourquoi les experts peinent à expliquer", url: "https://hbr.org/2006/12/the-curse-of-knowledge", source: "Harvard Business Review" },
   { dimension: "understanding", title: "Leadership et communication : adapter son message à son public", url: "https://www.coursera.org/articles/leadership-skills", source: "Coursera" },
+  { dimension: "understanding", title: "Comment développer la pensée critique de nos enfants ?", url: "https://www.ted.com/talks/helen_lee_bouygues_comment_developper_la_pensee_critique_de_nos_enfants?language=fr", source: "TED" },
+  { dimension: "understanding", title: "Comment développer l'esprit critique avec la Zététique ?", url: "https://www.ted.com/talks/victorien_draperon_comment_developper_l_esprit_critique_avec_la_zetetique?language=fr", source: "TED" },
 
   // ── Connexion ────────────────────────────────────────────────────────────
   { dimension: "connection", title: "Celeste Headlee : 10 façons d'avoir de meilleures conversations", url: "https://www.ted.com/talks/celeste_headlee_10_ways_to_have_a_better_conversation?language=fr", source: "TED" },
@@ -187,4 +215,6 @@ export const ARTICLES_FR: ArticleEntry[] = [
   { dimension: "connection", title: "Construire des relations solides : stratégies pratiques", url: "https://positivepsychology.com/rapport-building/", source: "Positive Psychology" },
   { dimension: "connection", title: "Le leadership authentique pour inspirer la confiance", url: "https://positivepsychology.com/authentic-leadership/", source: "Positive Psychology" },
   { dimension: "connection", title: "Intelligence émotionnelle : pourquoi c'est plus important que le QI", url: "https://positivepsychology.com/emotional-intelligence-eq/", source: "Positive Psychology" },
+  { dimension: "connection", title: "Frances Frei : comment instaurer (et réinstaurer) la confiance", url: "https://www.ted.com/talks/frances_frei_how_to_build_and_rebuild_trust?language=fr", source: "TED" },
+  { dimension: "connection", title: "Daniel Goleman et la compassion", url: "https://www.ted.com/talks/daniel_goleman_on_compassion?language=fr", source: "TED" },
 ];
