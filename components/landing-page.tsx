@@ -212,7 +212,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4 text-center">Proprietary Methodology</p>
           <h2 className="text-3xl sm:text-5xl font-light text-slate-400 text-center leading-none mb-1">THE THREE-SIGNAL</h2>
-          <h2 className="text-3xl sm:text-5xl font-black text-center leading-none mb-4">INTELLIGENCE MODEL</h2>
+          <h2 className="text-2xl sm:text-5xl font-black text-center leading-none mb-4">INTELLIGENCE MODEL</h2>
           <p className="text-center text-slate-400 max-w-lg mx-auto mb-12 text-sm">
             Most feedback tools give you one perspective. LearnFast gives you three — simultaneously. Where they diverge is where your growth lives.
           </p>
@@ -243,7 +243,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <p className="text-xs font-semibold tracking-[0.3em] text-slate-500 uppercase mb-4 text-center">Everything You Need</p>
           <h2 className="text-3xl sm:text-5xl font-light text-slate-400 text-center leading-none mb-1">BUILT FOR</h2>
-          <h2 className="text-3xl sm:text-5xl font-black text-center leading-none mb-12">SERIOUS PRESENTERS</h2>
+          <h2 className="text-2xl sm:text-5xl font-black text-center leading-none mb-12">SERIOUS PRESENTERS</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f) => (
               <div key={f.title} className="rounded-2xl border border-white/10 bg-[#0f1118] p-6 sm:p-7">
@@ -393,7 +393,7 @@ export default function LandingPage() {
                 <p className="text-xs font-semibold tracking-[0.25em] text-violet-400 uppercase">Premium Feature</p>
               </div>
               <h2 className="text-3xl sm:text-4xl font-light text-slate-400 leading-none mb-1">INDUSTRY</h2>
-              <h2 className="text-3xl sm:text-4xl font-black leading-none mb-6">LEADERBOARDS</h2>
+              <h2 className="text-2xl sm:text-4xl font-black leading-none mb-6">LEADERBOARDS</h2>
               <p className="text-base text-slate-400 leading-relaxed mb-6">
                 See how you rank against peers in your sector. LearnFast builds real normative data from every AI assessment run on the platform — so your score isn't just a number, it's a percentile rank against Sales professionals, Healthcare leaders, Technology engineers and more.
               </p>
