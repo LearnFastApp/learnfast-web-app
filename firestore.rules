@@ -29,9 +29,34 @@ service cloud.firestore {
     }
 
     // ── Consumer product: presenters ────────────────────────────────────────
+    // Privileged fields (subscriptionStatus beyond the 'free' floor, orgId,
+    // orgRole, pilotExpiresAt/pilotCode/pilotOrgName, stripeCustomerId,
+    // isPlatformAdmin, user_key, etc.) are NEVER client-writable — they are
+    // only ever set via Admin SDK server routes, which bypass these rules
+    // entirely. The allowlists below cover every legitimate client write
+    // site (signup, settings profile edit, nickname, locale, onboarding).
 
     match /presenters/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read: if request.auth != null && request.auth.uid == uid;
+
+      // Account creation (signup) may set a starter profile, but
+      // subscriptionStatus — if present at all — must be the harmless
+      // default 'free'. Anything else (active/pilot/lite/etc.) must come
+      // from a server route.
+      allow create: if request.auth != null && request.auth.uid == uid &&
+        request.resource.data.keys().hasOnly(
+          ['email', 'displayName', 'createdAt', 'locale', 'industry', 'nickname', 'subscriptionStatus']
+        ) &&
+        (
+          !('subscriptionStatus' in request.resource.data) ||
+          request.resource.data.subscriptionStatus == 'free'
+        );
+
+      // Profile self-edits only — no update may touch a privileged field.
+      allow update: if request.auth != null && request.auth.uid == uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+          ['email', 'displayName', 'createdAt', 'locale', 'industry', 'nickname', 'onboardingSeen']
+        );
     }
 
     // ── Consumer product: sessions ──────────────────────────────────────────

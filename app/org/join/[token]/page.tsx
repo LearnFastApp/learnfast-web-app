@@ -139,7 +139,6 @@ export default function JoinPage() {
         await setDoc(doc(db, "presenters", result.user.uid), {
           email: preview.email,
           displayName: name.trim() || preview.email.split("@")[0],
-          subscriptionStatus: "lite",
           locale: "en",
           industry: "enterprise",
           createdAt: serverTimestamp(),

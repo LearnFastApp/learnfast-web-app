@@ -22,6 +22,17 @@
  *   ✓ Members can read member sub-collection
  *   ✓ Members cannot write member sub-collection
  *   ✓ Non-members cannot read member sub-collection
+ *
+ * presenters/{uid} self-service allowlist (added 2026-07-10 — closes a
+ * billing-bypass hole where any client could self-write subscriptionStatus/orgId):
+ *   ✓ Signup create with only allowlisted fields + subscriptionStatus:'free' succeeds
+ *   ✓ Signup create attempting subscriptionStatus:'active' is rejected
+ *   ✓ Signup create attempting to set orgId directly is rejected
+ *   ✓ Profile update (displayName/nickname/locale/onboardingSeen) succeeds
+ *   ✓ Update attempting to change subscriptionStatus is rejected
+ *   ✓ Update attempting to set orgId is rejected
+ *   ✓ Update attempting to set pilotExpiresAt is rejected
+ *   ✓ A different user cannot write to someone else's presenter doc
  */
 
 import { initializeTestEnvironment, assertFails, assertSucceeds } from "@firebase/rules-unit-testing";
@@ -336,5 +347,123 @@ describe("feedback_responses validation (Phase 0 acceptance)", () => {
         submittedAt: new Date(),
       })
     );
+  });
+});
+
+// ── presenters/{uid} self-service allowlist ───────────────────────────────────
+
+describe("presenters self-service allowlist", () => {
+  it("signup create with only allowlisted fields + subscriptionStatus:'free' succeeds", async () => {
+    const db = testEnv.authenticatedContext("uid-new-signup-1").firestore();
+    await assertSucceeds(
+      setDoc(doc(db, "presenters/uid-new-signup-1"), {
+        email: "new@example.com",
+        displayName: "New User",
+        subscriptionStatus: "free",
+        locale: "en",
+        industry: "tech",
+        nickname: null,
+        createdAt: new Date(),
+      })
+    );
+  });
+
+  it("signup create attempting subscriptionStatus:'active' is rejected", async () => {
+    const db = testEnv.authenticatedContext("uid-new-signup-2").firestore();
+    await assertFails(
+      setDoc(doc(db, "presenters/uid-new-signup-2"), {
+        email: "attacker@example.com",
+        displayName: "Attacker",
+        subscriptionStatus: "active",
+        createdAt: new Date(),
+      })
+    );
+  });
+
+  it("signup create attempting to set orgId directly is rejected", async () => {
+    const db = testEnv.authenticatedContext("uid-new-signup-3").firestore();
+    await assertFails(
+      setDoc(doc(db, "presenters/uid-new-signup-3"), {
+        email: "attacker2@example.com",
+        displayName: "Attacker2",
+        orgId: ORG_ID,
+        createdAt: new Date(),
+      })
+    );
+  });
+
+  it("profile update (displayName/nickname/locale/onboardingSeen) succeeds", async () => {
+    const uid = "uid-existing-presenter-1";
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), `presenters/${uid}`), {
+        email: "existing@example.com",
+        displayName: "Existing User",
+        subscriptionStatus: "free",
+        createdAt: new Date(),
+      });
+    });
+    const db = testEnv.authenticatedContext(uid).firestore();
+    await assertSucceeds(
+      updateDoc(doc(db, `presenters/${uid}`), {
+        displayName: "Updated Name",
+        nickname: "Nicky",
+        locale: "fr",
+        onboardingSeen: true,
+      })
+    );
+  });
+
+  it("update attempting to change subscriptionStatus is rejected", async () => {
+    const uid = "uid-existing-presenter-2";
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), `presenters/${uid}`), {
+        email: "existing2@example.com",
+        subscriptionStatus: "free",
+        createdAt: new Date(),
+      });
+    });
+    const db = testEnv.authenticatedContext(uid).firestore();
+    await assertFails(updateDoc(doc(db, `presenters/${uid}`), { subscriptionStatus: "active" }));
+  });
+
+  it("update attempting to set orgId is rejected", async () => {
+    const uid = "uid-existing-presenter-3";
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), `presenters/${uid}`), {
+        email: "existing3@example.com",
+        subscriptionStatus: "free",
+        createdAt: new Date(),
+      });
+    });
+    const db = testEnv.authenticatedContext(uid).firestore();
+    await assertFails(updateDoc(doc(db, `presenters/${uid}`), { orgId: ORG_ID }));
+  });
+
+  it("update attempting to set pilotExpiresAt is rejected", async () => {
+    const uid = "uid-existing-presenter-4";
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), `presenters/${uid}`), {
+        email: "existing4@example.com",
+        subscriptionStatus: "free",
+        createdAt: new Date(),
+      });
+    });
+    const db = testEnv.authenticatedContext(uid).firestore();
+    await assertFails(
+      updateDoc(doc(db, `presenters/${uid}`), { pilotExpiresAt: new Date(), subscriptionStatus: "pilot" })
+    );
+  });
+
+  it("a different user cannot write to someone else's presenter doc", async () => {
+    const victimUid = "uid-victim-1";
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), `presenters/${victimUid}`), {
+        email: "victim@example.com",
+        subscriptionStatus: "free",
+        createdAt: new Date(),
+      });
+    });
+    const db = testEnv.authenticatedContext("uid-attacker-3").firestore();
+    await assertFails(updateDoc(doc(db, `presenters/${victimUid}`), { displayName: "Hijacked" }));
   });
 });
