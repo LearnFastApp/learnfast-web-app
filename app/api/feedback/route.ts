@@ -3,6 +3,7 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { rateLimit, getIp } from "@/lib/rate-limit";
 import { logEvent } from "@/lib/telemetry";
+import { getOrCreateUserKey } from "@/lib/user-key";
 
 export const dynamic = "force-dynamic";
 
@@ -74,12 +75,16 @@ export async function POST(req: NextRequest) {
         : {}),
     });
 
-    // Log to canonical event spine — audience member is anonymous, log against session
+    // Log to canonical event spine — audience member is anonymous, log against session.
+    // presenter_user_key (not the raw uid) identifies whose session this was.
+    const presenterUserKey = resolvedPresenterId
+      ? await getOrCreateUserKey(resolvedPresenterId).catch(() => null)
+      : null;
     logEvent("measurement.audience_score_submitted", {
       context: { surface: "web", source: "audience_loop" },
       payload: {
         session_id: sessionId,
-        presenter_id: resolvedPresenterId,
+        presenter_user_key: presenterUserKey,
         scores,
         has_comment: !!(comment?.trim()),
       },

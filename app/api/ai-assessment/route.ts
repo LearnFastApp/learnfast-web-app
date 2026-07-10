@@ -20,8 +20,16 @@ async function checkGate(uid: string): Promise<{ allowed: boolean; reason?: stri
   const pilotExpiry = data.pilotExpiresAt?.toDate?.() as Date | undefined;
   const isPilot = status === "pilot" && pilotExpiry && pilotExpiry > new Date();
 
-  // Org members are treated as Lite regardless of their consumer subscription status
-  const isOrgMember = !!(data.orgId as string | undefined);
+  // Org members are treated as Lite regardless of their consumer subscription status.
+  // Must verify actual active membership, not just presence of the orgId field —
+  // that field is never client-writable, but a stale/removed membership shouldn't
+  // silently keep granting paid access either.
+  const orgId = data.orgId as string | undefined;
+  let isOrgMember = false;
+  if (orgId) {
+    const memberSnap = await db.doc(`organizations/${orgId}/members/${uid}`).get();
+    isOrgMember = memberSnap.exists && memberSnap.data()?.status === "active";
+  }
   const isPaid = status === "active" || status === "lite" || isOrgMember || isPilot;
 
   if (!isPaid) return { allowed: false, reason: "upgrade_required" };

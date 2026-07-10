@@ -4,10 +4,16 @@
  * Run BEFORE deploying any change to the scoring prompt, model, or rubric:
  *   node scripts/seed-scoring-version.mjs
  *
- * This seeds the initial version sv_2026_07_v1 with the current production
- * model (claude-sonnet-4-6) and archives the prompt hash.
+ * v2 (2026-07-10, backdated registration for commit 2d4a558 on 2026-07-05):
+ * bumped because that commit changed live scoring behavior — injecting a
+ * "previous tips" block into the prompt to reduce repetition across a
+ * presenter's sessions, and setting temperature: 0.8 for more varied
+ * phrasing — without registering a new version at the time. Scores from
+ * 2026-07-05 onward are sv_2026_07_v2 in substance even though the doc is
+ * only being created now; this seed is the first opportunity to close
+ * that gap going forward.
  *
- * For future version bumps, copy this script, update VERSION_ID, and run again.
+ * For future version bumps, update VERSION_ID and NOTES below and run again.
  */
 
 import { createHash } from "crypto";
@@ -24,17 +30,17 @@ if (!getApps().length) initializeApp({ projectId });
 const db = getFirestore();
 
 // ── Current scoring version config ───────────────────────────────────────────
-const VERSION_ID = "sv_2026_07_v1";
+const VERSION_ID = "sv_2026_07_v2";
 
 const MODEL = process.env.AI_MODEL ?? "claude-sonnet-4-6";
 const TRANSCRIPTION_PROVIDER = "assemblyai — sentiment_analysis, auto_chapters disabled; filler_words enabled; language_detection enabled";
 const RUBRIC_VERSION = "five-dimension-v1";
-const NOTES = "Initial production version. Assessment prompt: five cognitive-science-grounded dimensions (Clarity/Energy/Engagement/Understanding/Connection), calibration 0-100, scoring anchors at 40/55/70/85. Rehearsal prompt: same dimensions + comparative take coaching.";
+const NOTES = "Same five-dimension rubric as sv_2026_07_v1 (Clarity/Energy/Engagement/Understanding/Connection, calibration 0-100, anchors at 40/55/70/85). Changed from v1 (commit 2d4a558, 2026-07-05): assessment prompt now injects a PREVIOUS TIPS block (presenter's prior tips passed in, explicitly instructed not to repeat them) to reduce repetitive coaching across sessions; API call now sets temperature: 0.8 (was unset/deterministic) for more varied phrasing. Rehearsal prompt unchanged.";
 
 // Hash of the scoring prompt template — regenerate if prompt changes by running:
 // node -e "const {createHash}=require('crypto');const fs=require('fs');const p=fs.readFileSync('lib/ai-assessment-analysis.ts','utf8');console.log(createHash('sha256').update(p).digest('hex'))"
 const PROMPT_HASH = createHash("sha256")
-  .update(`five-dimension-assessment-prompt:${MODEL}:${RUBRIC_VERSION}:2026-07`)
+  .update(`five-dimension-assessment-prompt:${MODEL}:${RUBRIC_VERSION}:2026-07-v2-previous-tips-temp0.8`)
   .digest("hex");
 
 // ─────────────────────────────────────────────────────────────────────────────
