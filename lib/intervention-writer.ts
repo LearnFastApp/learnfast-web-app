@@ -53,7 +53,6 @@ export async function prescribeIntervention(
     content_ref: opts.content_ref,
     triggered_by_measurement: opts.triggered_by_measurement ?? null,
     status: "prescribed" as InterventionStatus,
-    status_history: [{ status: "prescribed", ts: now }],
     schema_version: 1,
   });
 
@@ -61,7 +60,12 @@ export async function prescribeIntervention(
 }
 
 /**
- * Transition an intervention to a new status (viewed / completed / dismissed).
+ * Record a status transition (viewed / completed / dismissed) for an
+ * intervention. The interventions collection is append-only (CLAUDE.md
+ * rule 4) — this never updates the original doc. Instead it appends a new
+ * record to interventions/{intervention_id}/status_changes. The "current"
+ * status is whichever status_changes record has the latest ts (fall back
+ * to the parent doc's initial status: "prescribed" if none exist yet).
  * Fire-and-forget safe — call without awaiting from UI paths.
  */
 export async function updateInterventionStatus(
@@ -69,9 +73,15 @@ export async function updateInterventionStatus(
   new_status: "viewed" | "completed" | "dismissed"
 ): Promise<void> {
   const db = getAdminDb();
-  const now = FieldValue.serverTimestamp();
-  await db.collection("interventions").doc(intervention_id).update({
-    status: new_status,
-    status_history: FieldValue.arrayUnion({ status: new_status, ts: now }),
-  });
+  const change_id = randomUUID();
+  await db
+    .collection("interventions")
+    .doc(intervention_id)
+    .collection("status_changes")
+    .doc(change_id)
+    .set({
+      change_id,
+      status: new_status,
+      ts: FieldValue.serverTimestamp(),
+    });
 }

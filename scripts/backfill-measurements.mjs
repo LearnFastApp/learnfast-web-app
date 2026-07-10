@@ -10,6 +10,14 @@
  *
  * Safe to re-run — skips assessments already backfilled (checks for existing measurement
  * with matching source_ref).
+ *
+ * NOTE ON lib/measurement-writer.ts: this script intentionally does NOT import that
+ * module. It's plain TypeScript run directly by `node` here with no bundler — Node's
+ * type-stripping handles the syntax, but not this repo's `@/` path aliases or
+ * extensionless local imports, so `lib/measurement-writer.ts` (which imports
+ * `./firebase-admin` etc.) can't resolve under plain `node` without adding a loader/
+ * build step. The measurement doc shape below is kept in sync with that writer by
+ * hand — if `writeMeasurement`'s schema changes, update this script to match.
  */
 
 import { readFileSync } from "fs";
@@ -46,16 +54,46 @@ async function alreadyBackfilled(source_ref) {
   return !snap.empty;
 }
 
+// Mirrors writeMeasurement's atomic sequence numbering (lib/measurement-writer.ts) —
+// nth measurement of this kind for this user_key, counting what's already written
+// (including earlier docs from this same backfill run).
+// IMPORTANT: only produces correct chronological numbering if callers process
+// records for each user_key oldest-first — the loops below sort by timestamp
+// before calling this for exactly that reason.
+async function nextSequenceIndex(user_key, kind) {
+  const countSnap = await db
+    .collection("measurements")
+    .where("user_key", "==", user_key)
+    .where("kind", "==", kind)
+    .count()
+    .get();
+  return countSnap.data().count + 1;
+}
+
 // ── Backfill ai_assessments ───────────────────────────────────────────────────
 console.log("[backfill] Scanning ai_assessments...");
 const assessmentsSnap = await db.collection("ai_assessments")
   .where("status", "==", "complete")
   .get();
 
+function tsMillis(data, ...fields) {
+  for (const f of fields) {
+    const v = data[f]?.toDate?.();
+    if (v) return v.getTime();
+  }
+  return 0;
+}
+
+// Sort oldest-first per presenter so nextSequenceIndex() numbers chronologically
+// rather than in arbitrary Firestore fetch order.
+const sortedAssessmentDocs = [...assessmentsSnap.docs].sort(
+  (a, b) => tsMillis(a.data(), "completedAt", "createdAt") - tsMillis(b.data(), "completedAt", "createdAt")
+);
+
 let assessmentCount = 0;
 let assessmentSkipped = 0;
 
-for (const doc of assessmentsSnap.docs) {
+for (const doc of sortedAssessmentDocs) {
   const data = doc.data();
   const presenterId = data.presenterId;
   if (!presenterId || data.isGuest) {
@@ -94,7 +132,7 @@ for (const doc of assessmentsSnap.docs) {
     scoring_version_ref: "scoring_versions/unknown-pre-v1",
     signal: "ai",
     raw_ref: null,
-    sequence_index: 0,
+    sequence_index: await nextSequenceIndex(user_key, "ai_assessment"),
     backfilled: true,
     source_ref: `ai_assessments/${doc.id}`,
     schema_version: 1,
@@ -116,6 +154,10 @@ const sessionsSnap = await db.collection("rehearsal_sessions").get();
 let takeCount = 0;
 let takeSkipped = 0;
 
+// Flatten every take across every session first — a presenter's takes are spread
+// across multiple session docs, so per-presenter chronological order can only be
+// established after gathering everything, not session-by-session.
+const allTakes = [];
 for (const sessionDoc of sessionsSnap.docs) {
   const sessionData = sessionDoc.data();
   const presenterId = sessionData.presenterId;
@@ -126,7 +168,15 @@ for (const sessionDoc of sessionsSnap.docs) {
     .get();
 
   for (const takeDoc of takesSnap.docs) {
-    const takeData = takeDoc.data();
+    allTakes.push({ sessionDoc, sessionData, presenterId, takeDoc, takeData: takeDoc.data() });
+  }
+}
+
+const sortedTakes = allTakes.sort(
+  (a, b) => tsMillis(a.takeData, "completedAt") - tsMillis(b.takeData, "completedAt")
+);
+
+for (const { sessionDoc, sessionData, presenterId, takeDoc, takeData } of sortedTakes) {
     const source_ref = `rehearsal_sessions/${sessionDoc.id}/takes/${takeDoc.id}`;
 
     if (await alreadyBackfilled(source_ref)) { takeSkipped++; continue; }
@@ -156,7 +206,7 @@ for (const sessionDoc of sessionsSnap.docs) {
       scoring_version_ref: "scoring_versions/unknown-pre-v1",
       signal: "ai",
       raw_ref: null,
-      sequence_index: 0,
+      sequence_index: await nextSequenceIndex(user_key, "rehearsal_take"),
       backfilled: true,
       source_ref,
       schema_version: 1,
@@ -166,11 +216,9 @@ for (const sessionDoc of sessionsSnap.docs) {
       await db.collection("measurements").doc(measurement_id).set(measurement);
     }
     takeCount++;
-  }
 }
 
 console.log(`[backfill] Rehearsal takes: ${takeCount} backfilled, ${takeSkipped} skipped.`);
 console.log();
-console.log("[backfill] Done. Note: backfilled measurements have sequence_index=0.");
-console.log("  Run a one-time repair query in BigQuery to re-assign sequence_index by ts order.");
+console.log("[backfill] Done. sequence_index was assigned chronologically per user_key during this run.");
 process.exit(0);
