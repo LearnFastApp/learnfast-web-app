@@ -9,6 +9,7 @@ import { getOrCreateUserKey } from "@/lib/user-key";
 import { writeMeasurement } from "@/lib/measurement-writer";
 import { uploadRawRehearsalBundle } from "@/lib/r2-client";
 import { completePrescribedSession } from "@/lib/gameday/complete-prescribed-session";
+import { generateAndSaveCueCard, shouldGenerateCueCard, compositeScore } from "@/lib/gameday/generate-cue-card";
 
 export const dynamic = "force-dynamic";
 
@@ -214,6 +215,7 @@ export async function GET(
       });
 
       const prescribedSessionId = sessionData.prescribedSessionId as string | undefined;
+      const planId = sessionData.planId as string | undefined;
       if (prescribedSessionId) {
         await completePrescribedSession({ prescribedSessionId, rehearsalSessionId: sessionId, takeId, userId: uid });
         logEvent("gameday.prescribed_session_completed", {
@@ -221,11 +223,30 @@ export async function GET(
           org_id: orgId,
           payload: {
             prescribedSessionId,
-            planId: sessionData.planId ?? null,
+            planId: planId ?? null,
             sessionType: sessionData.gamedaySessionType ?? null,
             wasFreeAttribution: false,
           },
         });
+      }
+
+      // Cue card: extracted after the HIGHEST-scoring fullrun (spec §2) — one
+      // isolated Anthropic call, never blocking the main response.
+      if (planId && sessionData.gamedaySessionType === "fullrun") {
+        const thisComposite = compositeScore(
+          coaching.scores as { clarity: number; energy: number; engagement: number; understanding: number; connection: number }
+        );
+        if (await shouldGenerateCueCard({ planId, thisComposite })) {
+          await generateAndSaveCueCard({
+            planId,
+            userId: uid,
+            rehearsalSessionId: sessionId,
+            takeId,
+            transcriptText: transcript.text ?? "",
+            locale: sessionUserLocale,
+            user_key,
+          });
+        }
       }
     } catch (err) {
       console.error("[data-foundation] rehearsal take post-processing failed:", err);

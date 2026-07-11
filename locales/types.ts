@@ -314,6 +314,24 @@ export interface GamedayStrings {
   attributionPrompt: (sessionLabel: string) => string;
   attributionYes: string;
   attributionDismiss: string;
+  cueCardOpeningLabel: string;
+  cueCardAnchorLabel: (n: number) => string;
+  cueCardClosingLabel: string;
+  editBtn: string;
+  saveBtn: string;
+  taperEditWarning: string;
+  editAnywayBtn: string;
+  extractionFailedFallback: string;
+  manualCueCardHeading: string;
+  warmupBreathingPrompt: string;
+  warmupFirstLinePrompt: string;
+  goGetItBtn: string;
+  workIsDoneMessage: string;
+  debriefPrompt: string;
+  debriefUpsellPrompt: string;
+  nextDateBtn: string;
+  skipBtn: string;
+  continueBtn: string;
 }
 
 export interface LocaleCatalogue {

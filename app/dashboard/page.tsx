@@ -36,6 +36,7 @@ import { trackLocaleSet } from "@/lib/locale/analytics";
 import { trackDashboardCoachWidgetClicked } from "@/lib/coach-analytics";
 import { isGamedayModeEnabled } from "@/lib/feature-flags";
 import { classifyRunway } from "@/lib/gameday/runway";
+import DebriefPrompt from "@/components/gameday/debrief-prompt";
 
 
 interface Session {
@@ -97,7 +98,7 @@ export default function Dashboard() {
   const [editingTagsId, setEditingTagsId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState("");
   const [activeTab, setActiveTab] = useState<"sessions" | "reflections" | "rehearsals" | "gameday">("sessions");
-  const [gamedayEvent, setGamedayEvent] = useState<{ id: string; title: string; eventDate: Date } | null | undefined>(undefined);
+  const [gamedayEvent, setGamedayEvent] = useState<{ id: string; title: string; eventDate: Date; planId: string | null } | null | undefined>(undefined);
   const [reflections, setReflections] = useState<ReflectionEntry[]>([]);
   const [reflectionsLoading, setReflectionsLoading] = useState(false);
   const [responseCounts, setResponseCounts] = useState<Record<string, number>>({});
@@ -261,11 +262,20 @@ export default function Dashboard() {
     let cancelled = false;
     getDocs(
       query(collection(db, "speakingEvents"), where("userId", "==", user.uid), where("status", "==", "active"), limit(1))
-    ).then((snap) => {
+    ).then(async (snap) => {
       if (cancelled) return;
       if (snap.empty) { setGamedayEvent(null); return; }
       const d = snap.docs[0];
-      setGamedayEvent({ id: d.id, title: d.data().title, eventDate: d.data().eventDate.toDate() });
+      const planSnap = await getDocs(
+        query(collection(db, "plans"), where("userId", "==", user.uid), where("eventId", "==", d.id), where("isCurrent", "==", true), limit(1))
+      );
+      if (cancelled) return;
+      setGamedayEvent({
+        id: d.id,
+        title: d.data().title,
+        eventDate: d.data().eventDate.toDate(),
+        planId: planSnap.empty ? null : planSnap.docs[0].id,
+      });
     }).catch(() => { if (!cancelled) setGamedayEvent(null); });
     return () => { cancelled = true; };
   }, [user]);
@@ -996,6 +1006,8 @@ export default function Dashboard() {
                       {isFr ? "Vers quoi vous préparez-vous ?" : "What are you building toward?"}
                     </button>
                   </div>
+                ) : gamedayEvent.eventDate.getTime() <= new Date().getTime() && gamedayEvent.planId ? (
+                  <DebriefPrompt eventId={gamedayEvent.id} planId={gamedayEvent.planId} />
                 ) : (
                   <button
                     onClick={() => router.push(`/gameday/${gamedayEvent.id}`)}

@@ -82,6 +82,13 @@ export default function GamedayPlanPage({ params }: { params: Promise<{ eventId:
           return;
         }
         setData(json);
+        // Cache the eventId -> planId mapping so the offline-first Warm-Up
+        // screen can resolve it without a network round trip.
+        try {
+          localStorage.setItem(`gameday:planIdForEvent:${eventId}`, json.plan.id);
+        } catch {
+          // best-effort
+        }
       } catch {
         if (!cancelled) setError("network");
       }
