@@ -22,6 +22,16 @@ export function isContextsEnabled(): boolean {
 }
 
 /**
+ * Gameday Mode / Sprint Mode feature flag (event-backed periodisation plans).
+ * Set NEXT_PUBLIC_FEATURE_GAMEDAY_MODE=true in apphosting.yaml to enable.
+ * When disabled, no Gameday UI is shown and no new collections are touched —
+ * all existing flows behave exactly as before.
+ */
+export function isGamedayModeEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_FEATURE_GAMEDAY_MODE === "true";
+}
+
+/**
  * Convenience assertion for API routes. Throws a typed error object
  * so callers can return a consistent 403 response.
  *

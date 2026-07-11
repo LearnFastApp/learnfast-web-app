@@ -294,6 +294,36 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // ── Gameday Mode / Sprint Mode (event-backed periodisation plans) ───────
+    // Feature-flagged (gameday_mode) — see lib/feature-flags.ts. All four
+    // collections are created/mutated exclusively via /api/gameday/* admin-SDK
+    // routes, matching rehearsal_sessions/ai_assessments/discoveryCalls above,
+    // EXCEPT cueCards.lines: cue cards must be editable at all times, including
+    // offline, so that one field is client-writable directly.
+
+    match /speakingEvents/{eventId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow write: if false;
+    }
+
+    match /plans/{planId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow write: if false;
+    }
+
+    match /prescribedSessions/{sessionId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow write: if false;
+    }
+
+    match /cueCards/{cardId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if false; // only ever created server-side (the one Anthropic-call route)
+      allow update: if request.auth != null && request.auth.uid == resource.data.userId &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lines', 'updatedAt']);
+      allow delete: if false;
+    }
+
   }
 
 }

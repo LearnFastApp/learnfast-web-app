@@ -7,7 +7,8 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "test:rules": "firebase emulators:exec --only firestore --project learnfast-app-cc98c \"node --test scripts/test-rules.mjs\""
+    "test:rules": "firebase emulators:exec --only firestore --project learnfast-app-cc98c \"node --test scripts/test-rules.mjs\"",
+    "test:gameday": "node --test lib/gameday/*.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.106.0",

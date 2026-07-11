@@ -467,3 +467,196 @@ describe("presenters self-service allowlist", () => {
     await assertFails(updateDoc(doc(db, `presenters/${victimUid}`), { displayName: "Hijacked" }));
   });
 });
+
+// ── Gameday Mode / Sprint Mode (speakingEvents, plans, prescribedSessions, cueCards) ─
+// All four collections are created/mutated exclusively via /api/gameday/* admin-SDK
+// routes — read is owner-scoped, write is `if false`, EXCEPT cueCards.lines, which
+// must be client-editable at all times (including offline).
+
+const GAMEDAY_OWNER_UID = "uid-gameday-owner-1";
+const GAMEDAY_OTHER_UID = "uid-gameday-other-1";
+
+describe("speakingEvents ownership", () => {
+  const eventId = "event-1";
+
+  before(async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), `speakingEvents/${eventId}`), {
+        userId: GAMEDAY_OWNER_UID,
+        title: "Q3 Board Update",
+        eventDate: new Date(),
+        contextType: "board_presentation",
+        status: "active",
+        createdAt: new Date(),
+      });
+    });
+  });
+
+  it("owner can read their own speakingEvent", async () => {
+    const db = testEnv.authenticatedContext(GAMEDAY_OWNER_UID).firestore();
+    await assertSucceeds(getDoc(doc(db, `speakingEvents/${eventId}`)));
+  });
+
+  it("a different user cannot read someone else's speakingEvent", async () => {
+    const db = testEnv.authenticatedContext(GAMEDAY_OTHER_UID).firestore();
+    await assertFails(getDoc(doc(db, `speakingEvents/${eventId}`)));
+  });
+
+  it("unauthenticated user cannot read a speakingEvent", async () => {
+    const db = testEnv.unauthenticatedContext().firestore();
+    await assertFails(getDoc(doc(db, `speakingEvents/${eventId}`)));
+  });
+
+  it("client cannot create a speakingEvent directly (admin SDK only)", async () => {
+    const db = testEnv.authenticatedContext(GAMEDAY_OWNER_UID).firestore();
+    await assertFails(
+      setDoc(doc(db, "speakingEvents/event-client-attempt"), {
+        userId: GAMEDAY_OWNER_UID,
+        title: "Sneaky",
+        eventDate: new Date(),
+        contextType: "general",
+        status: "active",
+        createdAt: new Date(),
+      })
+    );
+  });
+
+  it("owner cannot update a speakingEvent directly (admin SDK only)", async () => {
+    const db = testEnv.authenticatedContext(GAMEDAY_OWNER_UID).firestore();
+    await assertFails(updateDoc(doc(db, `speakingEvents/${eventId}`), { status: "cancelled" }));
+  });
+});
+
+describe("plans ownership", () => {
+  const planId = "plan-1";
+
+  before(async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), `plans/${planId}`), {
+        eventId: "event-1",
+        userId: GAMEDAY_OWNER_UID,
+        mode: "sprint",
+        runwayDays: 3,
+        planVersion: 1,
+        isCurrent: true,
+        generatedAt: new Date(),
+      });
+    });
+  });
+
+  it("owner can read their own plan", async () => {
+    const db = testEnv.authenticatedContext(GAMEDAY_OWNER_UID).firestore();
+    await assertSucceeds(getDoc(doc(db, `plans/${planId}`)));
+  });
+
+  it("a different user cannot read someone else's plan", async () => {
+    const db = testEnv.authenticatedContext(GAMEDAY_OTHER_UID).firestore();
+    await assertFails(getDoc(doc(db, `plans/${planId}`)));
+  });
+
+  it("client cannot write a plan directly (admin SDK only, versioning enforced in app code)", async () => {
+    const db = testEnv.authenticatedContext(GAMEDAY_OWNER_UID).firestore();
+    await assertFails(updateDoc(doc(db, `plans/${planId}`), { isCurrent: false }));
+  });
+});
+
+describe("prescribedSessions ownership", () => {
+  const sessionId = "prescribed-session-1";
+
+  before(async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), `prescribedSessions/${sessionId}`), {
+        planId: "plan-1",
+        eventId: "event-1",
+        userId: GAMEDAY_OWNER_UID,
+        sessionType: "triage",
+        ordinal: 0,
+        status: "scheduled",
+      });
+    });
+  });
+
+  it("owner can read their own prescribed session", async () => {
+    const db = testEnv.authenticatedContext(GAMEDAY_OWNER_UID).firestore();
+    await assertSucceeds(getDoc(doc(db, `prescribedSessions/${sessionId}`)));
+  });
+
+  it("a different user cannot read someone else's prescribed session", async () => {
+    const db = testEnv.authenticatedContext(GAMEDAY_OTHER_UID).firestore();
+    await assertFails(getDoc(doc(db, `prescribedSessions/${sessionId}`)));
+  });
+
+  it("unauthenticated user cannot read a prescribed session", async () => {
+    const db = testEnv.unauthenticatedContext().firestore();
+    await assertFails(getDoc(doc(db, `prescribedSessions/${sessionId}`)));
+  });
+
+  it("client cannot mark a prescribed session complete directly (admin SDK only)", async () => {
+    const db = testEnv.authenticatedContext(GAMEDAY_OWNER_UID).firestore();
+    await assertFails(updateDoc(doc(db, `prescribedSessions/${sessionId}`), { status: "completed" }));
+  });
+});
+
+describe("cueCards ownership and field-restricted edits", () => {
+  const cardId = "cue-card-1";
+
+  before(async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), `cueCards/${cardId}`), {
+        planId: "plan-1",
+        userId: GAMEDAY_OWNER_UID,
+        lines: ["Open strong.", "Anchor one.", "Anchor two.", "Anchor three.", "Close strong."],
+        taperAdvisory: false,
+        updatedAt: new Date(),
+      });
+    });
+  });
+
+  it("owner can read their own cue card", async () => {
+    const db = testEnv.authenticatedContext(GAMEDAY_OWNER_UID).firestore();
+    await assertSucceeds(getDoc(doc(db, `cueCards/${cardId}`)));
+  });
+
+  it("a different user cannot read someone else's cue card", async () => {
+    const db = testEnv.authenticatedContext(GAMEDAY_OTHER_UID).firestore();
+    await assertFails(getDoc(doc(db, `cueCards/${cardId}`)));
+  });
+
+  it("client cannot create a cue card directly (the one Anthropic-call route creates it)", async () => {
+    const db = testEnv.authenticatedContext(GAMEDAY_OWNER_UID).firestore();
+    await assertFails(
+      setDoc(doc(db, "cueCards/cue-card-client-attempt"), {
+        planId: "plan-1",
+        userId: GAMEDAY_OWNER_UID,
+        lines: ["a", "b", "c", "d", "e"],
+        taperAdvisory: false,
+        updatedAt: new Date(),
+      })
+    );
+  });
+
+  it("owner CAN edit lines directly — cue cards must be editable at all times, including offline", async () => {
+    const db = testEnv.authenticatedContext(GAMEDAY_OWNER_UID).firestore();
+    await assertSucceeds(
+      updateDoc(doc(db, `cueCards/${cardId}`), {
+        lines: ["New open.", "Anchor one.", "Anchor two.", "Anchor three.", "New close."],
+        updatedAt: new Date(),
+      })
+    );
+  });
+
+  it("owner cannot use an update to reassign the card to a different plan/user", async () => {
+    const db = testEnv.authenticatedContext(GAMEDAY_OWNER_UID).firestore();
+    await assertFails(updateDoc(doc(db, `cueCards/${cardId}`), { userId: GAMEDAY_OTHER_UID }));
+  });
+
+  it("a different user cannot edit someone else's cue card lines", async () => {
+    const db = testEnv.authenticatedContext(GAMEDAY_OTHER_UID).firestore();
+    await assertFails(updateDoc(doc(db, `cueCards/${cardId}`), { lines: ["hijacked"] }));
+  });
+
+  it("cue cards cannot be deleted by the client", async () => {
+    const db = testEnv.authenticatedContext(GAMEDAY_OWNER_UID).firestore();
+    await assertFails(deleteDoc(doc(db, `cueCards/${cardId}`)));
+  });
+});
