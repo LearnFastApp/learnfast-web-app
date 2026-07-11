@@ -12,6 +12,7 @@ import {
 import { Suspense } from "react";
 import { isGamedayModeEnabled } from "@/lib/feature-flags";
 import FreeSessionAttributionCard from "@/components/gameday/free-session-attribution-card";
+import { getDimensionDisplayOrder, type LensKey } from "@/lib/gameday/feedback-lens";
 
 const DIM_COLORS: Record<string, string> = {
   clarity: "#8b5cf6",
@@ -49,6 +50,7 @@ interface Session {
   tier?: string;
   orgId?: string | null;
   isPublic?: boolean;
+  gamedaySessionType?: string | null;
 }
 
 type PageStage = "loading" | "polling" | "ready" | "recording" | "recorded" | "uploading" | "promoting" | "promoted" | "error";
@@ -572,7 +574,10 @@ function RehearsalPageInner() {
                   )}
                 </div>
                 <div className="space-y-2.5">
-                  {DIMS.map((d) => (
+                  {(isGamedayModeEnabled() && session?.gamedaySessionType
+                    ? getDimensionDisplayOrder(session.gamedaySessionType as LensKey)
+                    : DIMS
+                  ).map((d) => (
                     <div key={d} className="flex items-center justify-between gap-3">
                       <span className="text-sm text-slate-300 capitalize w-28 flex-shrink-0">{d}</span>
                       <ScorePill dim={d} score={activeTake.scores![d]} />
