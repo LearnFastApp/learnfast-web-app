@@ -9,6 +9,32 @@ export const dynamic = "force-dynamic";
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
+// Phrases publishers show in place of (or alongside a teaser before) the real
+// article body when a piece is metered/subscriber-only. A 200 response alone
+// doesn't prove the content is actually readable — some sites gate inline on
+// the same URL rather than redirecting, so the body has to be inspected too.
+const PAYWALL_MARKERS = [
+  "subscribe to continue reading",
+  "subscribe to keep reading",
+  "sign in or subscribe",
+  "sign up or subscribe to read",
+  "to continue reading, subscribe",
+  "this content is for subscribers only",
+  "become a member to continue reading",
+  "you've reached your limit of free articles",
+  "you have reached your article limit",
+  "start your free trial to continue reading",
+  "unlock this article",
+  "register to continue reading",
+  "meteredpaywall",
+  "paywall-message",
+];
+
+function detectPaywall(html: string): string | null {
+  const lower = html.toLowerCase();
+  return PAYWALL_MARKERS.find((marker) => lower.includes(marker)) ?? null;
+}
+
 type CheckResult = { ok: boolean; status: number; reason: string; finalUrl: string };
 
 async function checkUrl(url: string): Promise<CheckResult> {
@@ -33,6 +59,12 @@ async function checkUrl(url: string): Promise<CheckResult> {
     const finalDepth = new URL(res.url).pathname.split("/").filter(Boolean).length;
     if (originalDepth >= 2 && finalDepth < 2) {
       return { ok: false, status: 200, reason: "Redirected to homepage (content gated)", finalUrl: res.url };
+    }
+
+    const html = await res.text();
+    const paywallMarker = detectPaywall(html);
+    if (paywallMarker) {
+      return { ok: false, status: 200, reason: `Paywalled (matched "${paywallMarker}")`, finalUrl: res.url };
     }
 
     return { ok: true, status: res.status, reason: "", finalUrl: res.url };

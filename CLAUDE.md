@@ -31,3 +31,12 @@ No updates, no deletes. The ONLY exception is the GDPR erasure script
 `events`, `measurements`, and `interventions` must never contain email addresses,
 display names, auth UIDs, or any other directly identifying fields.
 Use `user_key` (from `lib/user-key.ts`) exclusively.
+
+### 6. Educational library articles must never be paywalled
+Before adding an entry to `lib/articles.ts` / `ARTICLES_FR` / `lib/article-pool.ts`,
+fetch the URL and confirm the full article body is readable without hitting a
+subscribe/sign-in gate — a 200 response is not sufficient proof on its own
+(some publishers return 200 with only a teaser paragraph before the paywall).
+The scheduled health check (`app/api/cron/check-resources/route.ts`) treats
+detected paywall markers as broken and will auto-repair or alert on existing
+entries, but new entries must be verified paywall-free before being committed.
