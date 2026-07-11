@@ -1,4 +1,4 @@
-import type { PhaseSpec, PhaseType, PrescribedSessionSeed, SessionType } from "./types.ts";
+import type { PhaseSpec, PrescribedSessionSeed, SessionType } from "./types.ts";
 import { TAPER_VOLUME_FACTOR, describeTaperConstraint } from "./taper.ts";
 
 export type BlockBand = "56+" | "28-55" | "14-27" | "8-13";

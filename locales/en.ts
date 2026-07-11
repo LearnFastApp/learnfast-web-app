@@ -278,4 +278,23 @@ export const en: LocaleCatalogue = {
     switchToUpload: "Upload a file instead",
     switchToRecord: "Record instead",
   },
+
+  gameday: {
+    entryHeading: "What are you building toward?",
+    entrySubheading: "Tell us the event and we'll build your backwards plan.",
+    eventNameLabel: "Event name",
+    eventNamePlaceholder: "e.g. Q3 board update",
+    eventDateLabel: "Event date",
+    contextLabel: "What are you presenting?",
+    adjustSettingsToggle: "Adjust plan settings",
+    sessionsPerWeekLabel: "Sessions per week",
+    generatePlanBtn: "Generate my plan",
+    generating: "Generating…",
+    sprintModeBanner: (days) => `${days} days out — we're in Sprint Mode.`,
+    immediateRedirectNote: "Your event is almost here — let's get your cue card ready instead.",
+    planAdjustedBanner: (days) => `Plan adjusted — ${days} days to Gameday.`,
+    errGeneric: "Something went wrong. Please try again.",
+    errNetwork: "Network error. Please try again.",
+    errInvalidDate: "Please choose a date in the future.",
+  },
 };

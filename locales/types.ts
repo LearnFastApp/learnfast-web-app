@@ -281,6 +281,25 @@ export interface TryStrings {
   switchToRecord: string;
 }
 
+export interface GamedayStrings {
+  entryHeading: string;
+  entrySubheading: string;
+  eventNameLabel: string;
+  eventNamePlaceholder: string;
+  eventDateLabel: string;
+  contextLabel: string;
+  adjustSettingsToggle: string;
+  sessionsPerWeekLabel: string;
+  generatePlanBtn: string;
+  generating: string;
+  sprintModeBanner: (days: number) => string;
+  immediateRedirectNote: string;
+  planAdjustedBanner: (days: number) => string;
+  errGeneric: string;
+  errNetwork: string;
+  errInvalidDate: string;
+}
+
 export interface LocaleCatalogue {
   common: CommonStrings;
   dashboard: DashboardStrings;
@@ -290,6 +309,7 @@ export interface LocaleCatalogue {
   settings: SettingsStrings;
   createRehearsalModal: CreateRehearsalModalStrings;
   try: TryStrings;
+  gameday: GamedayStrings;
 }
 
 export type SupportedLocale = "en" | "fr";

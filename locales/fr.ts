@@ -287,4 +287,23 @@ export const fr: LocaleCatalogue = {
     switchToUpload: "Télécharger un fichier à la place",
     switchToRecord: "Enregistrer à la place",
   },
+
+  gameday: {
+    entryHeading: "Vers quoi vous préparez-vous ?",
+    entrySubheading: "Indiquez-nous l'événement et nous construirons votre plan à rebours.",
+    eventNameLabel: "Nom de l'événement",
+    eventNamePlaceholder: "ex. Point trimestriel au conseil",
+    eventDateLabel: "Date de l'événement",
+    contextLabel: "Que présentez-vous ?",
+    adjustSettingsToggle: "Ajuster les paramètres du plan",
+    sessionsPerWeekLabel: "Séances par semaine",
+    generatePlanBtn: "Générer mon plan",
+    generating: "Génération…",
+    sprintModeBanner: (days) => `${days} jours restants — mode Sprint activé.`,
+    immediateRedirectNote: "Votre événement approche — préparons plutôt votre fiche mémo.",
+    planAdjustedBanner: (days) => `Plan ajusté — ${days} jours avant le Jour J.`,
+    errGeneric: "Une erreur est survenue. Veuillez réessayer.",
+    errNetwork: "Erreur réseau. Veuillez réessayer.",
+    errInvalidDate: "Veuillez choisir une date future.",
+  },
 };
