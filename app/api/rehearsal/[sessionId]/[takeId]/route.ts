@@ -8,6 +8,7 @@ import { logEvent } from "@/lib/telemetry";
 import { getOrCreateUserKey } from "@/lib/user-key";
 import { writeMeasurement } from "@/lib/measurement-writer";
 import { uploadRawRehearsalBundle } from "@/lib/r2-client";
+import { completePrescribedSession } from "@/lib/gameday/complete-prescribed-session";
 
 export const dynamic = "force-dynamic";
 
@@ -211,6 +212,21 @@ export async function GET(
           scores: coaching.scores,
         },
       });
+
+      const prescribedSessionId = sessionData.prescribedSessionId as string | undefined;
+      if (prescribedSessionId) {
+        await completePrescribedSession({ prescribedSessionId, rehearsalSessionId: sessionId, takeId, userId: uid });
+        logEvent("gameday.prescribed_session_completed", {
+          user_key,
+          org_id: orgId,
+          payload: {
+            prescribedSessionId,
+            planId: sessionData.planId ?? null,
+            sessionType: sessionData.gamedaySessionType ?? null,
+            wasFreeAttribution: false,
+          },
+        });
+      }
     } catch (err) {
       console.error("[data-foundation] rehearsal take post-processing failed:", err);
     }

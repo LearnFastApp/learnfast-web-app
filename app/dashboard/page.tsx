@@ -17,6 +17,7 @@ import {
   Settings,
   ShieldCheck,
   Tag,
+  Target,
   Trash2,
   Trophy,
   Users,
@@ -33,6 +34,8 @@ import ProfileSetupModal from "@/components/profile-setup-modal";
 import { useLocale, useSetLocale, useTranslations } from "@/lib/i18n";
 import { trackLocaleSet } from "@/lib/locale/analytics";
 import { trackDashboardCoachWidgetClicked } from "@/lib/coach-analytics";
+import { isGamedayModeEnabled } from "@/lib/feature-flags";
+import { classifyRunway } from "@/lib/gameday/runway";
 
 
 interface Session {
@@ -93,7 +96,8 @@ export default function Dashboard() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [editingTagsId, setEditingTagsId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState("");
-  const [activeTab, setActiveTab] = useState<"sessions" | "reflections" | "rehearsals">("sessions");
+  const [activeTab, setActiveTab] = useState<"sessions" | "reflections" | "rehearsals" | "gameday">("sessions");
+  const [gamedayEvent, setGamedayEvent] = useState<{ id: string; title: string; eventDate: Date } | null | undefined>(undefined);
   const [reflections, setReflections] = useState<ReflectionEntry[]>([]);
   const [reflectionsLoading, setReflectionsLoading] = useState(false);
   const [responseCounts, setResponseCounts] = useState<Record<string, number>>({});
@@ -251,6 +255,20 @@ export default function Dashboard() {
   useEffect(() => {
     fetchRehearsalSessions();
   }, [fetchRehearsalSessions]);
+
+  useEffect(() => {
+    if (!user || !isGamedayModeEnabled()) return;
+    let cancelled = false;
+    getDocs(
+      query(collection(db, "speakingEvents"), where("userId", "==", user.uid), where("status", "==", "active"), limit(1))
+    ).then((snap) => {
+      if (cancelled) return;
+      if (snap.empty) { setGamedayEvent(null); return; }
+      const d = snap.docs[0];
+      setGamedayEvent({ id: d.id, title: d.data().title, eventDate: d.data().eventDate.toDate() });
+    }).catch(() => { if (!cancelled) setGamedayEvent(null); });
+    return () => { cancelled = true; };
+  }, [user]);
 
   const fetchProfileData = useCallback(() => {
     if (!user) return;
@@ -681,6 +699,15 @@ export default function Dashboard() {
                 <span className="rounded-full bg-violet-500/20 px-2 py-0.5 text-xs text-violet-400">{rehearsalSessions.length}</span>
               )}
             </button>
+            {isGamedayModeEnabled() && (
+              <button
+                onClick={() => setActiveTab("gameday")}
+                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-lg transition border-b-2 -mb-px ${activeTab === "gameday" ? "border-violet-400 text-white" : "border-transparent text-slate-400 hover:text-white"}`}
+              >
+                <Target className="h-4 w-4" />
+                {isFr ? "Jour J" : "Gameday"}
+              </button>
+            )}
           </div>
 
           <div className="space-y-8 p-6 pb-24 lg:pb-8 lg:p-8">
@@ -948,6 +975,40 @@ export default function Dashboard() {
                       </div>
                     ))}
                   </div>
+                )}
+              </section>
+            ) : activeTab === "gameday" ? (
+              <section>
+                <h2 className="mb-4 text-lg font-bold">{isFr ? "Jour J" : "Gameday"}</h2>
+                {gamedayEvent === undefined ? (
+                  <p className="text-sm text-slate-500 animate-pulse">{t.loading}</p>
+                ) : gamedayEvent === null ? (
+                  <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-slate-500">
+                    <p className="mb-4">
+                      {isFr
+                        ? "Aucun événement en préparation — construisez votre plan à rebours."
+                        : "No event in prep yet — build your backwards plan."}
+                    </p>
+                    <button
+                      onClick={() => router.push("/gameday")}
+                      className="rounded-xl bg-violet-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-400 transition"
+                    >
+                      {isFr ? "Vers quoi vous préparez-vous ?" : "What are you building toward?"}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => router.push(`/gameday/${gamedayEvent.id}`)}
+                    className="group w-full text-left rounded-2xl border border-white/10 bg-[#111827] p-6 hover:border-violet-500/40 transition"
+                  >
+                    <p className="text-xs uppercase tracking-wide text-slate-500">
+                      {classifyRunway(gamedayEvent.eventDate, new Date()).runwayDays} {isFr ? "jours restants" : "days to go"}
+                    </p>
+                    <p className="text-lg font-bold text-white mt-1">{gamedayEvent.title}</p>
+                    <p className="text-xs text-slate-600 group-hover:text-violet-400 transition mt-3">
+                      {isFr ? "Voir le plan →" : "View plan →"}
+                    </p>
+                  </button>
                 )}
               </section>
             ) : null}

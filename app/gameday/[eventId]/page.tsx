@@ -2,18 +2,31 @@
 
 import { useEffect, useState, use } from "react";
 import { notFound } from "next/navigation";
+import { doc, getDoc } from "firebase/firestore";
 import { useAuth } from "@/lib/auth-context";
 import { useTranslations } from "@/lib/i18n";
 import { isGamedayModeEnabled } from "@/lib/feature-flags";
+import { db } from "@/lib/firebase";
+import BlockTimelineView from "@/components/gameday/block-timeline-view";
+import DayStackView from "@/components/gameday/day-stack-view";
+import type { SessionType } from "@/lib/gameday/types";
 
 interface PrescribedSessionDoc {
   id: string;
-  sessionType: string;
+  planId: string;
+  sessionType: SessionType;
   phaseType: string | null;
   dayIndex: number | null;
   ordinal: number;
-  targetDate: { seconds: number } | string | null;
-  status: string;
+  targetDate: string | null;
+  status: "scheduled" | "completed" | "skipped" | "rolled";
+  focusDimension?: string | null;
+  constraint?: {
+    maxRecordSeconds?: number;
+    standing?: boolean;
+    noNotes?: boolean;
+    audioOptional?: boolean;
+  } | null;
 }
 
 interface PlanResponse {
@@ -31,11 +44,9 @@ interface PlanResponse {
 const DAY_STACK_THRESHOLD = 13;
 
 /**
- * Phase B stub: fetches the plan and picks the correct view family by
- * DENSITY (runway <= 13 days -> day-stack, regardless of engine mode), per
- * spec §5. The actual BlockTimelineView / DayStackView components with full
- * session cards land in Phase C — this renders enough to verify the engine
- * end-to-end (correct mode, correct view family, correct session list).
+ * View selection follows DENSITY, not engine mode (spec §5): any plan with
+ * runway <= 13 days renders in the day-stack view even if the engine
+ * classified it as a Sharpen block.
  */
 export default function GamedayPlanPage({ params }: { params: Promise<{ eventId: string }> }) {
   if (!isGamedayModeEnabled()) notFound();
@@ -45,11 +56,18 @@ export default function GamedayPlanPage({ params }: { params: Promise<{ eventId:
   const t = useTranslations("gameday");
 
   const [data, setData] = useState<PlanResponse | null>(null);
+  const [tierMaxSeconds, setTierMaxSeconds] = useState(300);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
+
+    getDoc(doc(db, "presenters", user.uid)).then((snap) => {
+      if (cancelled) return;
+      const status = snap.data()?.subscriptionStatus;
+      setTierMaxSeconds(status === "pilot" || status === "active" ? 1200 : 300);
+    });
 
     (async () => {
       try {
@@ -91,43 +109,52 @@ export default function GamedayPlanPage({ params }: { params: Promise<{ eventId:
   }
 
   const { plan, prescribedSessions, reanchored } = data;
-  const view = plan.runwayDays <= DAY_STACK_THRESHOLD ? "day-stack" : "block";
+  const useDayStack = plan.runwayDays <= DAY_STACK_THRESHOLD;
 
   return (
     <div className="min-h-screen bg-[#05070d] text-white p-4 sm:p-8">
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
-          <p className="text-xs uppercase tracking-wide text-slate-500">
-            {plan.mode} mode · {view} view
-          </p>
-          <h1 className="text-2xl font-bold mt-1">{plan.runwayDays} days to Gameday</h1>
-        </div>
-
+      <div className="max-w-2xl mx-auto space-y-4">
         {reanchored && (
           <p className="rounded-lg bg-violet-500/10 border border-violet-500/20 px-4 py-2.5 text-sm text-violet-300">
             {t.planAdjustedBanner(plan.runwayDays)}
           </p>
         )}
 
-        <div className="rounded-2xl border border-white/10 bg-[#111827] p-6">
-          <h2 className="text-sm font-semibold text-slate-400 mb-3">
-            {plan.mode === "block" ? "Phases" : "Sessions"}
-          </h2>
-          <ul className="space-y-2">
-            {prescribedSessions
-              .slice()
-              .sort((a, b) => a.ordinal - b.ordinal)
-              .map((s) => (
-                <li
-                  key={s.id}
-                  className="flex items-center justify-between rounded-xl border border-white/5 bg-[#1a2135] px-4 py-2.5 text-sm"
-                >
-                  <span className="text-white">{s.sessionType}</span>
-                  <span className="text-slate-500">{s.status}</span>
-                </li>
-              ))}
-          </ul>
-        </div>
+        {useDayStack ? (
+          <DayStackView
+            days={plan.days}
+            sessions={prescribedSessions.map((s) => ({
+              id: s.id,
+              planId: s.planId,
+              sessionType: s.sessionType,
+              ordinal: s.ordinal,
+              status: s.status,
+              focusDimension: s.focusDimension,
+              constraint: s.constraint,
+              targetDate: s.targetDate,
+              dayIndex: s.dayIndex,
+              phaseType: s.phaseType,
+            }))}
+            runwayDays={plan.runwayDays}
+            tierMaxSeconds={tierMaxSeconds}
+          />
+        ) : (
+          <BlockTimelineView
+            phases={plan.phases}
+            sessions={prescribedSessions.map((s) => ({
+              id: s.id,
+              planId: s.planId,
+              sessionType: s.sessionType,
+              ordinal: s.ordinal,
+              status: s.status,
+              focusDimension: s.focusDimension,
+              constraint: s.constraint,
+              phaseType: s.phaseType,
+            }))}
+            runwayDays={plan.runwayDays}
+            tierMaxSeconds={tierMaxSeconds}
+          />
+        )}
       </div>
     </div>
   );

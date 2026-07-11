@@ -18,12 +18,30 @@ interface Props {
   onClose: () => void;
   locale?: "en" | "fr";
   maxRecordSeconds?: number;
+  // Gameday preload (all optional — absent for every existing caller, so
+  // this is purely additive). Set together when a session-card's primary
+  // button opens this modal for a prescribed session.
+  initialTitle?: string;
+  initialTags?: string[];
+  initialContextId?: string;
+  planId?: string;
+  prescribedSessionId?: string;
+  sessionType?: string;
 }
 
 type Tab = "record" | "upload";
 type Stage = "setup" | "recording" | "preview" | "submitting";
 
-export default function CreateRehearsalModal({ onClose, maxRecordSeconds = 300 }: Props) {
+export default function CreateRehearsalModal({
+  onClose,
+  maxRecordSeconds = 300,
+  initialTitle = "",
+  initialTags = [],
+  initialContextId = "general",
+  planId,
+  prescribedSessionId,
+  sessionType,
+}: Props) {
   const { user } = useAuth();
   const router = useRouter();
   const locale = useLocale();
@@ -32,10 +50,10 @@ export default function CreateRehearsalModal({ onClose, maxRecordSeconds = 300 }
 
   const [tab, setTab] = useState<Tab>("record");
   const [stage, setStage] = useState<Stage>("setup");
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(initialTitle);
   const [tagInput, setTagInput] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
-  const [contextId, setContextId] = useState("general");
+  const [tags, setTags] = useState<string[]>(initialTags);
+  const [contextId, setContextId] = useState(initialContextId);
   const [errorMsg, setErrorMsg] = useState("");
 
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
@@ -117,6 +135,9 @@ export default function CreateRehearsalModal({ onClose, maxRecordSeconds = 300 }
       formData.append("tags", JSON.stringify(tags));
       formData.append("contextId", contextId);
       formData.append("file", blob, tab === "record" ? "rehearsal.webm" : (uploadFile as File).name);
+      if (planId) formData.append("planId", planId);
+      if (prescribedSessionId) formData.append("prescribedSessionId", prescribedSessionId);
+      if (sessionType) formData.append("sessionType", sessionType);
 
       const res = await fetch("/api/rehearsal", {
         method: "POST",

@@ -105,6 +105,9 @@ export async function POST(req: NextRequest) {
   let contextId: string;
   let contextLabelAtTime: string;
   let contextPromptVersion: string;
+  let planId: string | null;
+  let prescribedSessionId: string | null;
+  let gamedaySessionType: string | null;
 
   try {
     const formData = await req.formData();
@@ -116,6 +119,10 @@ export async function POST(req: NextRequest) {
     contextId = resolvedContext.contextId;
     contextLabelAtTime = resolvedContext.label;
     contextPromptVersion = resolvedContext.promptVersion;
+    // Gameday preload — all optional, absent for every non-Gameday session creation.
+    planId = ((formData.get("planId") as string) ?? "").trim() || null;
+    prescribedSessionId = ((formData.get("prescribedSessionId") as string) ?? "").trim() || null;
+    gamedaySessionType = ((formData.get("sessionType") as string) ?? "").trim() || null;
     const file = formData.get("file") as File | null;
     if (!file) return NextResponse.json({ error: "missing_file" }, { status: 400 });
     if (file.size > MAX_FILE_BYTES) return NextResponse.json({ error: "file_too_large" }, { status: 400 });
@@ -163,6 +170,9 @@ export async function POST(req: NextRequest) {
     contextLabelAtTime: getLocalizedContextLabel(contextId, userLocale),
     contextPromptVersion,
     userLocale,
+    planId,
+    prescribedSessionId,
+    gamedaySessionType,
   });
 
   const mimeType = fileName.endsWith(".webm") ? "audio/webm" : "audio/mpeg";

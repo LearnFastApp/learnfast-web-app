@@ -298,6 +298,22 @@ export interface GamedayStrings {
   errGeneric: string;
   errNetwork: string;
   errInvalidDate: string;
+  countdownHeader: (days: number) => string;
+  gamedayFooterLabel: (days: number) => string;
+  sessionOfLabel: (n: number, m: number) => string;
+  startSessionBtn: string;
+  baselineFraming: string;
+  constraintMaxSeconds: (seconds: number) => string;
+  constraintStanding: string;
+  constraintNoNotes: string;
+  constraintAudioOptional: string;
+  sessionWhy: Record<
+    "triage" | "triage-lite" | "repair" | "fullrun" | "pressure" | "polish" | "confidence" | "warmup" | "debrief",
+    string
+  >;
+  attributionPrompt: (sessionLabel: string) => string;
+  attributionYes: string;
+  attributionDismiss: string;
 }
 
 export interface LocaleCatalogue {

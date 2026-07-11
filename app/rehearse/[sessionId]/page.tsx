@@ -10,6 +10,8 @@ import {
   CheckCircle2, BookmarkCheck, Tag, AlertCircle, ChevronRight, Users,
 } from "lucide-react";
 import { Suspense } from "react";
+import { isGamedayModeEnabled } from "@/lib/feature-flags";
+import FreeSessionAttributionCard from "@/components/gameday/free-session-attribution-card";
 
 const DIM_COLORS: Record<string, string> = {
   clarity: "#8b5cf6",
@@ -546,6 +548,10 @@ function RehearsalPageInner() {
 
         {(pageStage === "ready" || pageStage === "promoted" || pageStage === "promoting") && isComplete && activeTake && (
           <div className="space-y-5">
+            {isGamedayModeEnabled() && activeTakeId && (
+              <FreeSessionAttributionCard rehearsalSessionId={sessionId} takeId={activeTakeId} />
+            )}
+
             {/* Comparison badge */}
             {activeTake.comparison && (
               <div className="rounded-xl bg-white/5 border border-white/10 px-4 py-3">
