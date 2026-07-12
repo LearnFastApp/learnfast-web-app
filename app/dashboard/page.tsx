@@ -99,6 +99,29 @@ export default function Dashboard() {
   const [tagInput, setTagInput] = useState("");
   const [activeTab, setActiveTab] = useState<"sessions" | "reflections" | "rehearsals" | "gameday">("sessions");
   const [gamedayEvent, setGamedayEvent] = useState<{ id: string; title: string; eventDate: Date; planId: string | null } | null | undefined>(undefined);
+  // Starts false on both server and client to avoid a hydration mismatch
+  // (localStorage doesn't exist during SSR) — the real value is read just
+  // after mount instead, same fix as the cue-card hydration bug earlier.
+  const [gamedayBadgeSeen, setGamedayBadgeSeen] = useState(false);
+
+  useEffect(() => {
+    (() => {
+      try {
+        setGamedayBadgeSeen(!!localStorage.getItem("gameday:navBadgeSeen"));
+      } catch {
+        // best-effort
+      }
+    })();
+  }, []);
+
+  function markGamedayBadgeSeen() {
+    try {
+      localStorage.setItem("gameday:navBadgeSeen", "1");
+    } catch {
+      // best-effort
+    }
+    setGamedayBadgeSeen(true);
+  }
   const [reflections, setReflections] = useState<ReflectionEntry[]>([]);
   const [reflectionsLoading, setReflectionsLoading] = useState(false);
   const [responseCounts, setResponseCounts] = useState<Record<string, number>>({});
@@ -711,11 +734,14 @@ export default function Dashboard() {
             </button>
             {isGamedayModeEnabled() && (
               <button
-                onClick={() => setActiveTab("gameday")}
+                onClick={() => { setActiveTab("gameday"); markGamedayBadgeSeen(); }}
                 className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-lg transition border-b-2 -mb-px ${activeTab === "gameday" ? "border-violet-400 text-white" : "border-transparent text-slate-400 hover:text-white"}`}
               >
                 <Target className="h-4 w-4" />
                 {isFr ? "Jour J" : "Gameday"}
+                <span className={`rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-black ${gamedayBadgeSeen ? "" : "new-badge-pulse"}`}>
+                  {isFr ? "NOUVEAU" : "NEW"}
+                </span>
               </button>
             )}
           </div>

@@ -8,6 +8,7 @@ import { getEnabledContexts, getLocalizedContextLabel, getLocalizedContextDescri
 import { isContextsEnabled } from "@/lib/feature-flags";
 import { trackContextSelected } from "@/lib/contexts/analytics";
 import { useLocale, useTranslations } from "@/lib/i18n";
+import type { SessionType } from "@/lib/gameday/types";
 
 const CONTEXTS = isContextsEnabled() ? getEnabledContexts() : [];
 
@@ -46,7 +47,12 @@ export default function CreateRehearsalModal({
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("createRehearsalModal");
+  const gamedayT = useTranslations("gameday");
   const maxMins = Math.round(maxRecordSeconds / 60);
+  const sessionGuidance =
+    sessionType && sessionType in gamedayT.sessionGuidance
+      ? gamedayT.sessionGuidance[sessionType as SessionType]
+      : null;
 
   const [tab, setTab] = useState<Tab>("record");
   const [stage, setStage] = useState<Stage>("setup");
@@ -186,6 +192,15 @@ export default function CreateRehearsalModal({
         </div>
 
         <div className="px-8 pb-8 space-y-5">
+          {sessionGuidance && (
+            <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-violet-400 mb-1">
+                {gamedayT.sessionGuidanceLabel}
+              </p>
+              <p className="text-sm text-violet-100 leading-relaxed">{sessionGuidance}</p>
+            </div>
+          )}
+
           {/* Title + Tags */}
           <div>
             <label className="mb-1.5 block text-sm text-slate-400">{t.titleLabel}</label>

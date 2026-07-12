@@ -657,7 +657,7 @@ export default function LiveSessionPage() {
               className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm transition ${
                 recorder.status === "error"
                   ? "border-red-500/30 text-red-400 hover:bg-red-500/10"
-                  : "border-white/10 text-slate-400 hover:text-white hover:bg-white/5"
+                  : "border-amber-500/40 text-amber-300 hover:bg-amber-500/10 new-badge-pulse"
               }`}
             >
               <Mic className="h-4 w-4" />

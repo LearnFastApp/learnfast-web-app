@@ -74,8 +74,8 @@ export interface PlanDoc {
   planVersion: number;
   isCurrent: boolean;
   sprintTemplateKey?: SprintTemplateKey | null;
-  phases?: PhaseSpec[];
-  days?: DaySpec[];
+  phases?: PhaseSpec[] | null;
+  days?: DaySpec[] | null;
   cueCardId?: string | null;
 }
 

@@ -139,6 +139,7 @@ export async function GET(
       locale: languageCode,
       contextId: sessionContextId,
       userLocale: sessionUserLocale,
+      sessionType: sessionData.gamedaySessionType as string | undefined,
     });
   } catch (err) {
     console.error("[rehearsal/takeId] Coaching failed:", err);
@@ -164,9 +165,21 @@ export async function GET(
     coaching: coaching.coaching,
     nextFocus: coaching.nextFocus,
     encouragement: coaching.encouragement,
+    readyForScript: coaching.readyForScript ?? null,
+    suggestedOutline: coaching.suggestedOutline ?? null,
   };
 
-  await takeRef.update(update);
+  try {
+    await takeRef.update(update);
+  } catch (err) {
+    // The take was already claimed (status: "analyzing") by the transaction
+    // above — if this write fails, it must still reach a terminal state, or
+    // it's stuck forever (every future poll sees a non-"processing" status
+    // and just returns {status:"processing"} without ever retrying).
+    console.error("[rehearsal/takeId] Final take update failed:", err);
+    await takeRef.update({ status: "failed", error: "save_failed" }).catch(() => {});
+    return NextResponse.json({ status: "failed", error: "save_failed", takeId });
+  }
 
   // ── Data Foundation: measurement record + event (fire-and-forget) ────────────
   (async () => {

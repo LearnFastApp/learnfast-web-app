@@ -180,3 +180,230 @@
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
   cursor: pointer;
 }
+
+/* Gameday cue card printout. The on-screen card is dark-mode styled — wrong
+   for paper (wastes ink, low contrast on a printer). Isolate the card via the
+   classic "hide everything, then re-show just the print area" pattern so it
+   works regardless of what else is mounted around it (edit/print buttons,
+   the Warm-Up screen's floating "Go get it" button, taper advisory banner). */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  .cue-card-print-area,
+  .cue-card-print-area * {
+    visibility: visible !important;
+  }
+  /* .cue-card-object's `transform: rotate(...)` (added later, for the
+     on-screen physical-card look) makes it a new containing block for any
+     `position: absolute` descendant — so .cue-card-print-area's absolute
+     top/left/width below would resolve against that small rotated box
+     instead of the page. Neutralize it during print so the print area goes
+     back to being positioned against the page, spanning it properly. */
+  .cue-card-object {
+    transform: none !important;
+  }
+  .cue-card-print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #ffffff !important;
+    padding: 64px 56px;
+    box-sizing: border-box;
+    /* Set via JS (CueCardView's print button) only when content would run
+       past one page — --print-scale shrinks the content proportionally,
+       --print-scaled-height caps this element's own box at that same
+       target so the print engine's page-break math sees the *scaled* size,
+       not the original overflow (a plain `transform: scale()` alone only
+       changes paint, not layout size, so pagination would still see the
+       untouched height and spill onto a second page regardless). Both
+       default to a no-op when unset, for short cards that already fit. */
+    transform: scale(var(--print-scale, 1));
+    transform-origin: top center;
+    height: var(--print-scaled-height, auto);
+    overflow: hidden;
+  }
+  .cue-card-print-label {
+    color: #6b6b6b !important;
+  }
+  .cue-card-print-line {
+    color: #0a0a0a !important;
+  }
+}
+
+/* Best-take moment: petals sweep into place once, staggered per dimension
+   (see the inline animation-delay in ScoreBloom), plus a brief saturation
+   lift on the whole mark. Reserved for the instant a take is freshly
+   promoted — never a loop, never the default render. */
+@keyframes score-bloom-draw {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes score-bloom-saturate {
+  0% {
+    filter: saturate(1);
+  }
+  40% {
+    filter: saturate(1.6);
+  }
+  100% {
+    filter: saturate(1);
+  }
+}
+.score-bloom-petal {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: score-bloom-draw 700ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.score-bloom-animate {
+  animation: score-bloom-saturate 1400ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .score-bloom-petal {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .score-bloom-animate {
+    animation: none;
+  }
+}
+
+/* Cue card as a physical object, not another rounded-xl panel — this is the
+   one thing in the app meant to be mentally carried onto a stage, not read
+   off a screen. Slight rotation + lift reads as "an object", not "a card
+   component"; the one-time flip plays only the very first time this exact
+   card is ever viewed on this device (see cardId-keyed localStorage check). */
+.cue-card-object {
+  /* No fixed aspect-ratio / vertical-centering — real generated lines run
+     much longer than short mockup placeholder text, and a rigid box just
+     let content overflow past its own rounded border. Height always follows
+     content instead. */
+  background: linear-gradient(160deg, #161c30, #0a0e1a 70%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 22px;
+  box-shadow:
+    0 30px 60px -20px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  transform: rotate(-1.2deg);
+  padding: 32px 28px;
+}
+@keyframes cue-card-flip {
+  from {
+    transform: rotate(-1.2deg) rotateY(90deg);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(-1.2deg) rotateY(0deg);
+    opacity: 1;
+  }
+}
+.cue-card-flip-in {
+  animation: cue-card-flip 750ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cue-card-flip-in {
+    animation: none;
+  }
+}
+
+/* Event day's warm wash — the one screen in the app that isn't the flat
+   near-black ground everything else uses, signalling this is categorically
+   different from a practice session before a single word of copy loads. */
+.warmup-bg {
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(251, 146, 60, 0.16), transparent 65%),
+    #05070d;
+}
+
+/* Roadmap first-view: stages build themselves in, staggered, instead of
+   appearing fully-formed — reserved for the very first time this event's
+   roadmap is opened (see the eventId-keyed localStorage check). */
+@keyframes roadmap-stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.roadmap-stage-build-in {
+  animation: roadmap-stage-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .roadmap-stage-build-in {
+    animation: none;
+  }
+}
+
+/* Coaching panel: strength -> coaching -> next focus -> encouragement land
+   one after another, like a coach actually saying each line, rather than
+   the whole card appearing as one static block of text. Reserved for the
+   panel's own mount (keyed by take id on the wrapping element) — switching
+   between takes replays it, re-rendering the same take does not. */
+@keyframes coaching-line-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.coaching-line-reveal {
+  animation: coaching-line-in 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .coaching-line-reveal {
+    animation: none;
+  }
+}
+
+/* Breathing countdown: each tick's digit breathes into place instead of
+   flipping instantly — the one screen where the motion IS the point. */
+@keyframes breathe-tick {
+  from {
+    opacity: 0.55;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.breathe-tick {
+  display: inline-block;
+  animation: breathe-tick 900ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .breathe-tick {
+    animation: none;
+  }
+}
+
+/* "NEW" badge: a quiet pulse until the user actually opens Gameday once —
+   draws the eye toward what it's advertising, then stops so a permanent
+   badge doesn't become wallpaper (or, eventually, an annoyance). */
+@keyframes new-badge-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--amber-glow, #f59e0b) 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--amber-glow, #f59e0b) 0%, transparent);
+  }
+}
+.new-badge-pulse {
+  animation: new-badge-pulse 2200ms ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .new-badge-pulse {
+    animation: none;
+  }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, usePathname } from "next/navigation";
 import Image from "next/image";
 import {
@@ -19,10 +19,12 @@ import {
   X,
   LogOut,
   ShieldCheck,
+  Target,
 } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
+import { isGamedayModeEnabled } from "@/lib/feature-flags";
 
 const SYSTEM_ADMIN_EMAIL = "physicalperformance@icloud.com";
 const SYSTEM_ADMIN_NAV = [
@@ -41,6 +43,12 @@ const MEMBER_NAV = [
   { segment: "sessions",     label: "Sessions",            icon: CalendarDays },
   { segment: "my-sessions",  label: "My Performance",      icon: BarChart2 },
   { segment: "rehearse",     label: "AI Analysis",         icon: Brain },
+  // Gameday is personal-scope (Firestore docs are keyed by plain userId, no
+  // orgId) — this just gives org members the same discoverable entry point
+  // personal-dashboard users already have, at the same top-level route, per
+  // "href" already overriding the /${orgId}/${segment} convention below
+  // (see learning-hub/coaches) rather than nesting a new /[orgId]/gameday.
+  { segment: "gameday",      label: "Gameday",             icon: Target,      href: "/gameday", badge: "NEW" },
   { segment: "community",    label: "Team Coaching Feed",  icon: MessageSquare },
   { segment: "learning-hub", label: "Resource Hub",        icon: BookOpen,    href: "/learning-hub" },
   { segment: "coaches",      label: "Coach Roster",        icon: UserRound,   href: "/coaches" },
@@ -64,12 +72,16 @@ function NavItem({
   icon: Icon,
   active,
   onClick,
+  badge,
+  badgePulse,
 }: {
   href: string;
   label: string;
   icon: React.ElementType;
   active: boolean;
   onClick?: () => void;
+  badge?: string;
+  badgePulse?: boolean;
 }) {
   return (
     <a
@@ -85,6 +97,11 @@ function NavItem({
     >
       <Icon className="w-4 h-4 shrink-0" />
       {label}
+      {badge && (
+        <span className={`ml-auto rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-black ${badgePulse ? "new-badge-pulse" : ""}`}>
+          {badge}
+        </span>
+      )}
     </a>
   );
 }
@@ -107,6 +124,20 @@ function SidebarContent({
   const isCoachOrAbove = myRole === "owner" || myRole === "admin" || myRole === "coach";
   const isAdminOrAbove = myRole === "owner" || myRole === "admin";
   const isSystemAdmin = user?.email === SYSTEM_ADMIN_EMAIL;
+
+  // Starts false on both server and client (localStorage doesn't exist
+  // during SSR) — read for real just after mount instead, same fix as the
+  // cue-card hydration bug.
+  const [gamedayBadgeSeen, setGamedayBadgeSeen] = useState(false);
+  useEffect(() => {
+    (() => {
+      try {
+        setGamedayBadgeSeen(!!localStorage.getItem("gameday:navBadgeSeen"));
+      } catch {
+        // best-effort
+      }
+    })();
+  }, []);
 
   function isActive(segment: string) {
     return pathname === `/${orgId}/${segment}`;
@@ -144,16 +175,30 @@ function SidebarContent({
 
       {/* Member nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-        {MEMBER_NAV.map(({ segment, label, icon, href: itemHref }) => (
-          <NavItem
-            key={segment}
-            href={itemHref ?? `/${orgId}/${segment}`}
-            label={label}
-            icon={icon}
-            active={itemHref ? pathname === itemHref : isActive(segment)}
-            onClick={onNavClick}
-          />
-        ))}
+        {MEMBER_NAV
+          .filter((item) => item.segment !== "gameday" || isGamedayModeEnabled())
+          .map(({ segment, label, icon, href: itemHref, badge }) => (
+            <NavItem
+              key={segment}
+              href={itemHref ?? `/${orgId}/${segment}`}
+              label={label}
+              icon={icon}
+              badge={badge}
+              badgePulse={segment === "gameday" && !gamedayBadgeSeen}
+              active={itemHref ? pathname === itemHref : isActive(segment)}
+              onClick={() => {
+                onNavClick?.();
+                if (segment === "gameday") {
+                  try {
+                    localStorage.setItem("gameday:navBadgeSeen", "1");
+                  } catch {
+                    // best-effort
+                  }
+                  setGamedayBadgeSeen(true);
+                }
+              }}
+            />
+          ))}
 
         {isCoachOrAbove && (
           <>

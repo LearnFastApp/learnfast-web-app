@@ -25,8 +25,12 @@ export function buildPlanDocument(
     planVersion: nextPlanVersion(opts.prevPlanVersion ?? null),
     isCurrent: true,
     sprintTemplateKey: generated.sprintTemplateKey ?? null,
-    phases: generated.phases,
-    days: generated.days,
+    // Firestore's Admin SDK rejects `undefined` field values outright — block
+    // mode never sets `days`, sprint/emergency mode never sets `phases`, so
+    // exactly one of these is always undefined on `generated` and must be
+    // coalesced before this object reaches a `.set()` call.
+    phases: generated.phases ?? null,
+    days: generated.days ?? null,
     cueCardId: null,
   };
 }

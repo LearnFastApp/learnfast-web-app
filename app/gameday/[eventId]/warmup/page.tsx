@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
-import { notFound } from "next/navigation";
+import { useEffect, useState, use, Suspense } from "react";
+import { notFound, useSearchParams } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { isGamedayModeEnabled } from "@/lib/feature-flags";
+import { useTranslations } from "@/lib/i18n";
 import WarmupFlow from "@/components/gameday/warmup-flow";
 
 function readCueCardCache(planId: string): string[] | null {
@@ -28,26 +29,31 @@ function readLocal(key: string): string | null {
 
 /**
  * Offline-first by design: resolves planId/cardId/lines from localStorage
- * FIRST (written by the plan page and by CueCardView on prior online visits)
- * via lazy state initializers — no effect needed for this synchronous read.
- * If a network reconciliation succeeds it refreshes the cache; if it fails
- * (no signal — the exact scenario this screen exists for), the page already
- * rendered from cache and nothing breaks.
+ * (written by the plan page and by CueCardView on prior online visits). That
+ * read has to happen inside an effect, not a lazy useState initializer —
+ * localStorage doesn't exist during server rendering, so an initializer that
+ * reads it would make the server always render "no card yet" while the
+ * client, once real cached data exists, renders the actual card instead —
+ * a hydration mismatch (and remount) on every visit after the first. State
+ * starts identically empty on server and client; the effect (client-only,
+ * post-mount) fills it in immediately after. If a network reconciliation
+ * succeeds it refreshes the cache; if it fails (no signal — the exact
+ * scenario this screen exists for), whatever was cached still rendered.
  */
-export default function GamedayWarmupPage({ params }: { params: Promise<{ eventId: string }> }) {
+function GamedayWarmupPageInner({ params }: { params: Promise<{ eventId: string }> }) {
   if (!isGamedayModeEnabled()) notFound();
 
   const { eventId } = use(params);
   const { user } = useAuth();
-  const [planId, setPlanId] = useState<string | null>(() => readLocal(`gameday:planIdForEvent:${eventId}`));
-  const [cardId, setCardId] = useState<string | null>(() => {
-    const p = readLocal(`gameday:planIdForEvent:${eventId}`);
-    return p ? readLocal(`gameday:cardIdForPlan:${p}`) : null;
-  });
-  const [cachedLines, setCachedLines] = useState<string[] | null>(() => {
-    const p = readLocal(`gameday:planIdForEvent:${eventId}`);
-    return p ? readCueCardCache(p) : null;
-  });
+  const t = useTranslations("gameday");
+  const searchParams = useSearchParams();
+  // Deep-linked from "View it on your Warm-Up screen" right after generating
+  // a cue card — that's a "come check what I built" visit, not the actual
+  // event-day sequence, so it skips the breathing/first-line ritual.
+  const initialStep = searchParams.get("step") === "cuecard" ? "cuecard" as const : undefined;
+  const [planId, setPlanId] = useState<string | null>(null);
+  const [cardId, setCardId] = useState<string | null>(null);
+  const [cachedLines, setCachedLines] = useState<string[] | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -55,7 +61,17 @@ export default function GamedayWarmupPage({ params }: { params: Promise<{ eventI
 
     (async () => {
       try {
-        let currentPlanId = planId;
+        // Synchronous local reads first — client-only (this whole callback
+        // only ever runs post-mount, in the browser), so no hydration risk.
+        let currentPlanId = readLocal(`gameday:planIdForEvent:${eventId}`);
+        if (currentPlanId) {
+          setPlanId(currentPlanId);
+          const cachedCardId = readLocal(`gameday:cardIdForPlan:${currentPlanId}`);
+          if (cachedCardId) setCardId(cachedCardId);
+          const cachedLinesVal = readCueCardCache(currentPlanId);
+          if (cachedLinesVal) setCachedLines(cachedLinesVal);
+        }
+
         if (!currentPlanId) {
           const token = await user.getIdToken();
           const res = await fetch(`/api/gameday/events/${eventId}/plan`, { headers: { Authorization: `Bearer ${token}` } });
@@ -86,11 +102,49 @@ export default function GamedayWarmupPage({ params }: { params: Promise<{ eventI
     return () => {
       cancelled = true;
     };
-    // Intentionally excludes `planId` — this should resolve once per mount
-    // from the closure's initial value; setting it mid-effect must not
-    // re-trigger a duplicate fetch/reconciliation pass.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, eventId]);
 
-  return <WarmupFlow planId={planId ?? eventId} cardId={cardId} cachedLines={cachedLines} isTaper={true} />;
+  async function handleManualSave(lines: string[]): Promise<{ cardId: string } | void> {
+    if (!user || !planId) return;
+    const token = await user.getIdToken();
+    const res = await fetch("/api/gameday/cue-cards", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ planId, manualLines: lines }),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    localStorage.setItem(`gameday:cardIdForPlan:${planId}`, data.cardId);
+    localStorage.setItem(
+      `gameday:cueCard:${planId}`,
+      JSON.stringify({ lines: data.lines, updatedAt: new Date().toISOString() })
+    );
+    return { cardId: data.cardId };
+  }
+
+  return (
+    <WarmupFlow
+      planId={planId ?? eventId}
+      cardId={cardId}
+      cachedLines={cachedLines}
+      isTaper={true}
+      manualEntrySubheading={t.extractionFailedFallback}
+      onManualSave={handleManualSave}
+      initialStep={initialStep}
+      doneHref={`/gameday/${eventId}`}
+      doneLabel={t.backToPlanLink}
+    />
+  );
+}
+
+export default function GamedayWarmupPage(props: { params: Promise<{ eventId: string }> }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#05070d] flex items-center justify-center text-slate-500 text-sm">…</div>
+      }
+    >
+      <GamedayWarmupPageInner {...props} />
+    </Suspense>
+  );
 }

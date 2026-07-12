@@ -52,6 +52,39 @@ export async function generateAndSaveCueCard(args: {
 }
 
 /**
+ * Type-it-yourself path: used when extraction failed, or when the presenter
+ * writes their own card instead of waiting for one to be generated. Skips
+ * the Anthropic call entirely — just persists what the user typed.
+ */
+export async function saveManualCueCard(args: {
+  planId: string;
+  userId: string;
+  lines: string[];
+  user_key: string;
+}): Promise<{ cardId: string; lines: string[] }> {
+  const db = getAdminDb();
+  const cardRef = db.collection("cueCards").doc();
+  const now = Timestamp.fromDate(new Date());
+  await cardRef.set({
+    planId: args.planId,
+    userId: args.userId,
+    extractedFromRehearsalSessionId: null,
+    extractedFromTakeId: null,
+    lines: args.lines,
+    taperAdvisory: false,
+    updatedAt: now,
+  });
+  await db.collection("plans").doc(args.planId).update({ cueCardId: cardRef.id });
+
+  logEvent("gameday.cue_card_generated", {
+    user_key: args.user_key,
+    payload: { planId: args.planId, cardId: cardRef.id, manual: true },
+  });
+
+  return { cardId: cardRef.id, lines: args.lines };
+}
+
+/**
  * Composite score used only to compare "is this fullrun better than the one
  * the current cue card came from" — a simple average, not a display metric.
  */

@@ -50,13 +50,16 @@ export default function DayStackView({ days, sessions, runwayDays, tierMaxSecond
       });
   }, [sessions, days]);
 
-  const firstIncompleteIndex = groups.findIndex((g) => g.sessions.some((s) => s.status !== "completed"));
+  // "scheduled" is the only status still awaiting action — a skipped session
+  // counts as past, same as completed, so a skip-ahead collapses these days
+  // instead of leaving them stuck open forever.
+  const firstIncompleteIndex = groups.findIndex((g) => g.sessions.some((s) => s.status === "scheduled"));
   const totalSessions = sessions.length;
 
   return (
     <div className="space-y-3">
       {groups.map((group, i) => {
-        const nextSession = group.sessions.find((s) => s.status !== "completed");
+        const nextSession = group.sessions.find((s) => s.status === "scheduled");
         const allDone = !nextSession;
         const isExpanded = i === firstIncompleteIndex;
 

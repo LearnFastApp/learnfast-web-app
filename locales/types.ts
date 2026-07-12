@@ -311,6 +311,13 @@ export interface GamedayStrings {
     "triage" | "triage-lite" | "repair" | "fullrun" | "pressure" | "polish" | "confidence" | "warmup" | "debrief",
     string
   >;
+  /** Fuller, instructional direction shown right before the user records — what to actually do/say, not just why it matters. */
+  sessionGuidance: Record<
+    "triage" | "triage-lite" | "repair" | "fullrun" | "pressure" | "polish" | "confidence" | "warmup" | "debrief",
+    string
+  >;
+  sessionGuidanceLabel: string;
+  eventDateHelper: string;
   attributionPrompt: (sessionLabel: string) => string;
   attributionYes: string;
   attributionDismiss: string;
@@ -319,6 +326,7 @@ export interface GamedayStrings {
   cueCardClosingLabel: string;
   editBtn: string;
   saveBtn: string;
+  printBtn: string;
   taperEditWarning: string;
   editAnywayBtn: string;
   extractionFailedFallback: string;
@@ -326,12 +334,50 @@ export interface GamedayStrings {
   warmupBreathingPrompt: string;
   warmupFirstLinePrompt: string;
   goGetItBtn: string;
-  workIsDoneMessage: string;
+  startingLiveSession: string;
+  goLiveFailedMessage: string;
   debriefPrompt: string;
   debriefUpsellPrompt: string;
   nextDateBtn: string;
   skipBtn: string;
   continueBtn: string;
+  roadmapEyebrow: string;
+  roadmapHeading: string;
+  roadmapSubheading: string;
+  roadmapBaselineLabel: string;
+  roadmapBaselineDesc: string;
+  roadmapBuildLabel: string;
+  roadmapBuildDesc: string;
+  roadmapTaperLabel: string;
+  roadmapTaperDesc: string;
+  roadmapCueCardLabel: string;
+  roadmapCueCardDesc: string;
+  roadmapEventDayLabel: string;
+  roadmapEventDayDesc: string;
+  roadmapYoureHereTag: string;
+  roadmapArrivalHeading: string;
+  roadmapArrivalSubheading: string;
+  skipAheadPrompt: string;
+  skippingAhead: string;
+  cueCardReadyHeading: string;
+  viewOnWarmupLink: string;
+  generateCueCardPrompt: string;
+  regenerateCueCardPrompt: string;
+  generateCueCardBtn: string;
+  regenerateCueCardBtn: string;
+  generatingCueCard: string;
+  cueCardGenerationFailed: string;
+  backToPlanLink: string;
+  backToDashboardLink: string;
+  roadmapAdjustBelowLink: string;
+  roadmapEditCueCardLink: string;
+  roadmapGoToWarmupLink: string;
+  introEyebrow: string;
+  introHeading: string;
+  introBody: string;
+  introStepPracticeLabel: string;
+  introStepCueCardLabel: string;
+  introStepEventDayLabel: string;
 }
 
 export interface LocaleCatalogue {

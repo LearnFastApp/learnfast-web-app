@@ -29,7 +29,11 @@ interface Props {
 export default function BlockTimelineView({ phases = [], sessions, runwayDays, tierMaxSeconds }: Props) {
   const t = useTranslations("gameday");
   const sorted = useMemo(() => sessions.slice().sort((a, b) => a.ordinal - b.ordinal), [sessions]);
-  const nextSession = sorted.find((s) => s.status !== "completed");
+  // "scheduled" is the only status still awaiting action — a skipped session
+  // counts as past, same as completed, so skip-ahead surfaces the real next
+  // step (Cue Card / Warm-Up) instead of re-offering a session the user
+  // already chose to move past.
+  const nextSession = sorted.find((s) => s.status === "scheduled");
   const nextIndex = nextSession ? sorted.findIndex((s) => s.id === nextSession.id) : -1;
 
   return (
@@ -48,6 +52,7 @@ export default function BlockTimelineView({ phases = [], sessions, runwayDays, t
           {sorted.map((s) => {
             const isNext = s.id === nextSession?.id;
             const isDone = s.status === "completed";
+            const isSkipped = s.status === "skipped";
             return (
               <div
                 key={s.id}
@@ -55,9 +60,11 @@ export default function BlockTimelineView({ phases = [], sessions, runwayDays, t
                 className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${
                   isDone
                     ? "bg-violet-400"
-                    : isNext
-                      ? "bg-violet-400 animate-pulse ring-2 ring-violet-400/40"
-                      : "bg-white/15"
+                    : isSkipped
+                      ? "bg-slate-600"
+                      : isNext
+                        ? "bg-violet-400 animate-pulse ring-2 ring-violet-400/40"
+                        : "bg-white/15"
                 }`}
               />
             );

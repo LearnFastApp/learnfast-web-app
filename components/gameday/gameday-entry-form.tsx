@@ -100,6 +100,7 @@ export default function GamedayEntryForm() {
             onChange={(e) => setEventDate(e.target.value)}
             className="w-full rounded-xl border border-white/10 bg-[#1a2135] px-4 py-3 text-white outline-none focus:border-violet-500"
           />
+          <p className="mt-1.5 text-xs text-slate-500">{t.eventDateHelper}</p>
         </div>
 
         <div>

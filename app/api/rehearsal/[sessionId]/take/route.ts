@@ -17,9 +17,19 @@ export async function POST(
 
   const { sessionId } = await params;
   const db = getAdminDb();
-
   const sessionRef = db.collection("rehearsal_sessions").doc(sessionId);
-  const sessionSnap = await sessionRef.get();
+
+  let sessionSnap;
+  try {
+    sessionSnap = await sessionRef.get();
+  } catch (err) {
+    // A stale/expired backend credential (or any transient Firestore issue)
+    // throws here uncaught, producing a non-JSON 500 that the client's
+    // fetch().json() then fails to parse — surfacing as a misleading
+    // "network error" even though nothing about the network is at fault.
+    console.error("[rehearsal/take] Firestore read failed:", err);
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
+  }
   if (!sessionSnap.exists || sessionSnap.data()!.presenterId !== uid) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
@@ -50,28 +60,32 @@ export async function POST(
   const now = Timestamp.fromDate(new Date());
 
   const takeRef = sessionRef.collection("takes").doc();
-  await takeRef.set({
-    takeNumber: newTakeNumber,
-    fileName,
-    assemblyAiId: null,
-    audioUrl: null,
-    status: "queued",
-    scores: null,
-    comparison: null,
-    strength: null,
-    coaching: null,
-    nextFocus: null,
-    encouragement: null,
-    audioDurationSeconds: null,
-    wordCount: null,
-    fillerWordCount: null,
-    wordsPerMinute: null,
-    languageCode: null,
-    createdAt: now,
-    isPromoted: false,
-  });
-
-  await sessionRef.update({ takeCount: newTakeNumber });
+  try {
+    await takeRef.set({
+      takeNumber: newTakeNumber,
+      fileName,
+      assemblyAiId: null,
+      audioUrl: null,
+      status: "queued",
+      scores: null,
+      comparison: null,
+      strength: null,
+      coaching: null,
+      nextFocus: null,
+      encouragement: null,
+      audioDurationSeconds: null,
+      wordCount: null,
+      fillerWordCount: null,
+      wordsPerMinute: null,
+      languageCode: null,
+      createdAt: now,
+      isPromoted: false,
+    });
+    await sessionRef.update({ takeCount: newTakeNumber });
+  } catch (err) {
+    console.error("[rehearsal/take] Firestore write failed:", err);
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
+  }
 
   // R2 upload — best-effort, never blocks transcription
   const mimeType = fileName.endsWith(".webm") ? "audio/webm" : "audio/mpeg";

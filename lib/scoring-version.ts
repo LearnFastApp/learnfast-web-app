@@ -9,7 +9,7 @@ import { getAdminDb } from "./firebase-admin";
  *
  * Bump format: sv_YYYY_MM_vN  (e.g. sv_2026_07_v1, sv_2026_09_v2)
  */
-export const ACTIVE_SCORING_VERSION = "sv_2026_07_v2";
+export const ACTIVE_SCORING_VERSION = "sv_2026_07_v5";
 
 /**
  * Returns the Firestore document path for the active scoring version.

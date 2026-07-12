@@ -5,6 +5,7 @@ import { isGamedayModeEnabled } from "@/lib/feature-flags";
 import { generatePlan } from "@/lib/gameday/plan-engine";
 import { buildPlanDocument } from "@/lib/gameday/plan-version";
 import { reanchorSprintPlan, carryOverCompletedSessions } from "@/lib/gameday/reanchor";
+import { serializeTimestamps } from "@/lib/gameday/serialize";
 import type { PrescribedSessionRecord } from "@/lib/gameday/types";
 import { logEvent } from "@/lib/telemetry";
 import { getOrCreateUserKey } from "@/lib/user-key";
@@ -70,8 +71,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ even
 
   if (!reanchorResult.needsRegeneration) {
     return NextResponse.json({
-      plan: { id: currentPlanDoc.id, ...currentPlan },
-      prescribedSessions: sessionsSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+      plan: { id: currentPlanDoc.id, ...serializeTimestamps(currentPlan) },
+      prescribedSessions: sessionsSnap.docs.map((d) => ({ id: d.id, ...serializeTimestamps(d.data()) })),
       reanchored: false,
     });
   }
@@ -139,7 +140,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ even
 
   return NextResponse.json({
     plan: { id: newPlanRef.id, ...newPlanDoc, generatedAt: nowTs.toDate().toISOString() },
-    prescribedSessions: newSessionsSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+    prescribedSessions: newSessionsSnap.docs.map((d) => ({ id: d.id, ...serializeTimestamps(d.data()) })),
     reanchored: true,
   });
 }

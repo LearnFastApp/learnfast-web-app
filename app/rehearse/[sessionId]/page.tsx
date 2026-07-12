@@ -8,20 +8,16 @@ import { db } from "@/lib/firebase";
 import {
   ArrowLeft, Mic, UploadCloud, Square, RotateCcw, Loader2,
   CheckCircle2, BookmarkCheck, Tag, AlertCircle, ChevronRight, Users,
+  Flag, Lightbulb, RefreshCw, Target,
 } from "lucide-react";
 import { Suspense } from "react";
 import { isGamedayModeEnabled } from "@/lib/feature-flags";
 import FreeSessionAttributionCard from "@/components/gameday/free-session-attribution-card";
+import GenerateCueCardCard from "@/components/gameday/generate-cue-card-card";
 import { getDimensionDisplayOrder, type LensKey } from "@/lib/gameday/feedback-lens";
+import TeleprompterOverlay from "@/components/teleprompter-overlay";
+import ScoreBloom, { DIM_COLORS, DIMS } from "@/components/score-bloom";
 
-const DIM_COLORS: Record<string, string> = {
-  clarity: "#8b5cf6",
-  energy: "#f59e0b",
-  engagement: "#22d3ee",
-  understanding: "#34d399",
-  connection: "#f472b6",
-};
-const DIMS = ["clarity", "energy", "engagement", "understanding", "connection"] as const;
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
 const ACCEPTED_TYPES = ["video/mp4","video/quicktime","video/webm","audio/mpeg","audio/wav","audio/mp4","audio/x-m4a","audio/webm"];
 
@@ -39,6 +35,11 @@ interface Take {
   wordsPerMinute?: number | null;
   fillerWordCount?: number | null;
   isPromoted?: boolean;
+  readyForScript?: boolean | null;
+  suggestedOutline?: {
+    throughline: string;
+    sections: { type: "opening" | "insight" | "reflection" | "closing"; label: string; content: string }[];
+  } | null;
 }
 
 interface Session {
@@ -51,23 +52,10 @@ interface Session {
   orgId?: string | null;
   isPublic?: boolean;
   gamedaySessionType?: string | null;
+  planId?: string | null;
 }
 
 type PageStage = "loading" | "polling" | "ready" | "recording" | "recorded" | "uploading" | "promoting" | "promoted" | "error";
-
-function ScorePill({ dim, score }: { dim: string; score: number }) {
-  return (
-    <div className="flex items-center gap-2">
-      <div className="w-24 h-1.5 rounded-full bg-white/10 overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${score}%`, backgroundColor: DIM_COLORS[dim] }}
-        />
-      </div>
-      <span className="text-xs font-semibold text-white w-7 text-right">{score}</span>
-    </div>
-  );
-}
 
 function RehearsalPageInner() {
   const { user } = useAuth();
@@ -116,10 +104,18 @@ function RehearsalPageInner() {
     suggestScript: "Suggérer des améliorations du discours",
     reworkingScript: "Réécriture de votre discours…",
     scriptImprovements: "Améliorations du discours",
+    yourThroughline: "Votre fil conducteur",
+    draftScriptFromOutline: "Rédiger un discours complet à partir de ce plan",
+    draftingScript: "Rédaction de votre discours…",
+    yourDraftScript: "Votre discours préliminaire",
+    notReadyPrefix: "Vous pouvez tenter une autre prise, ou — si vous préférez —",
+    notReadyLink: "nous préparons un discours pour vous",
+    notReadySuffix: "à partir de ce que vous avez pour l'instant.",
     fullRevisedScript: "Discours révisé complet",
     copyScript: "Copier le discours",
     copied: "Copié !",
     keepScript: "Garder mon discours",
+    useAsTeleprompter: "Utiliser comme téléprompteur",
     wpm: "MPM",
     fillerWords: "Mots parasites",
     duration: "Durée",
@@ -167,10 +163,18 @@ function RehearsalPageInner() {
     suggestScript: "Suggest script improvements",
     reworkingScript: "Reworking your script…",
     scriptImprovements: "Script improvements",
+    yourThroughline: "Your throughline",
+    draftScriptFromOutline: "Draft a full script from this outline",
+    draftingScript: "Drafting your script…",
+    yourDraftScript: "Your draft script",
+    notReadyPrefix: "You can try another take, or — if you'd like —",
+    notReadyLink: "we'll put a script together for you",
+    notReadySuffix: "from what you've got so far.",
     fullRevisedScript: "Full revised script",
     copyScript: "Copy full script",
     copied: "Copied!",
     keepScript: "Keep my script",
+    useAsTeleprompter: "Use as teleprompter",
     wpm: "WPM",
     fillerWords: "Filler words",
     duration: "Duration",
@@ -207,6 +211,10 @@ function RehearsalPageInner() {
 
   const [isSharing, setIsSharing] = useState(false);
   const [isShared, setIsShared] = useState(false);
+  // Set only by a promote() that just succeeded in this session — never by
+  // loading an already-promoted take, so the bloom's reveal animation plays
+  // exactly once, at the actual moment of achievement.
+  const [justPromoted, setJustPromoted] = useState(false);
 
   const [scriptStage, setScriptStage] = useState<"idle" | "loading" | "ready">("idle");
   const [scriptSuggestion, setScriptSuggestion] = useState<{
@@ -216,6 +224,10 @@ function RehearsalPageInner() {
     deliveryNote: string | null;
   } | null>(null);
   const [scriptCopied, setScriptCopied] = useState(false);
+  const [useTeleprompter, setUseTeleprompter] = useState(false);
+
+  const [outlineScriptStage, setOutlineScriptStage] = useState<"idle" | "loading" | "ready">("idle");
+  const [outlineScript, setOutlineScript] = useState<{ script: string; note: string } | null>(null);
 
   const mediaRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
@@ -322,6 +334,25 @@ function RehearsalPageInner() {
     setScriptStage("idle");
     setScriptSuggestion(null);
     setScriptCopied(false);
+  }
+
+  async function fetchOutlineScript() {
+    if (!user || !activeTakeId) return;
+    setOutlineScriptStage("loading");
+    setOutlineScript(null);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(
+        `/api/rehearsal/${sessionId}/${activeTakeId}/outline-script`,
+        { method: "POST", headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) { setOutlineScriptStage("idle"); return; }
+      const data = await res.json();
+      setOutlineScript(data);
+      setOutlineScriptStage("ready");
+    } catch {
+      setOutlineScriptStage("idle");
+    }
   }
 
   function fmtTime(s: number) {
@@ -435,6 +466,7 @@ function RehearsalPageInner() {
       });
       if (res.ok) {
         await loadSession();
+        setJustPromoted(true);
         setPageStage("promoted");
       } else {
         setPageStage("ready");
@@ -448,9 +480,16 @@ function RehearsalPageInner() {
 
   const activeTake = takes.find((t) => t.id === activeTakeId);
   const isComplete = activeTake?.status === "complete";
-  const overallScore = activeTake?.scores
-    ? Math.round(Object.values(activeTake.scores).reduce((a, b) => a + b, 0) / 5)
-    : null;
+
+  // Best prior take (by overall average, excluding the active one) — ghosted
+  // behind the active take's bloom so beating your own best is visible as
+  // the shape growing past it, not mental subtraction between two numbers.
+  const personalBestScores = takes.reduce<Record<string, number> | null>((best, tk) => {
+    if (!tk.scores || tk.id === activeTakeId) return best;
+    const avg = Object.values(tk.scores).reduce((a, b) => a + b, 0) / 5;
+    const bestAvg = best ? Object.values(best).reduce((a, b) => a + b, 0) / 5 : -1;
+    return avg > bestAvg ? tk.scores : best;
+  }, null);
 
   return (
     <div className="min-h-screen bg-[#0a0f1e] text-white">
@@ -488,6 +527,7 @@ function RehearsalPageInner() {
                 key={tk.id}
                 onClick={() => {
                   setActiveTakeId(tk.id);
+                  setJustPromoted(false);
                   if (tk.status === "complete") setPageStage("ready");
                   else if (tk.status === "failed") setPageStage("error");
                   else setPageStage("polling");
@@ -509,19 +549,12 @@ function RehearsalPageInner() {
                   )}
                 </div>
                 {tk.scores && (
-                  <div className="space-y-1">
-                    {DIMS.map((d) => (
-                      <div key={d} className="w-20 h-1 rounded-full bg-white/10 overflow-hidden">
-                        <div
-                          className="h-full rounded-full"
-                          style={{ width: `${tk.scores![d]}%`, backgroundColor: DIM_COLORS[d] }}
-                        />
-                      </div>
-                    ))}
+                  <div className="flex justify-center">
+                    <ScoreBloom scores={tk.scores} size={44} showNumber={false} />
                   </div>
                 )}
                 {tk.scores && (
-                  <p className="text-xs text-slate-400 mt-2 font-mono">
+                  <p className="text-xs text-slate-400 mt-1 text-center font-mono">
                     {Math.round(Object.values(tk.scores).reduce((a, b) => a + b, 0) / 5)}
                     <span className="text-slate-600">/100</span>
                   </p>
@@ -554,6 +587,10 @@ function RehearsalPageInner() {
               <FreeSessionAttributionCard rehearsalSessionId={sessionId} takeId={activeTakeId} />
             )}
 
+            {isGamedayModeEnabled() && session?.planId && activeTakeId && (
+              <GenerateCueCardCard planId={session.planId} rehearsalSessionId={sessionId} takeId={activeTakeId} />
+            )}
+
             {/* Comparison badge */}
             {activeTake.comparison && (
               <div className="rounded-xl bg-white/5 border border-white/10 px-4 py-3">
@@ -565,46 +602,54 @@ function RehearsalPageInner() {
             {/* Score overview */}
             {activeTake.scores && (
               <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-sm font-semibold text-slate-400">{t.takeScores(activeTake.takeNumber)}</p>
-                  {overallScore !== null && (
-                    <span className="text-2xl font-black text-white">
-                      {overallScore}<span className="text-sm text-slate-500 font-normal">/100</span>
-                    </span>
-                  )}
-                </div>
-                <div className="space-y-2.5">
-                  {(isGamedayModeEnabled() && session?.gamedaySessionType
-                    ? getDimensionDisplayOrder(session.gamedaySessionType as LensKey)
-                    : DIMS
-                  ).map((d) => (
-                    <div key={d} className="flex items-center justify-between gap-3">
-                      <span className="text-sm text-slate-300 capitalize w-28 flex-shrink-0">{d}</span>
-                      <ScorePill dim={d} score={activeTake.scores![d]} />
-                    </div>
-                  ))}
+                <p className="text-sm font-semibold text-slate-400 mb-4">{t.takeScores(activeTake.takeNumber)}</p>
+                <div className="flex items-center gap-6 flex-wrap">
+                  <ScoreBloom
+                    key={activeTake.id}
+                    scores={activeTake.scores}
+                    size={140}
+                    ghost={personalBestScores}
+                    drawIn
+                    celebrate={pageStage === "promoted" && justPromoted}
+                  />
+                  <div className="flex-1 min-w-[180px] space-y-2">
+                    {(isGamedayModeEnabled() && session?.gamedaySessionType
+                      ? getDimensionDisplayOrder(session.gamedaySessionType as LensKey)
+                      : DIMS
+                    ).map((d) => (
+                      <div key={d} className="flex items-center justify-between gap-3 text-sm">
+                        <span className="flex items-center gap-2 text-slate-300 capitalize">
+                          <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: DIM_COLORS[d] }} />
+                          {d}
+                        </span>
+                        <span className="font-semibold text-white">{activeTake.scores![d]}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Coaching output */}
-            <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-6 space-y-5">
+            {/* Coaching output — keyed by take id so switching takes replays
+                the staggered reveal below; re-rendering the same take (e.g.
+                unrelated state changes elsewhere on the page) does not. */}
+            <div key={activeTake.id} className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-6 space-y-5">
               {activeTake.strength && (
-                <div>
+                <div className="coaching-line-reveal" style={{ animationDelay: "0ms" }}>
                   <p className="text-xs font-semibold text-green-400 uppercase tracking-wider mb-1.5">{t.whatsWorking}</p>
                   <p className="text-sm text-slate-200 leading-relaxed">{activeTake.strength}</p>
                 </div>
               )}
 
               {activeTake.coaching && (
-                <div>
+                <div className="coaching-line-reveal" style={{ animationDelay: "110ms" }}>
                   <p className="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-1.5">{t.coaching}</p>
                   <p className="text-sm text-slate-200 leading-relaxed">{activeTake.coaching}</p>
                 </div>
               )}
 
               {activeTake.nextFocus && activeTake.nextFocus.length > 0 && (
-                <div>
+                <div className="coaching-line-reveal" style={{ animationDelay: "220ms" }}>
                   <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2">{t.nextFocus}</p>
                   <ul className="space-y-2">
                     {activeTake.nextFocus.map((f, i) => (
@@ -618,13 +663,88 @@ function RehearsalPageInner() {
               )}
 
               {activeTake.encouragement && (
-                <p className="text-sm text-slate-300 italic border-t border-white/10 pt-4 leading-relaxed">
+                <p className="coaching-line-reveal text-sm text-slate-300 italic border-t border-white/10 pt-4 leading-relaxed" style={{ animationDelay: "330ms" }}>
                   &ldquo;{activeTake.encouragement}&rdquo;
                 </p>
               )}
 
-              {/* Script suggestion trigger */}
-              {scriptStage === "idle" && (
+              {/* Suggested outline (triage-lite, readyForScript only) — built
+                  from Chris Anderson's "throughline" + Nancy Duarte's
+                  "Sparkline" (what-is / what-could-be oscillation). Replaces
+                  the script-suggestion trigger at this stage entirely: there's
+                  no delivered script yet to rewrite, only ideas to structure. */}
+              {activeTake.suggestedOutline && (
+                <div className="border-t border-white/10 pt-4 space-y-4">
+                  <div>
+                    <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-1.5">{t.yourThroughline}</p>
+                    <p className="text-sm text-white font-medium leading-relaxed">{activeTake.suggestedOutline.throughline}</p>
+                  </div>
+                  <div className="space-y-3">
+                    {activeTake.suggestedOutline.sections.map((section, i) => {
+                      const Icon =
+                        section.type === "opening" ? Flag :
+                        section.type === "insight" ? Lightbulb :
+                        section.type === "reflection" ? RefreshCw :
+                        Target;
+                      return (
+                        <div key={i} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <Icon className="h-3.5 w-3.5 text-amber-400 flex-shrink-0" />
+                            <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider">{section.label}</p>
+                          </div>
+                          <p className="text-sm text-slate-200 leading-relaxed">{section.content}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Draft-script action — opt-in, never automatic (handing over
+                  a script the presenter didn't ask for undercuts ownership of
+                  material they haven't built themselves yet). Works two ways:
+                  with a ready outline it expands it into full paragraphs;
+                  without one it drafts straight from the transcript and stays
+                  honest about being a rough starting point. */}
+              {session?.gamedaySessionType === "triage-lite" && outlineScriptStage === "idle" && (
+                <div className="border-t border-white/10 pt-4">
+                  {activeTake.readyForScript === false ? (
+                    <p className="text-sm text-slate-300 leading-relaxed">
+                      {t.notReadyPrefix}{" "}
+                      <button
+                        onClick={fetchOutlineScript}
+                        className="font-semibold text-violet-300 hover:text-violet-100 transition underline underline-offset-2"
+                      >
+                        {t.notReadyLink}
+                      </button>{" "}
+                      {t.notReadySuffix}
+                    </p>
+                  ) : activeTake.suggestedOutline ? (
+                    <button
+                      onClick={fetchOutlineScript}
+                      className="flex items-center gap-2 text-sm font-medium text-violet-300 hover:text-violet-100 transition"
+                    >
+                      <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                      {t.draftScriptFromOutline}
+                    </button>
+                  ) : null}
+                </div>
+              )}
+
+              {session?.gamedaySessionType === "triage-lite" && outlineScriptStage === "loading" && (
+                <div className="border-t border-white/10 pt-4 flex items-center gap-2 text-sm text-slate-400">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t.draftingScript}
+                </div>
+              )}
+
+              {/* Script suggestion trigger — never shown for triage-lite:
+                  when readyForScript is false the coaching text above already
+                  asked for another outline pass; when true, the outline above
+                  is the deliverable instead of a script rewrite. */}
+              {scriptStage === "idle" && session?.gamedaySessionType !== "triage-lite" && (
                 <div className="border-t border-white/10 pt-4">
                   <button
                     onClick={fetchScriptSuggestion}
@@ -645,6 +765,40 @@ function RehearsalPageInner() {
                 </div>
               )}
             </div>
+
+            {/* Draft-script panel (triage-lite only) */}
+            {outlineScriptStage === "ready" && outlineScript && (
+              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6 space-y-4">
+                <div>
+                  <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-1.5">{t.yourDraftScript}</p>
+                  <p className="text-sm text-slate-200 leading-relaxed">{outlineScript.note}</p>
+                </div>
+                <div className="rounded-xl bg-[#0a0f1e] border border-white/10 p-4 max-h-64 overflow-y-auto">
+                  <p className="text-sm text-slate-200 leading-relaxed whitespace-pre-wrap">{outlineScript.script}</p>
+                </div>
+                <div className="flex gap-3 flex-wrap">
+                  <button
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(outlineScript.script);
+                      setScriptCopied(true);
+                      setTimeout(() => setScriptCopied(false), 2000);
+                    }}
+                    className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-black transition"
+                  >
+                    {scriptCopied ? <><span className="font-bold">✓</span> {t.copied}</> : <>{t.copyScript}</>}
+                  </button>
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-300 ml-auto cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={useTeleprompter}
+                      onChange={(e) => setUseTeleprompter(e.target.checked)}
+                      className="h-4 w-4 rounded border-white/20 bg-transparent accent-amber-500"
+                    />
+                    {t.useAsTeleprompter}
+                  </label>
+                </div>
+              </div>
+            )}
 
             {/* Script suggestion panel */}
             {scriptStage === "ready" && scriptSuggestion && (
@@ -695,6 +849,15 @@ function RehearsalPageInner() {
                     >
                       {t.keepScript}
                     </button>
+                    <label className="flex items-center gap-2 text-sm font-medium text-slate-300 ml-auto cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={useTeleprompter}
+                        onChange={(e) => setUseTeleprompter(e.target.checked)}
+                        className="h-4 w-4 rounded border-white/20 bg-transparent accent-amber-500"
+                      />
+                      {t.useAsTeleprompter}
+                    </label>
                   </div>
                 </div>
               </div>
@@ -873,21 +1036,29 @@ function RehearsalPageInner() {
         )}
 
         {pageStage === "recording" && (
-          <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-8 text-center space-y-4">
-            <div className="relative w-16 h-16 mx-auto">
-              <div className="absolute inset-0 rounded-full bg-red-500/20 animate-ping" />
-              <div className="relative w-16 h-16 rounded-full bg-red-500/10 border border-red-500/40 flex items-center justify-center">
-                <Mic className="h-7 w-7 text-red-400" />
+          <div className="space-y-4">
+            {useTeleprompter && (scriptSuggestion?.fullRevisedScript || outlineScript?.script) && (
+              <TeleprompterOverlay
+                script={scriptSuggestion?.fullRevisedScript ?? outlineScript!.script}
+                elapsedSeconds={recordingSeconds}
+              />
+            )}
+            <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-8 text-center space-y-4">
+              <div className="relative w-16 h-16 mx-auto">
+                <div className="absolute inset-0 rounded-full bg-red-500/20 animate-ping" />
+                <div className="relative w-16 h-16 rounded-full bg-red-500/10 border border-red-500/40 flex items-center justify-center">
+                  <Mic className="h-7 w-7 text-red-400" />
+                </div>
               </div>
+              <p className="text-3xl font-mono font-bold text-white">{fmtTime(recordingSeconds)}</p>
+              <button
+                onClick={stopRecording}
+                className="flex items-center justify-center gap-2 mx-auto rounded-xl bg-red-500/20 border border-red-500/30 px-6 py-3 font-semibold text-red-400 hover:bg-red-500/30 transition"
+              >
+                <Square className="h-4 w-4" />
+                {t.stopRecording}
+              </button>
             </div>
-            <p className="text-3xl font-mono font-bold text-white">{fmtTime(recordingSeconds)}</p>
-            <button
-              onClick={stopRecording}
-              className="flex items-center justify-center gap-2 mx-auto rounded-xl bg-red-500/20 border border-red-500/30 px-6 py-3 font-semibold text-red-400 hover:bg-red-500/30 transition"
-            >
-              <Square className="h-4 w-4" />
-              {t.stopRecording}
-            </button>
           </div>
         )}
 
