@@ -707,7 +707,7 @@ export default function Dashboard() {
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-lg transition border-b-2 -mb-px ${activeTab === "sessions" ? "border-violet-500 text-white" : "border-transparent text-slate-400 hover:text-white"}`}
             >
               <LayoutDashboard className="h-4 w-4" />
-              {t.tabSessions}
+              <span className="hidden sm:inline">{t.tabSessions}</span>
               {(sessions.length + extraSessions.length) > 0 && (
                 <span className="rounded-full bg-violet-500/20 px-2 py-0.5 text-xs text-violet-400">{sessions.length + extraSessions.length}</span>
               )}
@@ -717,7 +717,7 @@ export default function Dashboard() {
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-lg transition border-b-2 -mb-px ${activeTab === "reflections" ? "border-cyan-400 text-white" : "border-transparent text-slate-400 hover:text-white"}`}
             >
               <PenLine className="h-4 w-4" />
-              {t.tabReflections}
+              <span className="hidden sm:inline">{t.tabReflections}</span>
               {reflections.length > 0 && (
                 <span className="rounded-full bg-cyan-500/20 px-2 py-0.5 text-xs text-cyan-400">{reflections.length}</span>
               )}
@@ -727,7 +727,7 @@ export default function Dashboard() {
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-lg transition border-b-2 -mb-px ${activeTab === "rehearsals" ? "border-violet-400 text-white" : "border-transparent text-slate-400 hover:text-white"}`}
             >
               <Mic className="h-4 w-4" />
-              {isFr ? "Répétitions" : "Rehearsals"}
+              <span className="hidden sm:inline">{isFr ? "Répétitions" : "Rehearsals"}</span>
               {rehearsalSessions.length > 0 && (
                 <span className="rounded-full bg-violet-500/20 px-2 py-0.5 text-xs text-violet-400">{rehearsalSessions.length}</span>
               )}
@@ -738,7 +738,7 @@ export default function Dashboard() {
                 className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-lg transition border-b-2 -mb-px ${activeTab === "gameday" ? "border-violet-400 text-white" : "border-transparent text-slate-400 hover:text-white"}`}
               >
                 <Target className="h-4 w-4" />
-                {isFr ? "Jour J" : "Gameday"}
+                <span className="hidden sm:inline">{isFr ? "Jour J" : "Gameday"}</span>
                 <span className={`rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-black ${gamedayBadgeSeen ? "" : "new-badge-pulse"}`}>
                   {isFr ? "NOUVEAU" : "NEW"}
                 </span>
@@ -1035,18 +1035,26 @@ export default function Dashboard() {
                 ) : gamedayEvent.eventDate.getTime() <= new Date().getTime() && gamedayEvent.planId ? (
                   <DebriefPrompt eventId={gamedayEvent.id} planId={gamedayEvent.planId} />
                 ) : (
-                  <button
-                    onClick={() => router.push(`/gameday/${gamedayEvent.id}`)}
-                    className="group w-full text-left rounded-2xl border border-white/10 bg-[#111827] p-6 hover:border-violet-500/40 transition"
-                  >
-                    <p className="text-xs uppercase tracking-wide text-slate-500">
-                      {classifyRunway(gamedayEvent.eventDate, new Date()).runwayDays} {isFr ? "jours restants" : "days to go"}
-                    </p>
-                    <p className="text-lg font-bold text-white mt-1">{gamedayEvent.title}</p>
-                    <p className="text-xs text-slate-600 group-hover:text-violet-400 transition mt-3">
-                      {isFr ? "Voir le plan →" : "View plan →"}
-                    </p>
-                  </button>
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => router.push(`/gameday/${gamedayEvent.id}`)}
+                      className="group w-full text-left rounded-2xl border border-white/10 bg-[#111827] p-6 hover:border-violet-500/40 transition"
+                    >
+                      <p className="text-xs uppercase tracking-wide text-slate-500">
+                        {classifyRunway(gamedayEvent.eventDate, new Date()).runwayDays} {isFr ? "jours restants" : "days to go"}
+                      </p>
+                      <p className="text-lg font-bold text-white mt-1">{gamedayEvent.title}</p>
+                      <p className="text-xs text-slate-600 group-hover:text-violet-400 transition mt-3">
+                        {isFr ? "Voir le plan →" : "View plan →"}
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => router.push("/gameday")}
+                      className="text-xs text-slate-500 hover:text-violet-400 transition"
+                    >
+                      {isFr ? "Préparer un autre événement →" : "Start a new Gameday →"}
+                    </button>
+                  </div>
                 )}
               </section>
             ) : null}

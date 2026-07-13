@@ -116,7 +116,7 @@ export default function CueCardView({ planId, cardId, initialLines, isTaper }: P
   const labels = [t.cueCardOpeningLabel, t.cueCardAnchorLabel(1), t.cueCardAnchorLabel(2), t.cueCardAnchorLabel(3), t.cueCardClosingLabel];
 
   return (
-    <div className="min-h-screen bg-[#05070d] text-white flex flex-col items-center p-6 pt-10 pb-28 gap-8">
+    <div className="min-h-screen bg-[#05070d] text-white flex flex-col items-center p-6 pt-10 pb-28 gap-8 overflow-x-hidden">
       <div className={`cue-card-object w-full max-w-sm ${firstView ? "cue-card-flip-in" : ""}`}>
         <div ref={printAreaRef} className="cue-card-print-area space-y-5">
           {(editing ? drafts : lines).map((line, i) => (

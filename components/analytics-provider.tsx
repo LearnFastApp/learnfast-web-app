@@ -65,7 +65,7 @@ export function AnalyticsProvider() {
       )}
 
       {consent === null && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 p-4 sm:p-6">
+        <div className="safe-bottom fixed bottom-0 left-0 right-0 z-50 p-4 sm:p-6">
           <div className="max-w-2xl mx-auto rounded-2xl border border-white/10 bg-[#111827] shadow-2xl shadow-black/60 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-white mb-1">Cookie preferences</p>

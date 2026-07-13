@@ -16,7 +16,7 @@ const ACCEPTED_TYPES = [
   "audio/mpeg", "audio/wav", "audio/mp4", "audio/x-m4a",
 ];
 const ACCEPTED_EXT = ".mp4,.mov,.webm,.mkv,.mp3,.wav,.m4a";
-const MAX_SIZE_BYTES = 500 * 1024 * 1024;
+const MAX_SIZE_BYTES = 2 * 1024 * 1024 * 1024;
 
 type Stage = "idle" | "ready" | "uploading" | "processing" | "complete" | "failed";
 
@@ -36,7 +36,7 @@ const STRINGS = {
     heading: "AI Analysis",
     cancel: "Cancel",
     dropLabel: "Drop recording here or click to browse",
-    dropSub: "MP4, MOV, WebM, MP3, WAV · max 500 MB",
+    dropSub: "MP4, MOV, WebM, MP3, WAV · max 2 GB",
     uploading: "Uploading…",
     analysing: "Analysing your recording…",
     analysingDesc: "AI scores will appear on the chart when ready · 1–3 minutes",
@@ -44,7 +44,7 @@ const STRINGS = {
     completeDesc: "View your full report — rationale, highlights, tips and vocal stats",
     failedDefault: "Analysis failed. Please try with a different file.",
     errBadType: "Unsupported file type. Use MP4, MOV, WebM, MP3 or WAV.",
-    errTooLarge: "File too large — maximum 500 MB.",
+    errTooLarge: "File too large — maximum 2 GB.",
     errUpgrade: "AI Analysis is available on Lite and Pro plans.",
     errMonthlyLimit: "You've used your 3 AI assessments this month. Upgrade to Pro for unlimited.",
     recordingReady: "Session recording ready",
@@ -59,7 +59,7 @@ const STRINGS = {
     heading: "Analyse IA",
     cancel: "Annuler",
     dropLabel: "Déposez votre enregistrement ici ou cliquez pour parcourir",
-    dropSub: "MP4, MOV, WebM, MP3, WAV · max 500 Mo",
+    dropSub: "MP4, MOV, WebM, MP3, WAV · max 2 Go",
     uploading: "Téléchargement…",
     analysing: "Analyse de votre enregistrement…",
     analysingDesc: "Les scores IA apparaîtront sur le graphique dès que prêts · 1–3 minutes",
@@ -67,7 +67,7 @@ const STRINGS = {
     completeDesc: "Voir votre rapport complet — justifications, points clés, conseils et statistiques vocales",
     failedDefault: "Échec de l'analyse. Veuillez réessayer avec un autre fichier.",
     errBadType: "Format non supporté. Utilisez MP4, MOV, WebM, MP3 ou WAV.",
-    errTooLarge: "Fichier trop volumineux — maximum 500 Mo.",
+    errTooLarge: "Fichier trop volumineux — maximum 2 Go.",
     errUpgrade: "L'analyse IA est disponible sur les abonnements Lite et Pro.",
     errMonthlyLimit: "Vous avez utilisé vos 3 analyses IA ce mois-ci. Passez à Pro pour un accès illimité.",
     recordingReady: "Enregistrement de session prêt",
