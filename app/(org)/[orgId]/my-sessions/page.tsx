@@ -11,6 +11,12 @@ import {
   PolarGrid,
   PolarAngleAxis,
   Radar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
 } from "recharts";
 
 type Dimension = "clarity" | "energy" | "engagement" | "understanding" | "connection";
@@ -59,6 +65,35 @@ const DIMENSION_COLOR: Record<Dimension, string> = {
   connection: "text-pink-400 bg-pink-400/10",
 };
 
+// Same hex palette as the personal /analytics trend chart, so the line
+// colors read consistently for anyone who's seen both views.
+const DIM_LINE_COLOR: Record<Dimension, string> = {
+  clarity: "#8b5cf6",
+  engagement: "#22d3ee",
+  energy: "#f59e0b",
+  understanding: "#34d399",
+  connection: "#f472b6",
+};
+
+function TrendTooltip(props: Record<string, unknown>) {
+  const { active, payload, label } = props as {
+    active: boolean;
+    payload: Array<{ dataKey: string; value: number; color: string }>;
+    label: string;
+  };
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-xl border border-[#1e293b] bg-[#0f172a] px-3 py-2 shadow-xl">
+      <p className="text-xs text-slate-400 mb-1">{label}</p>
+      {payload.map((p) => (
+        <p key={p.dataKey} className="text-xs font-semibold" style={{ color: p.color }}>
+          {DIMENSION_LABEL[p.dataKey as Dimension]} · {p.value.toFixed(1)}
+        </p>
+      ))}
+    </div>
+  );
+}
+
 const STATUS_COLORS: Record<string, string> = {
   scheduled: "text-slate-400 bg-slate-400/10",
   live: "text-green-400 bg-green-400/10",
@@ -102,6 +137,18 @@ export default function MySessionsPage() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [activeDims, setActiveDims] = useState<Set<Dimension>>(
+    new Set(["clarity", "energy", "engagement", "understanding", "connection"])
+  );
+
+  function toggleDim(dim: Dimension) {
+    setActiveDims((prev) => {
+      const next = new Set(prev);
+      if (next.has(dim)) { if (next.size > 1) next.delete(dim); }
+      else next.add(dim);
+      return next;
+    });
+  }
 
   async function deleteRehearsal(sessionId: string) {
     if (!user || deletingId) return;
@@ -189,6 +236,22 @@ export default function MySessionsPage() {
         }))
       : [];
 
+  // Sessions come back newest-first (scheduledStart desc) — reverse to
+  // chronological order for a left-to-right trend line, keeping only
+  // sessions that actually have scored feedback.
+  const trendData = (data?.sessions ?? [])
+    .filter((s) => s.avgScores !== null)
+    .slice()
+    .reverse()
+    .map((s, i) => ({
+      xKey: String(i),
+      name: s.title.length > 18 ? s.title.slice(0, 18) + "…" : s.title,
+      date: s.scheduledStart
+        ? new Date(s.scheduledStart).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
+        : "—",
+      ...s.avgScores,
+    }));
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-[#05070d] flex items-center justify-center">
@@ -226,6 +289,64 @@ export default function MySessionsPage() {
               <p className="text-xs text-slate-400 mb-1">Overall avg score</p>
               <p className="text-3xl font-bold">{calcOverallMean(data.overallAvg)}</p>
             </div>
+          </div>
+        )}
+
+        {/* Trend over time */}
+        {trendData.length >= 2 && (
+          <div className="bg-[#0f172a] border border-[#1e293b] rounded-2xl p-5 mb-8">
+            <p className="text-sm font-medium text-slate-300 mb-4">
+              Your dimensions over time
+            </p>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {dims.map((dim) => {
+                const active = activeDims.has(dim);
+                return (
+                  <button
+                    key={dim}
+                    onClick={() => toggleDim(dim)}
+                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition border"
+                    style={{
+                      borderColor: active ? DIM_LINE_COLOR[dim] : "#1e293b",
+                      backgroundColor: active ? `${DIM_LINE_COLOR[dim]}22` : "transparent",
+                      color: active ? DIM_LINE_COLOR[dim] : "#64748b",
+                    }}
+                  >
+                    <span
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: active ? DIM_LINE_COLOR[dim] : "#64748b" }}
+                    />
+                    {DIMENSION_LABEL[dim]}
+                  </button>
+                );
+              })}
+            </div>
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart data={trendData} margin={{ top: 5, right: 40, bottom: 5, left: 0 }}>
+                <CartesianGrid stroke="#ffffff08" />
+                <XAxis
+                  dataKey="xKey"
+                  ticks={trendData.map((d) => d.xKey)}
+                  tickFormatter={(val: string) => trendData[Number(val)]?.date ?? val}
+                  tick={{ fill: "#64748b", fontSize: 12 }}
+                  interval={0}
+                />
+                <YAxis domain={[0, 100]} tick={{ fill: "#64748b", fontSize: 12 }} />
+                <Tooltip content={TrendTooltip} />
+                {dims.filter((d) => activeDims.has(d)).map((dim) => (
+                  <Line
+                    key={dim}
+                    type="linear"
+                    dataKey={dim}
+                    stroke={DIM_LINE_COLOR[dim]}
+                    strokeWidth={2}
+                    dot={{ fill: DIM_LINE_COLOR[dim], r: 4, strokeWidth: 0 }}
+                    activeDot={{ r: 7, fill: DIM_LINE_COLOR[dim], stroke: "#0f172a", strokeWidth: 2 }}
+                    name={DIMENSION_LABEL[dim]}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         )}
 
