@@ -6,6 +6,7 @@ import { ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebas
 import { doc, getDoc } from "firebase/firestore";
 import { storage, db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
+import { authenticatedFetch } from "@/lib/authenticated-fetch";
 import {
   AlertCircle, Brain, FileVideo, Loader2, Mic, Pause,
   Play, RotateCcw, Square, Upload, UploadCloud,
@@ -50,6 +51,7 @@ const STRINGS = {
     errUpgrade: "AI Analysis is available on Lite and Pro plans.",
     errLimit: "You've used your 3 AI assessments for this month. Upgrade to Pro for unlimited access.",
     errMic: "Microphone access was denied. Please allow microphone access and try again.",
+    errUnauthorized: "Your session expired during upload. Please sign in again and retry.",
   },
   fr: {
     navBack: "← Tableau de bord",
@@ -77,6 +79,7 @@ const STRINGS = {
     errUpgrade: "L'analyse IA est disponible sur les abonnements Lite et Pro.",
     errLimit: "Vous avez utilisé vos 3 analyses IA ce mois-ci. Passez à Pro pour un accès illimité.",
     errMic: "Accès au microphone refusé. Veuillez autoriser l'accès au microphone et réessayer.",
+    errUnauthorized: "Votre session a expiré pendant le téléchargement. Veuillez vous reconnecter et réessayer.",
   },
 };
 
@@ -154,7 +157,6 @@ export default function AiAssessmentPage() {
     setUploadProgress(0);
     setErrorMsg("");
 
-    const token = await user.getIdToken();
     const path = `ai-recordings/${user.uid}/${Date.now()}-${fileName}`;
     const fileRef = storageRef(storage, path);
     const contentType = blob.type || "audio/webm";
@@ -173,9 +175,9 @@ export default function AiAssessmentPage() {
       async () => {
         try {
           const downloadUrl = await getDownloadURL(task.snapshot.ref);
-          const res = await fetch("/api/ai-assessment", {
+          const res = await authenticatedFetch(user, "/api/ai-assessment", {
             method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ downloadUrl, fileName, storagePath: path }),
           });
           let data: Record<string, string> = {};
@@ -184,6 +186,7 @@ export default function AiAssessmentPage() {
             const msgs: Record<string, string> = {
               upgrade_required: s.errUpgrade,
               monthly_limit: s.errLimit,
+              Unauthorized: s.errUnauthorized,
             };
             setErrorMsg(msgs[data.error] ?? `Error ${res.status}: ${data.error ?? (locale === "fr" ? "Échec de l'appel API." : "API call failed.")}`);
             setStage("error");

@@ -26,7 +26,8 @@ export async function verifyAuthToken(req: NextRequest): Promise<string | null> 
     const token = authHeader.slice(7);
     const decoded = await getAdminAuth().verifyIdToken(token);
     return decoded.uid;
-  } catch {
+  } catch (err) {
+    console.error("[verifyAuthToken] token verification failed:", err instanceof Error ? err.message : err);
     return null;
   }
 }

@@ -4,6 +4,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
+import { authenticatedFetch } from "@/lib/authenticated-fetch";
 import { Brain, UploadCloud, Loader2, AlertCircle, FileVideo, ChevronRight, CheckCircle, Mic } from "lucide-react";
 
 function formatBytes(bytes: number): string {
@@ -47,6 +48,7 @@ const STRINGS = {
     errTooLarge: "File too large — maximum 2 GB.",
     errUpgrade: "AI Analysis is available on Lite and Pro plans.",
     errMonthlyLimit: "You've used your 3 AI assessments this month. Upgrade to Pro for unlimited.",
+    errUnauthorized: "Your session expired during upload. Please sign in again and retry.",
     recordingReady: "Session recording ready",
     recordingReadyDesc: (size: string) => `${size} · Recorded during your session`,
     uploadRecording: "Upload for AI assessment",
@@ -70,6 +72,7 @@ const STRINGS = {
     errTooLarge: "Fichier trop volumineux — maximum 2 Go.",
     errUpgrade: "L'analyse IA est disponible sur les abonnements Lite et Pro.",
     errMonthlyLimit: "Vous avez utilisé vos 3 analyses IA ce mois-ci. Passez à Pro pour un accès illimité.",
+    errUnauthorized: "Votre session a expiré pendant le téléchargement. Veuillez vous reconnecter et réessayer.",
     recordingReady: "Enregistrement de session prêt",
     recordingReadyDesc: (size: string) => `${size} · Enregistré pendant votre session`,
     uploadRecording: "Envoyer pour analyse IA",
@@ -144,7 +147,6 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, initi
     setUploadProgress(0);
     setErrorMsg("");
 
-    const token = await user.getIdToken();
     const path = `ai-recordings/${user.uid}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
     const fileRef = storageRef(storage, path);
     const task = uploadBytesResumable(fileRef, file, { contentType: file.type || "video/mp4" });
@@ -159,9 +161,9 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, initi
       async () => {
         try {
           const downloadUrl = await getDownloadURL(task.snapshot.ref);
-          const res = await fetch("/api/ai-assessment", {
+          const res = await authenticatedFetch(user, "/api/ai-assessment", {
             method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ downloadUrl, fileName: file.name, storagePath: path, sessionId }),
           });
           const data = await res.json().catch(() => ({}));
@@ -169,6 +171,7 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, initi
             const msgs: Record<string, string> = {
               upgrade_required: s.errUpgrade,
               monthly_limit: s.errMonthlyLimit,
+              Unauthorized: s.errUnauthorized,
             };
             setErrorMsg(msgs[data.error] ?? `Error ${res.status}: ${data.error ?? "Something went wrong."}`);
             setStage("failed");

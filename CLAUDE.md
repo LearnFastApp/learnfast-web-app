@@ -40,3 +40,13 @@ subscribe/sign-in gate — a 200 response is not sufficient proof on its own
 The scheduled health check (`app/api/cron/check-resources/route.ts`) treats
 detected paywall markers as broken and will auto-repair or alert on existing
 entries, but new entries must be verified paywall-free before being committed.
+
+### 7. Never capture a Firebase ID token before a long-running operation
+`user.getIdToken()` must be called immediately before the fetch that uses it —
+never before an upload, recording, or any operation that can outlive the token's
+60-minute lifetime. A token captured before a multi-GB upload can expire by the
+time the follow-up request fires, producing a bare 401 after the user has already
+waited through the entire upload with no indication the file was received.
+Use `authenticatedFetch` from `lib/authenticated-fetch.ts`, which fetches the
+token at call time, for any authenticated request that follows an upload or
+other slow async step.
