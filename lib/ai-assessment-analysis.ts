@@ -169,5 +169,62 @@ Include 3–5 highlights (mix of strengths and opportunities) and exactly 3 tips
   if (start === -1 || end === -1 || end <= start) {
     throw new Error(`No JSON object in Claude response: ${raw.slice(0, 200)}`);
   }
-  return JSON.parse(raw.slice(start, end + 1)) as AssessmentAnalysis;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw.slice(start, end + 1));
+  } catch {
+    throw new Error(`Analysis response was not valid JSON: ${raw.slice(0, 200)}`);
+  }
+
+  if (!isValidAssessmentAnalysis(parsed)) {
+    throw new Error(`Analysis response did not match the expected shape: ${JSON.stringify(parsed).slice(0, 300)}`);
+  }
+
+  return parsed;
+}
+
+/**
+ * Runtime shape check on the model's response — `JSON.parse(...) as
+ * AssessmentAnalysis` is just a type assertion with no runtime guarantee, and
+ * a subtly malformed response (missing/renamed field) would otherwise slip
+ * through as "success" with e.g. `summary: undefined`, which then crashes
+ * the caller's Firestore `.update()` (undefined fields throw) far away from
+ * this function, leaving the assessment stuck in "analyzing" with no path to
+ * a terminal state. Failing loudly here lets the existing try/catch at the
+ * call site mark the assessment "failed" cleanly instead.
+ */
+function isValidAssessmentAnalysis(value: unknown): value is AssessmentAnalysis {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+
+  const scores = v.scores as Record<string, unknown> | undefined;
+  const rationale = v.rationale as Record<string, unknown> | undefined;
+  const hasValidScores =
+    !!scores && typeof scores === "object" && DIMENSIONS.every((dim) => typeof scores[dim] === "number");
+  const hasValidRationale =
+    !!rationale && typeof rationale === "object" && DIMENSIONS.every((dim) => typeof rationale[dim] === "string");
+
+  return (
+    hasValidScores &&
+    hasValidRationale &&
+    Array.isArray(v.highlights) &&
+    v.highlights.every((h: unknown) => {
+      if (!h || typeof h !== "object") return false;
+      const highlight = h as Record<string, unknown>;
+      return (
+        typeof highlight.quote === "string" &&
+        (DIMENSIONS as readonly string[]).includes(highlight.dimension as string) &&
+        (highlight.type === "strength" || highlight.type === "opportunity")
+      );
+    }) &&
+    Array.isArray(v.tips) &&
+    v.tips.every((t: unknown) => {
+      if (!t || typeof t !== "object") return false;
+      const tip = t as Record<string, unknown>;
+      return (DIMENSIONS as readonly string[]).includes(tip.dimension as string) && typeof tip.tip === "string";
+    }) &&
+    typeof v.summary === "string" &&
+    v.summary.length > 0
+  );
 }

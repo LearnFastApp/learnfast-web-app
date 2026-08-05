@@ -152,7 +152,17 @@ export async function GET(
     summary: analysis.summary,
   };
 
-  await docRef.update(update);
+  try {
+    await docRef.update(update);
+  } catch (err) {
+    // The assessment was already claimed (status: "analyzing") by the transaction
+    // above — if this write fails, it must still reach a terminal state, or it's
+    // stuck forever (every future poll sees a non-"processing" status and just
+    // returns {status:"processing"} without ever retrying).
+    console.error("[ai-assessment/get] Final assessment update failed:", err);
+    await docRef.update({ status: "failed", error: "save_failed" }).catch(() => {});
+    return NextResponse.json({ status: "failed", error: "save_failed" });
+  }
 
   // ── Data Foundation: events, measurements, raw artifacts, interventions ──────
   // All writes are fire-and-forget — failures logged but never block the response.

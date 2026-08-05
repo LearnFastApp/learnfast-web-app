@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, Legend } from "recharts";
 import { db } from "@/lib/firebase";
@@ -11,6 +11,10 @@ import { classifyArchetype, ARCHETYPE_DEFS } from "@/lib/archetypes";
 
 const DIMENSIONS = ["clarity", "energy", "engagement", "understanding", "connection"] as const;
 type Dimension = (typeof DIMENSIONS)[number];
+
+// Consecutive poll failures (401/500/network) to tolerate before giving up —
+// a single transient error must not silently strand the user mid-analysis.
+const MAX_POLL_FAILURES = 6;
 
 const DIM_LABELS_EN: Record<Dimension, string> = {
   clarity: "Clarity", energy: "Energy", engagement: "Engagement",
@@ -126,7 +130,6 @@ interface AssessmentData {
 export default function AiAssessmentResultsPage() {
   const { id } = useParams<{ id: string }>();
   const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
 
   const [assessment, setAssessment] = useState<AssessmentData | null>(null);
   const [audienceScores, setAudienceScores] = useState<Record<Dimension, number> | null>(null);
@@ -134,6 +137,7 @@ export default function AiAssessmentResultsPage() {
   const [locale, setLocale] = useState<"en" | "fr">("en");
   const [pdfExporting, setPdfExporting] = useState(false);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollFailuresRef = useRef(0);
 
   // Fetch presenter locale
   useEffect(() => {
@@ -148,21 +152,32 @@ export default function AiAssessmentResultsPage() {
     if (authLoading || !user) return;
 
     async function poll() {
-      const token = await user!.getIdToken();
-      const res = await fetch(`/api/ai-assessment/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) { router.replace("/dashboard"); return; }
-      const data = await res.json() as AssessmentData;
-      setAssessment(data);
-      if (data.status !== "complete" && data.status !== "failed") {
+      try {
+        const token = await user!.getIdToken();
+        const res = await fetch(`/api/ai-assessment/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        pollFailuresRef.current = 0;
+        const data = await res.json() as AssessmentData;
+        setAssessment(data);
+        if (data.status !== "complete" && data.status !== "failed") {
+          pollRef.current = setTimeout(poll, 5000);
+        }
+      } catch (err) {
+        pollFailuresRef.current += 1;
+        if (pollFailuresRef.current >= MAX_POLL_FAILURES) {
+          console.error("[ai-assessment/page] Poll gave up after repeated failures:", err);
+          setAssessment({ status: "failed", error: "poll_failed" });
+          return;
+        }
         pollRef.current = setTimeout(poll, 5000);
       }
     }
 
     poll();
     return () => { if (pollRef.current) clearTimeout(pollRef.current); };
-  }, [id, user, authLoading, router]);
+  }, [id, user, authLoading]);
 
   // Fetch audience + reflection scores — only if this assessment is linked to a session
   useEffect(() => {

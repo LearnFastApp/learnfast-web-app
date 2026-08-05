@@ -135,7 +135,17 @@ export async function GET(
     summary: analysis.summary,
   };
 
-  await docRef.update(update);
+  try {
+    await docRef.update(update);
+  } catch (err) {
+    // The assessment was already claimed (status: "analyzing") by the transaction
+    // above — if this write fails, it must still reach a terminal state, or it's
+    // stuck forever (every future poll sees a non-"processing" status and just
+    // returns {status:"processing"} without ever retrying).
+    console.error("[guest-assessment/token] Final assessment update failed:", err);
+    await docRef.update({ status: "failed", error: "save_failed" }).catch(() => {});
+    return NextResponse.json({ status: "failed", error: "save_failed" });
+  }
 
   // Send results email now that we have scores (fire-and-forget)
   const guestEmail = data.guestEmail as string | undefined;

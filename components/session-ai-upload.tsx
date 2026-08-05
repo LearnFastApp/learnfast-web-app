@@ -86,6 +86,7 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, initi
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const movedToReadyRef = useRef(false);
+  const pollFailuresRef = useRef(0);
 
   const [stage, setStage] = useState<Stage>(existingAssessmentId ? "processing" : "idle");
   const [showZone, setShowZone] = useState(false);
@@ -99,19 +100,34 @@ export default function SessionAiUpload({ sessionId, existingAssessmentId, initi
     if (stage === "complete" || stage === "failed") return;
 
     async function poll() {
-      const token = await user!.getIdToken();
-      const res = await fetch(`/api/ai-assessment/${assessmentId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data.status === "complete" && data.scores) {
-        setStage("complete");
-        onComplete(data.scores, assessmentId!);
-      } else if (data.status === "failed") {
-        setStage("failed");
-        setErrorMsg(s.failedDefault);
-      } else {
+      try {
+        const token = await user!.getIdToken();
+        const res = await fetch(`/api/ai-assessment/${assessmentId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        pollFailuresRef.current = 0;
+        const data = await res.json();
+        if (data.status === "complete" && data.scores) {
+          setStage("complete");
+          onComplete(data.scores, assessmentId!);
+        } else if (data.status === "failed") {
+          setStage("failed");
+          setErrorMsg(s.failedDefault);
+        } else {
+          pollRef.current = setTimeout(poll, 5000);
+        }
+      } catch (err) {
+        // A single transient error (cold start, network blip, brief 401) must not
+        // silently strand the user on "Analysing…" forever — retry a few times
+        // before surfacing failure.
+        pollFailuresRef.current += 1;
+        if (pollFailuresRef.current >= 6) {
+          console.error("[session-ai-upload] Poll gave up after repeated failures:", err);
+          setStage("failed");
+          setErrorMsg(s.failedDefault);
+          return;
+        }
         pollRef.current = setTimeout(poll, 5000);
       }
     }
