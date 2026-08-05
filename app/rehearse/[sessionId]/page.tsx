@@ -4,7 +4,9 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { getDoc, doc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { db, storage } from "@/lib/firebase";
+import { authenticatedFetch } from "@/lib/authenticated-fetch";
 import {
   ArrowLeft, Mic, UploadCloud, Square, RotateCcw, Loader2,
   CheckCircle2, BookmarkCheck, Tag, AlertCircle, ChevronRight, Users,
@@ -18,7 +20,7 @@ import { getDimensionDisplayOrder, type LensKey } from "@/lib/gameday/feedback-l
 import TeleprompterOverlay from "@/components/teleprompter-overlay";
 import ScoreBloom, { DIM_COLORS, DIMS } from "@/components/score-bloom";
 
-const MAX_FILE_BYTES = 50 * 1024 * 1024;
+const MAX_FILE_BYTES = 2 * 1024 * 1024 * 1024;
 const ACCEPTED_TYPES = ["video/mp4","video/quicktime","video/webm","audio/mpeg","audio/wav","audio/mp4","audio/x-m4a","audio/webm"];
 
 interface Take {
@@ -75,6 +77,7 @@ function RehearsalPageInner() {
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [takeUploadProgress, setTakeUploadProgress] = useState(0);
   const [inputMode, setInputMode] = useState<"record" | "upload">("record");
 
   const [locale, setLocale] = useState<"en" | "fr">("en");
@@ -142,7 +145,7 @@ function RehearsalPageInner() {
     errDuration: "L'enregistrement dépasse la durée maximale autorisée.",
     errAnalysis: "L'analyse a échoué. Veuillez essayer une autre prise.",
     errTakesLimit: "Vous avez atteint le nombre maximum de prises sur Lite. Passez à Pro pour des prises illimitées.",
-    errFileTooLarge: "Fichier trop volumineux (max 50 Mo).",
+    errFileTooLarge: "Fichier trop volumineux (max 2 Go).",
     errGeneric: "Une erreur est survenue. Veuillez réessayer.",
     errNetwork: "Erreur réseau. Veuillez réessayer.",
     errSave: "Impossible de sauvegarder la prise. Veuillez réessayer.",
@@ -201,7 +204,7 @@ function RehearsalPageInner() {
     errDuration: "Recording exceeds the maximum duration for your plan.",
     errAnalysis: "Analysis failed. Please try another take.",
     errTakesLimit: "You've reached the maximum takes for this rehearsal on Lite. Upgrade to Pro for unlimited takes.",
-    errFileTooLarge: "File too large (max 50 MB).",
+    errFileTooLarge: "File too large (max 2 GB).",
     errGeneric: "Something went wrong. Please try again.",
     errNetwork: "Network error. Please try again.",
     errSave: "Could not save take. Please try again.",
@@ -399,39 +402,53 @@ function RehearsalPageInner() {
 
     setPageStage("uploading");
     setErrorMsg("");
+    setTakeUploadProgress(0);
 
-    try {
-      const token = await user.getIdToken();
-      const formData = new FormData();
-      formData.append("file", blob, inputMode === "record" ? "rehearsal.webm" : (uploadFile as File).name);
+    const fileName = inputMode === "record" ? "rehearsal.webm" : (uploadFile as File).name;
+    const contentType = blob.type || "audio/webm";
+    const path = `rehearsal-recordings/${user.uid}/${Date.now()}-${fileName.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    const fileRef = storageRef(storage, path);
+    const task = uploadBytesResumable(fileRef, blob, { contentType });
 
-      const res = await fetch(`/api/rehearsal/${sessionId}/take`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        const msgs: Record<string, string> = {
-          takes_limit_reached: t.errTakesLimit,
-          file_too_large: t.errFileTooLarge,
-        };
-        setErrorMsg(msgs[data.error] ?? t.errGeneric);
+    task.on(
+      "state_changed",
+      (snap) => setTakeUploadProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
+      (err) => {
+        console.error("[rehearse] storage error:", err.code, err.message);
+        setErrorMsg(t.errNetwork);
         setPageStage("ready");
-        return;
-      }
+      },
+      async () => {
+        try {
+          const downloadUrl = await getDownloadURL(task.snapshot.ref);
+          const res = await authenticatedFetch(user, `/api/rehearsal/${sessionId}/take`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ downloadUrl, storagePath: path, fileName, contentType }),
+          });
 
-      setActiveTakeId(data.takeId);
-      setRecordedBlob(null);
-      setUploadFile(null);
-      await loadSession();
-      setPageStage("polling");
-    } catch {
-      setErrorMsg(t.errNetwork);
-      setPageStage("ready");
-    }
+          const data = await res.json().catch(() => ({}));
+
+          if (!res.ok) {
+            const msgs: Record<string, string> = {
+              takes_limit_reached: t.errTakesLimit,
+            };
+            setErrorMsg(msgs[data.error] ?? t.errGeneric);
+            setPageStage("ready");
+            return;
+          }
+
+          setActiveTakeId(data.takeId);
+          setRecordedBlob(null);
+          setUploadFile(null);
+          await loadSession();
+          setPageStage("polling");
+        } catch {
+          setErrorMsg(t.errNetwork);
+          setPageStage("ready");
+        }
+      }
+    );
   }
 
   const [shareError, setShareError] = useState("");
@@ -1087,7 +1104,9 @@ function RehearsalPageInner() {
         {pageStage === "uploading" && (
           <div className="flex items-center justify-center gap-3 py-10">
             <Loader2 className="h-5 w-5 text-violet-400 animate-spin" />
-            <span className="text-sm text-slate-400">{t.uploading}</span>
+            <span className="text-sm text-slate-400">
+              {t.uploading}{takeUploadProgress > 0 ? ` ${takeUploadProgress}%` : ""}
+            </span>
           </div>
         )}
 

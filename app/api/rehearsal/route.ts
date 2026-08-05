@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Timestamp } from "firebase-admin/firestore";
 import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
-import { uploadAndSubmitTranscription } from "@/lib/assemblyai-client";
-import { uploadTakeAudio } from "@/lib/r2-client";
+import { submitTranscription } from "@/lib/assemblyai-client";
+import { uploadTakeAudioFromUrl } from "@/lib/r2-client";
 import { getContext, getLocalizedContextLabel } from "@/lib/contexts/registry";
 import { monthKey, refundRehearsalQuotaIfFirstTake } from "@/lib/rehearsal-gate";
 
@@ -13,7 +13,6 @@ const FREE_TAKES_LIMIT = 3;
 const LITE_MONTHLY_LIMIT = 3;
 const LITE_TAKES_LIMIT = 5;
 const ADMIN_UIDS = new Set(["zuFmYCIaGLViRSc7LXFwej6wql22"]);
-const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
 type Tier = "admin" | "pro" | "lite" | "free";
 
@@ -96,8 +95,10 @@ export async function POST(req: NextRequest) {
 
   let title: string;
   let tags: string[];
-  let fileBuffer: Buffer;
+  let downloadUrl: string;
+  let storagePath: string | null;
   let fileName: string;
+  let contentType: string;
   let contextId: string;
   let contextLabelAtTime: string;
   let contextPromptVersion: string;
@@ -106,24 +107,24 @@ export async function POST(req: NextRequest) {
   let gamedaySessionType: string | null;
 
   try {
-    const formData = await req.formData();
-    title = ((formData.get("title") as string) ?? "").trim();
-    const rawTags = (formData.get("tags") as string) ?? "[]";
-    tags = JSON.parse(rawTags) as string[];
-    const rawContextId = ((formData.get("contextId") as string) ?? "general").trim() || "general";
+    const body = await req.json();
+    title = (typeof body.title === "string" ? body.title : "").trim();
+    tags = Array.isArray(body.tags) ? (body.tags as string[]) : [];
+    const rawContextId = (typeof body.contextId === "string" ? body.contextId : "general").trim() || "general";
     const resolvedContext = getContext(rawContextId);
     contextId = resolvedContext.contextId;
     contextLabelAtTime = resolvedContext.label;
     contextPromptVersion = resolvedContext.promptVersion;
     // Gameday preload — all optional, absent for every non-Gameday session creation.
-    planId = ((formData.get("planId") as string) ?? "").trim() || null;
-    prescribedSessionId = ((formData.get("prescribedSessionId") as string) ?? "").trim() || null;
-    gamedaySessionType = ((formData.get("sessionType") as string) ?? "").trim() || null;
-    const file = formData.get("file") as File | null;
-    if (!file) return NextResponse.json({ error: "missing_file" }, { status: 400 });
-    if (file.size > MAX_FILE_BYTES) return NextResponse.json({ error: "file_too_large" }, { status: 400 });
-    fileName = file.name || "recording";
-    fileBuffer = Buffer.from(await file.arrayBuffer());
+    planId = typeof body.planId === "string" ? body.planId : null;
+    prescribedSessionId = typeof body.prescribedSessionId === "string" ? body.prescribedSessionId : null;
+    gamedaySessionType = typeof body.sessionType === "string" ? body.sessionType : null;
+
+    downloadUrl = typeof body.downloadUrl === "string" ? body.downloadUrl : "";
+    if (!downloadUrl) return NextResponse.json({ error: "missing_file" }, { status: 400 });
+    storagePath = typeof body.storagePath === "string" ? body.storagePath : null;
+    fileName = typeof body.fileName === "string" ? body.fileName : "recording";
+    contentType = typeof body.contentType === "string" ? body.contentType : "audio/webm";
   } catch {
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   }
@@ -171,12 +172,11 @@ export async function POST(req: NextRequest) {
     gamedaySessionType,
   });
 
-  const mimeType = fileName.endsWith(".webm") ? "audio/webm" : "audio/mpeg";
-
   const takeRef = sessionRef.collection("takes").doc();
   await takeRef.set({
     takeNumber: 1,
     fileName,
+    storagePath,
     assemblyAiId: null,
     audioUrl: null,
     status: "queued",
@@ -195,29 +195,28 @@ export async function POST(req: NextRequest) {
     isPromoted: false,
   });
 
-  // R2 upload — best-effort, never blocks transcription
-  let audioUrl: string | null = null;
-  let r2Error: string | null = null;
-  try {
-    audioUrl = await uploadTakeAudio(takeRef.id, fileBuffer, mimeType);
-  } catch (err) {
-    r2Error = err instanceof Error
-      ? (err.message || err.name || "r2_error_no_message")
-      : (String(err) || "r2_unknown_error");
-    console.error("[rehearsal] R2 upload failed:", r2Error);
-  }
+  // R2 relay — fire-and-forget, never blocks the response. Streams from the
+  // Storage download URL rather than buffering in memory (files here can be
+  // a multi-hundred-MB video and this instance only has 512MiB).
+  uploadTakeAudioFromUrl(takeRef.id, downloadUrl, contentType)
+    .then((audioUrl) => takeRef.update({ audioUrl }).catch(() => {}))
+    .catch((err) => {
+      const r2Error = err instanceof Error ? (err.message || err.name) : String(err);
+      console.error("[rehearsal] R2 relay failed:", r2Error);
+      takeRef.update({ r2Error: r2Error || "r2_unknown_error" }).catch(() => {});
+    });
 
   let transcriptId: string;
   try {
-    transcriptId = await uploadAndSubmitTranscription(fileBuffer);
+    transcriptId = await submitTranscription(downloadUrl);
   } catch (err) {
-    console.error("[rehearsal] AssemblyAI upload failed:", err);
+    console.error("[rehearsal] AssemblyAI submit failed:", err);
     await takeRef.update({ status: "failed", error: String(err) });
     await refundRehearsalQuotaIfFirstTake(db, uid, gate.tier, 1, now.toDate());
     return NextResponse.json({ error: "transcription_failed" }, { status: 500 });
   }
 
-  await takeRef.update({ assemblyAiId: transcriptId, audioUrl, r2Error, status: "processing" });
+  await takeRef.update({ assemblyAiId: transcriptId, status: "processing" });
 
   return NextResponse.json({
     sessionId: sessionRef.id,

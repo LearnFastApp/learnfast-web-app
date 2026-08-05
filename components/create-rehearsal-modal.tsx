@@ -2,7 +2,10 @@
 
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
 import { X, Mic, UploadCloud, Tag, Square, RotateCcw } from "lucide-react";
+import { ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { storage } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
+import { authenticatedFetch } from "@/lib/authenticated-fetch";
 import { useRouter } from "next/navigation";
 import { getEnabledContexts, getLocalizedContextLabel, getLocalizedContextDescription } from "@/lib/contexts/registry";
 import { isContextsEnabled } from "@/lib/feature-flags";
@@ -13,7 +16,7 @@ import type { SessionType } from "@/lib/gameday/types";
 const CONTEXTS = isContextsEnabled() ? getEnabledContexts() : [];
 
 const ACCEPTED_TYPES = ["video/mp4","video/quicktime","video/webm","audio/mpeg","audio/wav","audio/mp4","audio/x-m4a","audio/webm"];
-const MAX_SIZE_BYTES = 50 * 1024 * 1024;
+const MAX_SIZE_BYTES = 2 * 1024 * 1024 * 1024;
 
 interface Props {
   onClose: () => void;
@@ -65,6 +68,7 @@ export default function CreateRehearsalModal({
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const mediaRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
@@ -133,44 +137,63 @@ export default function CreateRehearsalModal({
 
     setStage("submitting");
     setErrorMsg("");
+    setUploadProgress(0);
 
-    try {
-      const token = await user.getIdToken();
-      const formData = new FormData();
-      formData.append("title", title.trim());
-      formData.append("tags", JSON.stringify(tags));
-      formData.append("contextId", contextId);
-      formData.append("file", blob, tab === "record" ? "rehearsal.webm" : (uploadFile as File).name);
-      if (planId) formData.append("planId", planId);
-      if (prescribedSessionId) formData.append("prescribedSessionId", prescribedSessionId);
-      if (sessionType) formData.append("sessionType", sessionType);
+    const fileName = tab === "record" ? "rehearsal.webm" : (uploadFile as File).name;
+    const contentType = blob.type || "audio/webm";
+    const path = `rehearsal-recordings/${user.uid}/${Date.now()}-${fileName.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    const fileRef = storageRef(storage, path);
+    const task = uploadBytesResumable(fileRef, blob, { contentType });
 
-      const res = await fetch("/api/rehearsal", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        const msgs: Record<string, string> = {
-          upgrade_required: t.errUpgrade,
-          free_limit: t.errFreeLimit,
-          monthly_limit: t.errMonthlyLimit,
-          file_too_large: t.errFileTooLarge,
-        };
-        setErrorMsg(msgs[data.error] ?? t.errGeneric);
+    task.on(
+      "state_changed",
+      (snap) => setUploadProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
+      (err) => {
+        console.error("[create-rehearsal-modal] storage error:", err.code, err.message);
+        setErrorMsg(t.errNetwork);
         setStage("setup");
-        return;
-      }
+      },
+      async () => {
+        try {
+          const downloadUrl = await getDownloadURL(task.snapshot.ref);
+          const res = await authenticatedFetch(user, "/api/rehearsal", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              downloadUrl,
+              storagePath: path,
+              fileName,
+              contentType,
+              title: title.trim(),
+              tags,
+              contextId,
+              planId: planId ?? null,
+              prescribedSessionId: prescribedSessionId ?? null,
+              sessionType: sessionType ?? null,
+            }),
+          });
 
-      router.push(`/rehearse/${data.sessionId}?takeId=${data.takeId}`);
-      onClose();
-    } catch {
-      setErrorMsg(t.errNetwork);
-      setStage("setup");
-    }
+          const data = await res.json().catch(() => ({}));
+
+          if (!res.ok) {
+            const msgs: Record<string, string> = {
+              upgrade_required: t.errUpgrade,
+              free_limit: t.errFreeLimit,
+              monthly_limit: t.errMonthlyLimit,
+            };
+            setErrorMsg(msgs[data.error] ?? t.errGeneric);
+            setStage("setup");
+            return;
+          }
+
+          router.push(`/rehearse/${data.sessionId}?takeId=${data.takeId}`);
+          onClose();
+        } catch {
+          setErrorMsg(t.errNetwork);
+          setStage("setup");
+        }
+      }
+    );
   }
 
   const canSubmit = stage !== "submitting" && (
@@ -364,7 +387,7 @@ export default function CreateRehearsalModal({
                   <div className="space-y-2">
                     <UploadCloud className="h-8 w-8 text-slate-500 mx-auto" />
                     <p className="text-sm text-slate-400">{t.clickToChoose}</p>
-                    <p className="text-xs text-slate-600">{`MP4 · MOV · WebM · MP3 · WAV · up to ${maxMins} min · max 50 MB`}</p>
+                    <p className="text-xs text-slate-600">{`MP4 · MOV · WebM · MP3 · WAV · up to ${maxMins} min · max 2 GB`}</p>
                   </div>
                 )}
               </button>
@@ -380,7 +403,7 @@ export default function CreateRehearsalModal({
             disabled={!canSubmit}
             className="w-full rounded-xl bg-violet-500 py-3 font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-400 disabled:opacity-40 disabled:cursor-not-allowed transition"
           >
-            {stage === "submitting" ? t.submitting : t.submit}
+            {stage === "submitting" ? (uploadProgress > 0 ? t.uploading(uploadProgress) : t.submitting) : t.submit}
           </button>
         </div>
       </div>

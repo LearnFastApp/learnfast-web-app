@@ -1,4 +1,7 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
+import { Readable } from "node:stream";
+import type { ReadableStream as NodeWebReadableStream } from "node:stream/web";
 
 const accountId = process.env.R2_ACCOUNT_ID!;
 const accessKeyId = process.env.R2_ACCESS_KEY_ID!;
@@ -93,5 +96,49 @@ export async function uploadTakeAudio(
     })
   );
 
+  return `${publicUrl}/${key}`;
+}
+
+function extFromMimeType(mimeType: string): string {
+  if (mimeType.includes("webm")) return "webm";
+  if (mimeType.includes("mp4")) return "mp4";
+  if (mimeType.includes("quicktime")) return "mov";
+  if (mimeType.includes("mpeg")) return "mp3";
+  if (mimeType.includes("wav")) return "wav";
+  return "webm";
+}
+
+/**
+ * Same as uploadTakeAudio, but streams the file from a URL (a Firebase
+ * Storage download URL) straight through to R2 instead of taking a Buffer.
+ * Rehearsal recordings can be a multi-hundred-MB video, and this app's
+ * hosting instance only has 512MiB of memory — loading a file that size
+ * into a Buffer risks an OOM crash. `Upload` reads the response body in
+ * bounded chunks and does a multipart upload, so peak memory stays small
+ * regardless of file size.
+ */
+export async function uploadTakeAudioFromUrl(
+  takeId: string,
+  sourceUrl: string,
+  mimeType: string
+): Promise<string> {
+  const res = await fetch(sourceUrl);
+  if (!res.ok || !res.body) {
+    throw new Error(`Failed to fetch source for R2 relay: ${res.status}`);
+  }
+
+  const key = `takes/${takeId}.${extFromMimeType(mimeType)}`;
+  const upload = new Upload({
+    client: s3,
+    params: {
+      Bucket: bucket,
+      Key: key,
+      Body: Readable.fromWeb(res.body as NodeWebReadableStream<Uint8Array>),
+      ContentType: mimeType,
+      CacheControl: "public, max-age=31536000, immutable",
+    },
+  });
+
+  await upload.done();
   return `${publicUrl}/${key}`;
 }

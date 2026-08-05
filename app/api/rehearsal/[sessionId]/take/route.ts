@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Timestamp } from "firebase-admin/firestore";
 import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
-import { uploadAndSubmitTranscription } from "@/lib/assemblyai-client";
-import { uploadTakeAudio } from "@/lib/r2-client";
+import { submitTranscription } from "@/lib/assemblyai-client";
+import { uploadTakeAudioFromUrl } from "@/lib/r2-client";
 
 export const dynamic = "force-dynamic";
-
-const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
 export async function POST(
   req: NextRequest,
@@ -42,16 +40,18 @@ export async function POST(
     return NextResponse.json({ error: "takes_limit_reached" }, { status: 403 });
   }
 
-  let fileBuffer: Buffer;
+  let downloadUrl: string;
+  let storagePath: string | null;
   let fileName: string;
+  let contentType: string;
 
   try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File | null;
-    if (!file) return NextResponse.json({ error: "missing_file" }, { status: 400 });
-    if (file.size > MAX_FILE_BYTES) return NextResponse.json({ error: "file_too_large" }, { status: 400 });
-    fileName = file.name || "recording";
-    fileBuffer = Buffer.from(await file.arrayBuffer());
+    const body = await req.json();
+    downloadUrl = typeof body.downloadUrl === "string" ? body.downloadUrl : "";
+    if (!downloadUrl) return NextResponse.json({ error: "missing_file" }, { status: 400 });
+    storagePath = typeof body.storagePath === "string" ? body.storagePath : null;
+    fileName = typeof body.fileName === "string" ? body.fileName : "recording";
+    contentType = typeof body.contentType === "string" ? body.contentType : "audio/webm";
   } catch {
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   }
@@ -64,6 +64,7 @@ export async function POST(
     await takeRef.set({
       takeNumber: newTakeNumber,
       fileName,
+      storagePath,
       assemblyAiId: null,
       audioUrl: null,
       status: "queued",
@@ -87,29 +88,27 @@ export async function POST(
     return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
 
-  // R2 upload — best-effort, never blocks transcription
-  const mimeType = fileName.endsWith(".webm") ? "audio/webm" : "audio/mpeg";
-  let audioUrl: string | null = null;
-  let r2Error: string | null = null;
-  try {
-    audioUrl = await uploadTakeAudio(takeRef.id, fileBuffer, mimeType);
-  } catch (err) {
-    r2Error = err instanceof Error
-      ? (err.message || err.name || "r2_error_no_message")
-      : (String(err) || "r2_unknown_error");
-    console.error("[rehearsal/take] R2 upload failed:", r2Error);
-  }
+  // R2 relay — fire-and-forget, never blocks the response. Streams from the
+  // Storage download URL rather than buffering in memory (files here can be
+  // a multi-hundred-MB video and this instance only has 512MiB).
+  uploadTakeAudioFromUrl(takeRef.id, downloadUrl, contentType)
+    .then((audioUrl) => takeRef.update({ audioUrl }).catch(() => {}))
+    .catch((err) => {
+      const r2Error = err instanceof Error ? (err.message || err.name) : String(err);
+      console.error("[rehearsal/take] R2 relay failed:", r2Error);
+      takeRef.update({ r2Error: r2Error || "r2_unknown_error" }).catch(() => {});
+    });
 
   let transcriptId: string;
   try {
-    transcriptId = await uploadAndSubmitTranscription(fileBuffer);
+    transcriptId = await submitTranscription(downloadUrl);
   } catch (err) {
-    console.error("[rehearsal/take] AssemblyAI upload failed:", err);
+    console.error("[rehearsal/take] AssemblyAI submit failed:", err);
     await takeRef.update({ status: "failed", error: String(err) });
     return NextResponse.json({ error: "transcription_failed" }, { status: 500 });
   }
 
-  await takeRef.update({ assemblyAiId: transcriptId, audioUrl, r2Error, status: "processing" });
+  await takeRef.update({ assemblyAiId: transcriptId, status: "processing" });
 
   return NextResponse.json({
     takeId: takeRef.id,

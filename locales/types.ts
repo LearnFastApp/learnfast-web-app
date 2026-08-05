@@ -258,6 +258,7 @@ export interface CreateRehearsalModalStrings {
   unsupportedFormat: string;
   submit: string;
   submitting: string;
+  uploading: (pct: number) => string;
   errUpgrade: string;
   errFreeLimit: string;
   errMonthlyLimit: string;
