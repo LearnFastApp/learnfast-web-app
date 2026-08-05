@@ -44,9 +44,13 @@ async function checkGate(uid: string): Promise<{ allowed: boolean; reason?: stri
     .where("presenterId", "==", uid)
     .get();
 
+  // A "failed" assessment (transcription error, malformed AI response, etc.)
+  // is a platform fault, not a user action — it must not consume the user's
+  // monthly quota, or a bug effectively steals credits from the user.
   const used = docsSnap.docs.filter((d) => {
-    const createdAt = d.data().createdAt?.toDate?.() as Date | undefined;
-    return createdAt && createdAt >= startOfMonth;
+    const data = d.data();
+    const createdAt = data.createdAt?.toDate?.() as Date | undefined;
+    return createdAt && createdAt >= startOfMonth && data.status !== "failed";
   }).length;
   const limit = LITE_LIMIT; // TODO: Pro = unlimited when Pro tier launches
   if (used >= limit) return { allowed: false, reason: "monthly_limit" };
