@@ -4,6 +4,7 @@ import { getAdminDb, verifyAuthToken } from "@/lib/firebase-admin";
 import { uploadAndSubmitTranscription } from "@/lib/assemblyai-client";
 import { uploadTakeAudio } from "@/lib/r2-client";
 import { getContext, getLocalizedContextLabel } from "@/lib/contexts/registry";
+import { monthKey, refundRehearsalQuotaIfFirstTake } from "@/lib/rehearsal-gate";
 
 export const dynamic = "force-dynamic";
 
@@ -15,11 +16,6 @@ const ADMIN_UIDS = new Set(["zuFmYCIaGLViRSc7LXFwej6wql22"]);
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
 type Tier = "admin" | "pro" | "lite" | "free";
-
-function monthKey(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
 
 async function checkGate(uid: string): Promise<{ allowed: boolean; reason?: string; tier: Tier; orgId?: string }> {
   if (ADMIN_UIDS.has(uid)) return { allowed: true, tier: "admin" };
@@ -217,6 +213,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("[rehearsal] AssemblyAI upload failed:", err);
     await takeRef.update({ status: "failed", error: String(err) });
+    await refundRehearsalQuotaIfFirstTake(db, uid, gate.tier, 1, now.toDate());
     return NextResponse.json({ error: "transcription_failed" }, { status: 500 });
   }
 

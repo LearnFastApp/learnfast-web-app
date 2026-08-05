@@ -10,6 +10,7 @@ import { writeMeasurement } from "@/lib/measurement-writer";
 import { uploadRawRehearsalBundle } from "@/lib/r2-client";
 import { completePrescribedSession } from "@/lib/gameday/complete-prescribed-session";
 import { generateAndSaveCueCard, shouldGenerateCueCard, compositeScore } from "@/lib/gameday/generate-cue-card";
+import { refundRehearsalQuotaIfFirstTake } from "@/lib/rehearsal-gate";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,9 @@ export async function GET(
   if (!sessionSnap.exists || sessionSnap.data()!.presenterId !== uid) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
+  const sessionData = sessionSnap.data()!;
+  const sessionTier = (sessionData.tier as string | undefined) ?? "free";
+  const sessionCreatedAt: Date = sessionData.createdAt?.toDate?.() ?? new Date();
 
   const takeRef = sessionRef.collection("takes").doc(takeId);
   const takeSnap = await takeRef.get();
@@ -60,6 +64,7 @@ export async function GET(
 
   if (transcript.status === "error") {
     await takeRef.update({ status: "failed", error: transcript.error ?? "AssemblyAI error" });
+    await refundRehearsalQuotaIfFirstTake(db, uid, sessionTier, takeData.takeNumber as number, sessionCreatedAt);
     return NextResponse.json({ status: "failed", error: transcript.error, takeId });
   }
 
@@ -68,10 +73,10 @@ export async function GET(
   }
 
   const audioDurationSeconds = transcript.audio_duration ?? 0;
-  const sessionTier = (sessionSnap.data()!.tier as string | undefined) ?? "free";
   const maxDuration = DURATION_LIMITS[sessionTier] ?? 300;
   if (audioDurationSeconds > maxDuration) {
     await takeRef.update({ status: "failed", error: "duration_exceeded" });
+    await refundRehearsalQuotaIfFirstTake(db, uid, sessionTier, takeData.takeNumber as number, sessionCreatedAt);
     return NextResponse.json({ status: "failed", error: "duration_exceeded", takeId });
   }
 
@@ -120,7 +125,6 @@ export async function GET(
     }
   }
 
-  const sessionData = sessionSnap.data()!;
   const sessionContextId = (sessionData.contextId as string | undefined) ?? "general";
   const sessionUserLocale = (sessionData.userLocale as string | undefined) ?? "en";
 
@@ -144,6 +148,7 @@ export async function GET(
   } catch (err) {
     console.error("[rehearsal/takeId] Coaching failed:", err);
     await takeRef.update({ status: "failed", error: "coaching_failed" });
+    await refundRehearsalQuotaIfFirstTake(db, uid, sessionTier, takeNumber, sessionCreatedAt);
     return NextResponse.json({ status: "failed", error: "coaching_failed", takeId });
   }
 
@@ -178,6 +183,7 @@ export async function GET(
     // and just returns {status:"processing"} without ever retrying).
     console.error("[rehearsal/takeId] Final take update failed:", err);
     await takeRef.update({ status: "failed", error: "save_failed" }).catch(() => {});
+    await refundRehearsalQuotaIfFirstTake(db, uid, sessionTier, takeNumber, sessionCreatedAt);
     return NextResponse.json({ status: "failed", error: "save_failed", takeId });
   }
 
